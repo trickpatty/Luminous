@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Luminous.Domain.Entities;
 using Luminous.Domain.Enums;
+using Nanoid;
 
 namespace Luminous.Domain.Tests.Entities;
 
@@ -26,7 +27,7 @@ public class DeviceTests
     {
         // Arrange
         var device = Device.CreateWithLinkCode(DeviceType.Display);
-        var familyId = Guid.NewGuid().ToString();
+        var familyId = Nanoid.Generate();
         var deviceName = "Kitchen Display";
         var linkedBy = "user-id";
 

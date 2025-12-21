@@ -1,4 +1,5 @@
 using Luminous.Domain.Common;
+using Nanoid;
 
 namespace Luminous.Domain.Entities;
 
@@ -100,7 +101,7 @@ public sealed class FamilyList : Entity
     {
         var item = new ListItem
         {
-            Id = Guid.NewGuid().ToString(),
+            Id = Nanoid.Generate(),
             Text = text.Trim(),
             Category = category,
             Quantity = quantity,
@@ -143,8 +144,9 @@ public sealed class ListItem
 {
     /// <summary>
     /// Gets or sets the item ID.
+    /// Uses NanoId for URL-friendly, compact unique identifiers.
     /// </summary>
-    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string Id { get; set; } = Nanoid.Generate();
 
     /// <summary>
     /// Gets or sets the item text.

@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Luminous.Domain.Entities;
 using Luminous.Domain.Enums;
+using Nanoid;
 
 namespace Luminous.Domain.Tests.Entities;
 
@@ -10,7 +11,7 @@ public class UserTests
     public void CreateOwner_ShouldCreateUserWithOwnerRole()
     {
         // Arrange
-        var familyId = Guid.NewGuid().ToString();
+        var familyId = Nanoid.Generate();
         var email = "owner@example.com";
         var displayName = "Family Owner";
 
@@ -29,7 +30,7 @@ public class UserTests
     public void Create_WithRole_ShouldCreateUserWithSpecifiedRole()
     {
         // Arrange
-        var familyId = Guid.NewGuid().ToString();
+        var familyId = Nanoid.Generate();
         var email = "child@example.com";
         var displayName = "Child User";
 

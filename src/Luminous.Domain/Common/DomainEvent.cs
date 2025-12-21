@@ -1,3 +1,5 @@
+using Nanoid;
+
 namespace Luminous.Domain.Common;
 
 /// <summary>
@@ -7,8 +9,9 @@ public abstract class DomainEvent
 {
     /// <summary>
     /// Gets the unique identifier for this event.
+    /// Uses NanoId for URL-friendly, compact unique identifiers.
     /// </summary>
-    public string EventId { get; } = Guid.NewGuid().ToString();
+    public string EventId { get; } = Nanoid.Generate();
 
     /// <summary>
     /// Gets the timestamp when this event occurred.

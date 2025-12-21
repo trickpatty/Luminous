@@ -6,4 +6,8 @@
     <Description>Domain layer containing entities, value objects, and domain interfaces</Description>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Nanoid" />
+  </ItemGroup>
+
 </Project>

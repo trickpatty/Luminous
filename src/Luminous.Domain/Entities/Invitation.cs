@@ -1,5 +1,6 @@
 using Luminous.Domain.Common;
 using Luminous.Domain.Enums;
+using Nanoid;
 
 namespace Luminous.Domain.Entities;
 
@@ -127,12 +128,10 @@ public sealed class Invitation : Entity
 
     /// <summary>
     /// Generates a unique invitation code.
+    /// Uses NanoId for URL-friendly, compact unique identifiers.
     /// </summary>
     private static string GenerateCode()
     {
-        return Convert.ToBase64String(Guid.NewGuid().ToByteArray())
-            .Replace("+", "-")
-            .Replace("/", "_")
-            .TrimEnd('=');
+        return Nanoid.Generate(size: 22);
     }
 }

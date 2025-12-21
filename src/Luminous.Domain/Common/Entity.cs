@@ -1,3 +1,5 @@
+using Nanoid;
+
 namespace Luminous.Domain.Common;
 
 /// <summary>
@@ -7,8 +9,9 @@ public abstract class Entity
 {
     /// <summary>
     /// Gets or sets the unique identifier for this entity.
+    /// Uses NanoId for URL-friendly, compact unique identifiers.
     /// </summary>
-    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string Id { get; set; } = Nanoid.Generate();
 
     /// <summary>
     /// Gets or sets the timestamp when this entity was created.
