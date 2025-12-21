@@ -6,6 +6,93 @@ This document defines the expectations, standards, and development practices for
 
 **Luminous** is a digital family command center designed for large, portrait-mounted touchscreens. It provides a calm, glanceable view of household schedules, tasks, and reminders.
 
+For comprehensive project documentation, see:
+- [Project Overview](./docs/PROJECT-OVERVIEW.md) - Complete product specification
+- [Architecture](./docs/ARCHITECTURE.md) - Technical architecture documentation
+- [Roadmap](./docs/ROADMAP.md) - Development phases and milestones
+- [Architecture Decision Records](./docs/adr/) - Key design decisions
+
+---
+
+## TOGAF Enterprise Architecture Principles
+
+Luminous follows TOGAF (The Open Group Architecture Framework) principles for enterprise architecture. All architectural decisions must align with these principles.
+
+### Architecture Development Method (ADM)
+
+We follow TOGAF ADM phases in our development process:
+
+| Phase | Description | Luminous Application |
+|-------|-------------|---------------------|
+| **Preliminary** | Framework and principles | Establish guidelines (this document) |
+| **A: Vision** | Architecture vision | Project overview and goals |
+| **B: Business** | Business architecture | Feature capabilities and processes |
+| **C: Information** | Data architecture | Domain models and data flows |
+| **C: Application** | Application architecture | Component design and boundaries |
+| **D: Technology** | Technology architecture | Technology stack decisions |
+| **E: Opportunities** | Solutions and migration | Roadmap phases |
+| **F: Migration** | Planning | Phase transitions |
+| **G: Governance** | Implementation governance | Code reviews, ADRs |
+| **H: Change** | Architecture change | Version updates, migrations |
+
+### Core Architecture Principles
+
+#### Business Principles
+
+| ID | Principle | Description |
+|----|-----------|-------------|
+| BP-1 | **Family-Centric Design** | All features must serve real family coordination needs |
+| BP-2 | **Zero Distraction** | The product differentiates by what it omits |
+| BP-3 | **Inclusive by Default** | Design for all ages and abilities |
+| BP-4 | **Privacy as a Feature** | Users own and control their data |
+
+#### Data Principles
+
+| ID | Principle | Description |
+|----|-----------|-------------|
+| DP-1 | **Local-First Data** | Data stored locally first; sync is secondary |
+| DP-2 | **User Data Ownership** | Users can export and self-host |
+| DP-3 | **Single Source of Truth** | Clear ownership rules per data type |
+| DP-4 | **Data Minimization** | Collect only what's necessary |
+
+#### Application Principles
+
+| ID | Principle | Description |
+|----|-----------|-------------|
+| AP-1 | **Modular Composability** | Features evolve independently |
+| AP-2 | **Cross-Platform Consistency** | Unified experience across platforms |
+| AP-3 | **Graceful Degradation** | Partial failures shouldn't block usage |
+| AP-4 | **Performance on Constraints** | Optimize for modest hardware |
+
+#### Technology Principles
+
+| ID | Principle | Description |
+|----|-----------|-------------|
+| TP-1 | **Open Source Stack** | No proprietary dependencies in core |
+| TP-2 | **Commodity Hardware** | ARM and x86 support; no specialized hardware |
+| TP-3 | **Standards-Based Integration** | OAuth 2.0, CalDAV, REST/GraphQL |
+| TP-4 | **Operational Simplicity** | Auto-updates, self-healing, minimal config |
+
+### Architecture Governance
+
+1. **All significant decisions require an ADR**
+   - New technology choices
+   - Architectural pattern changes
+   - Integration approaches
+   - Data model changes
+
+2. **ADRs must follow the template** in `/docs/adr/ADR-000-template.md`
+
+3. **Review process**
+   - ADRs proposed via pull request
+   - Minimum one reviewer approval
+   - Discussion period before acceptance
+
+4. **Principle compliance checks** in code reviews:
+   - Does this change align with architecture principles?
+   - Does it follow the bounded context boundaries?
+   - Is it appropriately documented?
+
 ---
 
 ## Core Development Principles
@@ -149,14 +236,25 @@ Use scopes to indicate the affected area:
 
 - `calendar` - Calendar-related changes
 - `tasks` - Task/chore management
+- `routines` - Routine management
+- `rewards` - Rewards and gamification
+- `meals` - Meal planning and recipes
+- `lists` - List management
+- `profiles` - Profile and household management
 - `notes` - Notes and reminders
 - `ui` - General UI components
 - `display` - Display/kiosk mode
+- `mobile` - Mobile application
+- `web` - Web application
+- `sync` - Synchronization engine
+- `import` - Magic import feature
 - `config` - Configuration
 - `api` - API/backend changes
 - `auth` - Authentication
 - `db` - Database changes
 - `infra` - Infrastructure
+- `docs` - Documentation
+- `adr` - Architecture Decision Records
 
 ### Commit Examples
 
