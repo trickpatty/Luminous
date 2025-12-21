@@ -238,21 +238,7 @@ az provider register --namespace Microsoft.OperationalInsights
 ```
 infra/
 ├── bicep/
-│   ├── main.bicep              # Main orchestration
-│   ├── modules/                # Resource modules
-│   │   ├── app-configuration.bicep
-│   │   ├── app-insights.bicep
-│   │   ├── app-service-plan.bicep
-│   │   ├── app-service.bicep
-│   │   ├── cosmos-db.bicep
-│   │   ├── function-app.bicep
-│   │   ├── key-vault.bicep
-│   │   ├── log-analytics.bicep
-│   │   ├── redis-cache.bicep
-│   │   ├── service-bus.bicep
-│   │   ├── signalr.bicep
-│   │   ├── static-web-app.bicep
-│   │   └── storage-account.bicep
+│   ├── main.bicep              # Main orchestration (uses AVMs from registry)
 │   └── parameters/             # Environment configs
 │       ├── dev.bicepparam
 │       ├── staging.bicepparam
@@ -261,6 +247,31 @@ infra/
     ├── deploy.sh               # Bash deployment script
     └── deploy.ps1              # PowerShell deployment script
 ```
+
+### Azure Verified Modules (AVMs)
+
+All resources are deployed using AVMs directly from the public Bicep registry (`br/public:avm/res/...`). This approach provides:
+
+- **Pre-validated patterns** - Security and compliance built-in
+- **Maintained by Microsoft/community** - Regular updates and bug fixes
+- **Semantic versioning** - Predictable upgrades
+- **Less code to maintain** - No custom module implementations
+
+| Resource | AVM Reference |
+|----------|---------------|
+| Resource Group | `br/public:avm/res/resources/resource-group:0.4.0` |
+| Log Analytics | `br/public:avm/res/operational-insights/workspace:0.9.0` |
+| App Insights | `br/public:avm/res/insights/component:0.4.1` |
+| Key Vault | `br/public:avm/res/key-vault/vault:0.9.0` |
+| App Configuration | `br/public:avm/res/app-configuration/configuration-store:0.5.1` |
+| Cosmos DB | `br/public:avm/res/document-db/database-account:0.8.1` |
+| Storage Account | `br/public:avm/res/storage/storage-account:0.14.3` |
+| Redis Cache | `br/public:avm/res/cache/redis:0.8.0` |
+| Service Bus | `br/public:avm/res/service-bus/namespace:0.10.0` |
+| SignalR | `br/public:avm/res/signal-r-service/signal-r:0.5.0` |
+| App Service Plan | `br/public:avm/res/web/serverfarm:0.3.0` |
+| App Service/Functions | `br/public:avm/res/web/site:0.11.1` |
+| Static Web App | `br/public:avm/res/web/static-site:0.6.0` |
 
 ### Quick Start
 

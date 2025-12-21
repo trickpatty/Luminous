@@ -38,7 +38,6 @@ param appServiceSkuName = 'P1v3'
 
 // Redis - Standard tier for production with higher capacity
 param redisSku = 'Standard'
-param redisFamily = 'C'
 param redisCapacity = 1
 
 // SignalR - Standard tier for production

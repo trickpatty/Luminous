@@ -37,7 +37,6 @@ param appServiceSkuName = 'S1'
 
 // Redis - Standard tier for staging
 param redisSku = 'Standard'
-param redisFamily = 'C'
 param redisCapacity = 0
 
 // SignalR - Standard tier for staging

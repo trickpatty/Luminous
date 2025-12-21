@@ -123,17 +123,18 @@ Establish the Azure infrastructure, .NET backend, Angular frontend, and developm
 #### 0.1 Azure Infrastructure (Bicep with AVMs) ✅ COMPLETED
 
 - [x] **0.1.1** Create Bicep modules for all Azure resources using AVMs
-  - *Implemented: main.bicep with 12 modules (cosmos-db, storage-account, redis-cache, service-bus, signalr, key-vault, app-configuration, app-service-plan, app-service, function-app, static-web-app, log-analytics, app-insights)*
+  - *Implemented: main.bicep using 13 AVMs directly from the public Bicep registry (br/public:avm/res/...)*
+  - *Resources: resource-group, log-analytics, app-insights, key-vault, app-configuration, cosmos-db, storage-account, redis-cache, service-bus, signalr, app-service-plan, web-site, static-web-app*
 - [x] **0.1.2** Configure Cosmos DB with required containers
-  - *Implemented: cosmos-db.bicep with 11 containers (families, users, events, chores, devices, routines, lists, meals, completions, invitations, credentials)*
+  - *Implemented: 11 containers via AVM (families, users, events, chores, devices, routines, lists, meals, completions, invitations, credentials)*
 - [x] **0.1.3** Set up in-house identity service with WebAuthn/passkey support
   - *Implemented: credentials container in Cosmos DB for WebAuthn credential storage; App Service configured for passwordless auth integration*
 - [x] **0.1.4** Configure App Service for .NET API
-  - *Implemented: app-service.bicep and app-service-plan.bicep with .NET 10, managed identity, Key Vault integration, health checks*
+  - *Implemented: Using br/public:avm/res/web/site with .NET 9, managed identity, health checks*
 - [x] **0.1.5** Set up Azure Static Web Apps for Angular
-  - *Implemented: static-web-app.bicep with Angular build configuration, API backend linking*
+  - *Implemented: Using br/public:avm/res/web/static-site with staging environment support*
 - [x] **0.1.6** Configure Key Vault for secrets
-  - *Implemented: key-vault.bicep with RBAC authorization, soft delete, managed identity access policies*
+  - *Implemented: Using br/public:avm/res/key-vault/vault with RBAC authorization, soft delete*
 - [x] **0.1.7** Set up environment parameter files (dev, staging, prod)
   - *Implemented: dev.bicepparam, staging.bicepparam, prod.bicepparam with environment-appropriate SKUs and settings*
 
@@ -628,3 +629,4 @@ These can be developed in parallel after Phase 0:
 | 1.0.0 | 2025-12-21 | Luminous Team | Initial roadmap |
 | 2.0.0 | 2025-12-21 | Luminous Team | Updated for Azure/.NET/Angular stack |
 | 2.1.0 | 2025-12-21 | Luminous Team | Phase 0.1 Azure Infrastructure completed |
+| 2.1.1 | 2025-12-21 | Luminous Team | Refactored to use AVMs directly from public registry |

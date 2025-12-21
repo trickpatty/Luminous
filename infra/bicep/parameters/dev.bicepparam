@@ -37,7 +37,6 @@ param appServiceSkuName = 'B1'
 
 // Redis - Basic tier for dev (smallest available)
 param redisSku = 'Basic'
-param redisFamily = 'C'
 param redisCapacity = 0
 
 // SignalR - Free tier for dev

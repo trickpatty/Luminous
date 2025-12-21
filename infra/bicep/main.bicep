@@ -1,8 +1,8 @@
 // =============================================================================
 // Luminous - Main Infrastructure Deployment
 // =============================================================================
-// This is the main orchestration file for deploying the Luminous Azure
-// infrastructure using Azure Verified Modules (AVMs).
+// Deploys Luminous Azure infrastructure using Azure Verified Modules (AVMs)
+// directly from the public Bicep registry.
 //
 // Usage:
 //   az deployment sub create \
@@ -11,6 +11,7 @@
 //     --parameters @parameters/dev.bicepparam
 //
 // TOGAF Principle: TP-4 - Infrastructure as Code
+// ADR-007: Bicep with AVMs for IaC
 // =============================================================================
 
 targetScope = 'subscription'
@@ -55,10 +56,8 @@ param appServiceSkuName string = environment == 'prod' ? 'P1v3' : 'B1'
 
 // Redis Configuration
 @description('Redis Cache SKU')
+@allowed(['Basic', 'Standard', 'Premium'])
 param redisSku string = environment == 'prod' ? 'Standard' : 'Basic'
-
-@description('Redis Cache Family')
-param redisFamily string = 'C'
 
 @description('Redis Cache Capacity')
 param redisCapacity int = environment == 'prod' ? 1 : 0
@@ -69,6 +68,7 @@ param signalRSku string = environment == 'prod' ? 'Standard_S1' : 'Free_F1'
 
 // Static Web App Configuration
 @description('Static Web App SKU')
+@allowed(['Free', 'Standard'])
 param staticWebAppSku string = environment == 'prod' ? 'Standard' : 'Free'
 
 // =============================================================================
@@ -80,9 +80,8 @@ var namingPrefix = '${projectPrefix}-${environment}'
 
 // Resource naming following Azure naming conventions
 var names = {
-  resourceGroup: resourceGroupName
   cosmosDb: 'cosmos-${namingPrefix}'
-  storageAccount: 'st${projectPrefix}${environment}' // Storage accounts can't have hyphens
+  storageAccount: 'st${projectPrefix}${environment}'
   keyVault: 'kv-${namingPrefix}'
   appConfig: 'appcs-${namingPrefix}'
   appServicePlan: 'asp-${namingPrefix}'
@@ -97,7 +96,7 @@ var names = {
   appInsights: 'appi-${namingPrefix}'
 }
 
-// Cosmos DB container configurations
+// Cosmos DB container configurations for multi-tenant data isolation
 var cosmosContainers = [
   { name: 'families', partitionKeyPath: '/id' }
   { name: 'users', partitionKeyPath: '/familyId' }
@@ -109,254 +108,324 @@ var cosmosContainers = [
   { name: 'meals', partitionKeyPath: '/familyId' }
   { name: 'completions', partitionKeyPath: '/familyId' }
   { name: 'invitations', partitionKeyPath: '/familyId' }
-  { name: 'credentials', partitionKeyPath: '/userId' } // WebAuthn credentials
+  { name: 'credentials', partitionKeyPath: '/userId' }
 ]
 
 // =============================================================================
-// Resource Group
+// Resource Group (using AVM)
 // =============================================================================
 
-resource rg 'Microsoft.Resources/resourceGroups@2024-03-01' = {
-  name: names.resourceGroup
-  location: location
-  tags: tags
+module rg 'br/public:avm/res/resources/resource-group:0.4.0' = {
+  name: 'deploy-resource-group'
+  params: {
+    name: resourceGroupName
+    location: location
+    tags: tags
+  }
 }
 
 // =============================================================================
 // Monitoring (Deploy first - other resources depend on these)
 // =============================================================================
 
-module logAnalytics 'modules/log-analytics.bicep' = {
+module logAnalytics 'br/public:avm/res/operational-insights/workspace:0.9.0' = {
   name: 'deploy-log-analytics'
-  scope: rg
+  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.logAnalytics
     location: location
     tags: tags
-    retentionInDays: environment == 'prod' ? 90 : 30
+    dataRetention: environment == 'prod' ? 90 : 30
+    skuName: 'PerGB2018'
   }
+  dependsOn: [rg]
 }
 
-module appInsights 'modules/app-insights.bicep' = {
+module appInsights 'br/public:avm/res/insights/component:0.4.1' = {
   name: 'deploy-app-insights'
-  scope: rg
+  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.appInsights
     location: location
     tags: tags
-    logAnalyticsWorkspaceId: logAnalytics.outputs.workspaceId
+    workspaceResourceId: logAnalytics.outputs.resourceId
+    applicationType: 'web'
   }
+  dependsOn: [rg]
 }
 
 // =============================================================================
 // Security
 // =============================================================================
 
-module keyVault 'modules/key-vault.bicep' = {
+module keyVault 'br/public:avm/res/key-vault/vault:0.9.0' = {
   name: 'deploy-key-vault'
-  scope: rg
+  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.keyVault
     location: location
     tags: tags
+    sku: 'standard'
+    enableRbacAuthorization: true
     enableSoftDelete: environment == 'prod'
+    softDeleteRetentionInDays: 90
     enablePurgeProtection: environment == 'prod'
   }
+  dependsOn: [rg]
 }
 
-module appConfig 'modules/app-configuration.bicep' = {
+module appConfig 'br/public:avm/res/app-configuration/configuration-store:0.5.1' = {
   name: 'deploy-app-config'
-  scope: rg
+  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.appConfig
     location: location
     tags: tags
     sku: environment == 'prod' ? 'Standard' : 'Free'
   }
+  dependsOn: [rg]
 }
 
 // =============================================================================
 // Data Services
 // =============================================================================
 
-module cosmosDb 'modules/cosmos-db.bicep' = {
+module cosmosDb 'br/public:avm/res/document-db/database-account:0.8.1' = {
   name: 'deploy-cosmos-db'
-  scope: rg
+  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.cosmosDb
     location: location
     tags: tags
-    enableServerless: cosmosDbServerless
-    consistencyLevel: cosmosDbConsistencyLevel
-    databaseName: projectName
-    containers: cosmosContainers
+    capabilitiesToAdd: cosmosDbServerless ? ['EnableServerless'] : []
+    defaultConsistencyLevel: cosmosDbConsistencyLevel
+    locations: [
+      {
+        locationName: location
+        failoverPriority: 0
+        isZoneRedundant: false
+      }
+    ]
+    sqlDatabases: [
+      {
+        name: projectName
+        containers: [for container in cosmosContainers: {
+          name: container.name
+          paths: [container.partitionKeyPath]
+        }]
+      }
+    ]
   }
+  dependsOn: [rg]
 }
 
-module storageAccount 'modules/storage-account.bicep' = {
+module storageAccount 'br/public:avm/res/storage/storage-account:0.14.3' = {
   name: 'deploy-storage-account'
-  scope: rg
+  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.storageAccount
     location: location
     tags: tags
-    sku: environment == 'prod' ? 'Standard_GRS' : 'Standard_LRS'
-    containerNames: [
-      'avatars'
-      'recipes'
-      'imports'
-      'exports'
-    ]
+    skuName: environment == 'prod' ? 'Standard_GRS' : 'Standard_LRS'
+    kind: 'StorageV2'
+    allowBlobPublicAccess: false
+    blobServices: {
+      containers: [
+        { name: 'avatars', publicAccess: 'None' }
+        { name: 'recipes', publicAccess: 'None' }
+        { name: 'imports', publicAccess: 'None' }
+        { name: 'exports', publicAccess: 'None' }
+      ]
+      deleteRetentionPolicy: {
+        enabled: true
+        days: 7
+      }
+    }
   }
+  dependsOn: [rg]
 }
 
-module redis 'modules/redis-cache.bicep' = {
+module redis 'br/public:avm/res/cache/redis:0.8.0' = {
   name: 'deploy-redis-cache'
-  scope: rg
+  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.redis
     location: location
     tags: tags
-    sku: redisSku
-    family: redisFamily
+    skuName: redisSku
     capacity: redisCapacity
+    redisVersion: '6'
+    minimumTlsVersion: '1.2'
+    publicNetworkAccess: 'Enabled'
   }
+  dependsOn: [rg]
 }
 
 // =============================================================================
 // Messaging Services
 // =============================================================================
 
-module serviceBus 'modules/service-bus.bicep' = {
+module serviceBus 'br/public:avm/res/service-bus/namespace:0.10.0' = {
   name: 'deploy-service-bus'
-  scope: rg
+  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.serviceBus
     location: location
     tags: tags
-    sku: environment == 'prod' ? 'Standard' : 'Basic'
+    skuObject: {
+      name: environment == 'prod' ? 'Standard' : 'Basic'
+    }
     queues: [
-      'calendar-sync'
-      'import-processing'
-      'notifications'
+      { name: 'calendar-sync' }
+      { name: 'import-processing' }
+      { name: 'notifications' }
     ]
   }
+  dependsOn: [rg]
 }
 
-module signalR 'modules/signalr.bicep' = {
+module signalR 'br/public:avm/res/signal-r-service/signal-r:0.5.0' = {
   name: 'deploy-signalr'
-  scope: rg
+  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.signalR
     location: location
     tags: tags
     sku: signalRSku
-    serviceMode: 'Default'
+    kind: 'SignalR'
+    features: [
+      { flag: 'ServiceMode', value: 'Default' }
+      { flag: 'EnableConnectivityLogs', value: 'True' }
+    ]
   }
+  dependsOn: [rg]
 }
 
 // =============================================================================
 // Compute Services
 // =============================================================================
 
-module appServicePlan 'modules/app-service-plan.bicep' = {
+module appServicePlan 'br/public:avm/res/web/serverfarm:0.3.0' = {
   name: 'deploy-app-service-plan'
-  scope: rg
+  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.appServicePlan
     location: location
     tags: tags
     skuName: appServiceSkuName
-    kind: 'linux'
+    skuCapacity: 1
+    kind: 'Linux'
+    reserved: true
   }
+  dependsOn: [rg]
 }
 
-module appService 'modules/app-service.bicep' = {
+module appService 'br/public:avm/res/web/site:0.11.1' = {
   name: 'deploy-app-service'
-  scope: rg
+  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.appService
     location: location
     tags: tags
-    appServicePlanId: appServicePlan.outputs.planId
-    appInsightsConnectionString: appInsights.outputs.connectionString
-    appInsightsInstrumentationKey: appInsights.outputs.instrumentationKey
-    runtimeStack: 'DOTNETCORE'
-    runtimeVersion: '10.0'
-    appSettings: [
-      { name: 'ASPNETCORE_ENVIRONMENT', value: environment == 'prod' ? 'Production' : 'Development' }
-      { name: 'CosmosDb__Endpoint', value: cosmosDb.outputs.endpoint }
-      { name: 'CosmosDb__DatabaseName', value: projectName }
-      { name: 'Redis__ConnectionString', value: redis.outputs.connectionString }
-      { name: 'SignalR__ConnectionString', value: signalR.outputs.connectionString }
-      { name: 'ServiceBus__ConnectionString', value: serviceBus.outputs.connectionString }
-      { name: 'Storage__ConnectionString', value: storageAccount.outputs.connectionString }
-      { name: 'AppConfig__Endpoint', value: appConfig.outputs.endpoint }
-    ]
-    keyVaultName: keyVault.outputs.name
+    kind: 'app,linux'
+    serverFarmResourceId: appServicePlan.outputs.resourceId
+    managedIdentities: {
+      systemAssigned: true
+    }
+    siteConfig: {
+      linuxFxVersion: 'DOTNETCORE|9.0'
+      alwaysOn: appServiceSkuName != 'F1' && appServiceSkuName != 'D1'
+      http20Enabled: true
+      minTlsVersion: '1.2'
+      ftpsState: 'Disabled'
+      healthCheckPath: '/health'
+    }
+    httpsOnly: true
+    clientAffinityEnabled: false
+    appSettingsKeyValuePairs: {
+      ASPNETCORE_ENVIRONMENT: environment == 'prod' ? 'Production' : 'Development'
+      APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
+      CosmosDb__Endpoint: cosmosDb.outputs.endpoint
+      CosmosDb__DatabaseName: projectName
+      SignalR__ConnectionString: signalR.outputs.hostName
+      AppConfig__Endpoint: appConfig.outputs.endpoint
+    }
   }
   dependsOn: [
     cosmosDb
-    redis
     signalR
-    serviceBus
-    storageAccount
     appConfig
+    appInsights
   ]
 }
 
-module functionAppSync 'modules/function-app.bicep' = {
+module functionAppSync 'br/public:avm/res/web/site:0.11.1' = {
   name: 'deploy-function-app-sync'
-  scope: rg
+  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.functionAppSync
     location: location
     tags: tags
-    appServicePlanId: appServicePlan.outputs.planId
-    storageAccountName: storageAccount.outputs.name
-    appInsightsConnectionString: appInsights.outputs.connectionString
-    appInsightsInstrumentationKey: appInsights.outputs.instrumentationKey
-    runtimeStack: 'dotnet-isolated'
-    runtimeVersion: '10.0'
-    appSettings: [
-      { name: 'CosmosDb__Endpoint', value: cosmosDb.outputs.endpoint }
-      { name: 'CosmosDb__DatabaseName', value: projectName }
-      { name: 'ServiceBus__ConnectionString', value: serviceBus.outputs.connectionString }
-    ]
-    keyVaultName: keyVault.outputs.name
+    kind: 'functionapp,linux'
+    serverFarmResourceId: appServicePlan.outputs.resourceId
+    managedIdentities: {
+      systemAssigned: true
+    }
+    siteConfig: {
+      linuxFxVersion: 'DOTNET-ISOLATED|9.0'
+      use32BitWorkerProcess: false
+      ftpsState: 'Disabled'
+      minTlsVersion: '1.2'
+    }
+    httpsOnly: true
+    appSettingsKeyValuePairs: {
+      FUNCTIONS_EXTENSION_VERSION: '~4'
+      FUNCTIONS_WORKER_RUNTIME: 'dotnet-isolated'
+      AzureWebJobsStorage: storageAccount.outputs.primaryBlobEndpoint
+      APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
+      CosmosDb__Endpoint: cosmosDb.outputs.endpoint
+      CosmosDb__DatabaseName: projectName
+    }
   }
   dependsOn: [
     cosmosDb
-    serviceBus
     storageAccount
+    appInsights
   ]
 }
 
-module functionAppImport 'modules/function-app.bicep' = {
+module functionAppImport 'br/public:avm/res/web/site:0.11.1' = {
   name: 'deploy-function-app-import'
-  scope: rg
+  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.functionAppImport
     location: location
     tags: tags
-    appServicePlanId: appServicePlan.outputs.planId
-    storageAccountName: storageAccount.outputs.name
-    appInsightsConnectionString: appInsights.outputs.connectionString
-    appInsightsInstrumentationKey: appInsights.outputs.instrumentationKey
-    runtimeStack: 'dotnet-isolated'
-    runtimeVersion: '10.0'
-    appSettings: [
-      { name: 'CosmosDb__Endpoint', value: cosmosDb.outputs.endpoint }
-      { name: 'CosmosDb__DatabaseName', value: projectName }
-      { name: 'ServiceBus__ConnectionString', value: serviceBus.outputs.connectionString }
-      { name: 'Storage__ConnectionString', value: storageAccount.outputs.connectionString }
-    ]
-    keyVaultName: keyVault.outputs.name
+    kind: 'functionapp,linux'
+    serverFarmResourceId: appServicePlan.outputs.resourceId
+    managedIdentities: {
+      systemAssigned: true
+    }
+    siteConfig: {
+      linuxFxVersion: 'DOTNET-ISOLATED|9.0'
+      use32BitWorkerProcess: false
+      ftpsState: 'Disabled'
+      minTlsVersion: '1.2'
+    }
+    httpsOnly: true
+    appSettingsKeyValuePairs: {
+      FUNCTIONS_EXTENSION_VERSION: '~4'
+      FUNCTIONS_WORKER_RUNTIME: 'dotnet-isolated'
+      AzureWebJobsStorage: storageAccount.outputs.primaryBlobEndpoint
+      APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
+      CosmosDb__Endpoint: cosmosDb.outputs.endpoint
+      CosmosDb__DatabaseName: projectName
+    }
   }
   dependsOn: [
     cosmosDb
-    serviceBus
     storageAccount
+    appInsights
   ]
 }
 
@@ -364,38 +433,40 @@ module functionAppImport 'modules/function-app.bicep' = {
 // Web Hosting
 // =============================================================================
 
-module staticWebApp 'modules/static-web-app.bicep' = {
+module staticWebApp 'br/public:avm/res/web/static-site:0.6.0' = {
   name: 'deploy-static-web-app'
-  scope: rg
+  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.staticWebApp
-    location: location // Note: Static Web Apps have limited region support
+    location: location
     tags: tags
     sku: staticWebAppSku
-    apiBackendUrl: 'https://${names.appService}.azurewebsites.net'
+    stagingEnvironmentPolicy: 'Enabled'
+    allowConfigFileUpdates: true
   }
+  dependsOn: [rg]
 }
 
 // =============================================================================
 // Outputs
 // =============================================================================
 
-output resourceGroupName string = rg.name
-output resourceGroupId string = rg.id
+output resourceGroupName string = resourceGroupName
+output resourceGroupId string = rg.outputs.resourceId
 
 // Data Services
 output cosmosDbEndpoint string = cosmosDb.outputs.endpoint
-output cosmosDbAccountName string = cosmosDb.outputs.accountName
+output cosmosDbAccountName string = cosmosDb.outputs.name
 output storageAccountName string = storageAccount.outputs.name
 output redisHostName string = redis.outputs.hostName
 
 // Compute Services
-output appServiceUrl string = appService.outputs.defaultHostName
-output functionAppSyncUrl string = functionAppSync.outputs.defaultHostName
-output functionAppImportUrl string = functionAppImport.outputs.defaultHostName
+output appServiceUrl string = appService.outputs.defaultHostname
+output functionAppSyncUrl string = functionAppSync.outputs.defaultHostname
+output functionAppImportUrl string = functionAppImport.outputs.defaultHostname
 
 // Web Hosting
-output staticWebAppUrl string = staticWebApp.outputs.defaultHostName
+output staticWebAppUrl string = staticWebApp.outputs.defaultHostname
 
 // Security
 output keyVaultName string = keyVault.outputs.name
@@ -404,8 +475,8 @@ output appConfigEndpoint string = appConfig.outputs.endpoint
 
 // Messaging
 output signalRHostName string = signalR.outputs.hostName
-output serviceBusNamespace string = serviceBus.outputs.namespaceName
+output serviceBusNamespace string = serviceBus.outputs.name
 
 // Monitoring
 output appInsightsConnectionString string = appInsights.outputs.connectionString
-output logAnalyticsWorkspaceId string = logAnalytics.outputs.workspaceId
+output logAnalyticsWorkspaceId string = logAnalytics.outputs.resourceId
