@@ -115,7 +115,7 @@ Following TOGAF Enterprise Architecture principles, Luminous adheres to these fo
 |                                                                                    |
 |  IDENTITY TIER                                                                     |
 |  +-------------------------------------------------------------------------+      |
-|  |                    AZURE AD B2C / ENTRA EXTERNAL ID                      |      |
+|  |              IN-HOUSE IDENTITY (Passkeys / WebAuthn / OAuth)             |      |
 |  +-------------------------------------------------------------------------+      |
 |                                                                                    |
 +------------------------------------------------------------------------------------+
@@ -143,7 +143,7 @@ LUMINOUS FAMILY HUB (MULTI-TENANT)
 |
 +-- PLATFORM CAPABILITY
 |   +-- Tenant Management
-|   +-- User Authentication (Azure AD B2C)
+|   +-- User Authentication (Passkeys/WebAuthn)
 |   +-- Device Registration (Board Linking)
 |   +-- Subscription Management
 |   +-- Usage Analytics
@@ -192,7 +192,7 @@ LUMINOUS FAMILY HUB (MULTI-TENANT)
 |  +----------+    +----------+    +----------+    +----------+       |
 |                                                                      |
 |  User registers --> Creates family --> Invites family --> Links     |
-|  via Azure AD B2C   (tenant)          members           display     |
+|  via Passkey/Email   (tenant)          members           display    |
 |                                                                      |
 +---------------------------------------------------------------------+
 ```
@@ -286,7 +286,7 @@ public class User
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string FamilyId { get; set; } = string.Empty;  // Partition key
-    public string ExternalId { get; set; } = string.Empty; // Azure AD B2C ID
+    public string ExternalId { get; set; } = string.Empty; // Internal auth ID
     public string Email { get; set; } = string.Empty;
     public string DisplayName { get; set; } = string.Empty;
     public UserRole Role { get; set; } = UserRole.Member;
@@ -336,7 +336,7 @@ public enum DeviceType
 | Data Type | Storage | Partition Strategy | Notes |
 |-----------|---------|-------------------|-------|
 | **Families** | CosmosDB | By family ID | Tenant root |
-| **Users** | CosmosDB | By family ID | Includes Azure AD B2C link |
+| **Users** | CosmosDB | By family ID | Includes auth credentials link |
 | **Events** | CosmosDB | By family ID | Calendar events |
 | **Chores** | CosmosDB | By family ID | Tasks and assignments |
 | **Devices** | CosmosDB | By family ID | Board registrations |
@@ -420,7 +420,7 @@ luminous/
 | **Storage** | Azure Blob Storage | Latest | Media, files |
 | **Messaging** | Azure Service Bus | Latest | Async processing |
 | **Real-time** | Azure SignalR Service | Latest | WebSocket at scale |
-| **Identity** | Azure AD B2C | Latest | Consumer identity |
+| **Identity** | In-house (FIDO2/WebAuthn) | Latest | Passwordless-first auth |
 | **IaC** | Bicep + AVMs | Latest | Azure-native, verified modules |
 
 ### Platform Matrix
@@ -442,30 +442,31 @@ luminous/
 
 ```
 +---------------------------------------------------------------------+
-|                       IDENTITY ARCHITECTURE                          |
+|                   PASSWORDLESS IDENTITY ARCHITECTURE                 |
 +---------------------------------------------------------------------+
 |                                                                      |
 |  +---------------------------------------------------------------+  |
-|  |                    AZURE AD B2C                                |  |
+|  |               IN-HOUSE IDENTITY SERVICE                        |  |
 |  |                                                                |  |
+|  |  PRIMARY (PASSWORDLESS)           FALLBACK                     |  |
 |  |  +--------------+  +--------------+  +--------------+          |  |
-|  |  |   Sign Up    |  |   Sign In    |  |   Password   |          |  |
-|  |  |    Flow      |  |    Flow      |  |    Reset     |          |  |
+|  |  |   Passkeys   |  |  Email OTP   |  |   Password   |          |  |
+|  |  |  (WebAuthn)  |  | (Magic Link) |  |  (+ MFA)     |          |  |
 |  |  +--------------+  +--------------+  +--------------+          |  |
 |  |                                                                |  |
-|  |  +--------------+  +--------------+                            |  |
-|  |  |   Social     |  |    MFA       |                            |  |
-|  |  |   Providers  |  |  (Optional)  |                            |  |
-|  |  |  (Google,    |  |              |                            |  |
-|  |  |   Apple)     |  |              |                            |  |
-|  |  +--------------+  +--------------+                            |  |
+|  |  ADDITIONAL METHODS                                            |  |
+|  |  +--------------+  +--------------+  +--------------+          |  |
+|  |  |  Hardware    |  |   Social     |  |    TOTP      |          |  |
+|  |  |   Tokens     |  |  (Google,    |  |   (MFA)      |          |  |
+|  |  | (YubiKey)    |  |   Apple)     |  |              |          |  |
+|  |  +--------------+  +--------------+  +--------------+          |  |
 |  |                                                                |  |
 |  +---------------------------------------------------------------+  |
 |                              |                                       |
 |                              v                                       |
 |  +---------------------------------------------------------------+  |
 |  |                    JWT ACCESS TOKEN                            |  |
-|  |  { sub, family_id, roles, permissions, exp, ... }              |  |
+|  |  { sub, family_id, role, auth_method, mfa_verified, exp, ... } |  |
 |  +---------------------------------------------------------------+  |
 |                              |                                       |
 |                              v                                       |
@@ -484,7 +485,7 @@ luminous/
 ### Device Linking Flow
 
 1. **Display requests link code** - Generates 6-digit code with 15-minute expiry
-2. **User opens mobile app** - Logs in with Azure AD B2C
+2. **User opens mobile app** - Logs in with passkey or other method
 3. **User enters code** - Associates device with their family
 4. **Display receives confirmation** - Gets device token for API access
 5. **Display syncs family data** - Pulls events, chores, settings
@@ -493,10 +494,12 @@ luminous/
 
 | Category | Requirement | Implementation |
 |----------|-------------|----------------|
-| **Authentication** | OAuth 2.0 / OpenID Connect | Azure AD B2C |
-| **Authorization** | Role-based + Family-scoped | Custom policies |
+| **Authentication** | Passwordless-first | Passkeys (WebAuthn), Email OTP, Social OAuth |
+| **MFA** | Required for password users | TOTP, hardware tokens, passkey as 2FA |
+| **Authorization** | Role-based + Family-scoped | JWT claims, custom policies |
 | **Data Isolation** | Tenant data separation | CosmosDB partitioning |
 | **Data Encryption** | At rest and in transit | Azure managed encryption, TLS 1.3 |
+| **Credential Storage** | Secure key storage | Argon2id hashing, encrypted WebAuthn keys |
 | **Secrets** | Secure secret storage | Azure Key Vault |
 | **API Security** | Rate limiting, validation | API Management + middleware |
 | **Device Auth** | Secure device tokens | JWT with refresh rotation |
@@ -618,7 +621,7 @@ module appService 'br/public:avm/res/web/site:0.3.0' = {
 
 ### Family Onboarding Flow
 
-1. **User Registration** - Azure AD B2C sign-up (email/password or social)
+1. **User Registration** - Sign up with passkey, email OTP, or social login
 2. **Family Creation** - POST /api/families creates tenant
 3. **Profile Setup** - Add family member profiles
 4. **Calendar Connection** - OAuth to Google/Outlook
@@ -701,7 +704,7 @@ services:
 | [ADR-007](./adr/ADR-007-bicep-avm-iac.md) | Bicep with AVMs for IaC | Accepted | 2025-12-21 |
 | [ADR-008](./adr/ADR-008-magic-import-approval.md) | Magic Import Requires Approval | Accepted | 2025-12-21 |
 | [ADR-009](./adr/ADR-009-zero-distraction-principle.md) | Zero-Distraction Design Principle | Accepted | 2025-12-21 |
-| [ADR-010](./adr/ADR-010-azure-ad-b2c-identity.md) | Azure AD B2C for Identity | Accepted | 2025-12-21 |
+| [ADR-010](./adr/ADR-010-passwordless-authentication.md) | In-House Passwordless Auth | Accepted | 2025-12-21 |
 
 ---
 

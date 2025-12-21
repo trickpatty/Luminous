@@ -53,7 +53,7 @@ Phase 0: Foundation
 +-- Azure Infrastructure (Bicep/AVMs)
 +-- .NET 10 Solution Structure
 +-- Angular Web Application Shell
-+-- Azure AD B2C Configuration
++-- Passwordless Authentication Setup
 +-- Local Development Environment
 
 Phase 1: Core Platform
@@ -102,7 +102,7 @@ Phase 6: Intelligence & Ecosystem
 
 | Phase | Name | Focus | Key Deliverables |
 |-------|------|-------|------------------|
-| **0** | Foundation | Infrastructure | Azure IaC, .NET solution, Angular shell, Azure AD B2C |
+| **0** | Foundation | Infrastructure | Azure IaC, .NET solution, Angular shell, Passwordless Auth |
 | **1** | Core Platform | Multi-tenancy | Family sign-up, device linking, CosmosDB, web MVP |
 | **2** | Display & Calendar | Calendar visibility | Display app, calendar integration, SignalR sync |
 | **3** | Native Mobile | Mobile apps | iOS (Swift), Android (Kotlin), push notifications |
@@ -124,7 +124,7 @@ Establish the Azure infrastructure, .NET backend, Angular frontend, and developm
 
 - [ ] **0.1.1** Create Bicep modules for all Azure resources using AVMs
 - [ ] **0.1.2** Configure Cosmos DB with required containers
-- [ ] **0.1.3** Set up Azure AD B2C tenant and user flows
+- [ ] **0.1.3** Set up in-house identity service with WebAuthn/passkey support
 - [ ] **0.1.4** Configure App Service for .NET API
 - [ ] **0.1.5** Set up Azure Static Web Apps for Angular
 - [ ] **0.1.6** Configure Key Vault for secrets
@@ -145,7 +145,7 @@ Establish the Azure infrastructure, .NET backend, Angular frontend, and developm
 - [ ] **0.3.1** Initialize Angular 19+ project with strict mode
 - [ ] **0.3.2** Configure Angular Material or Tailwind CSS
 - [ ] **0.3.3** Set up core module with authentication service
-- [ ] **0.3.4** Implement MSAL integration for Azure AD B2C
+- [ ] **0.3.4** Implement WebAuthn/passkey authentication integration
 - [ ] **0.3.5** Create shared component library
 - [ ] **0.3.6** Configure environment-based API URLs
 
@@ -177,7 +177,7 @@ Establish the Azure infrastructure, .NET backend, Angular frontend, and developm
 
 - Azure infrastructure deploys successfully to dev environment
 - .NET API runs locally with Cosmos DB Emulator
-- Angular app authenticates via Azure AD B2C
+- Angular app authenticates via passkey or email OTP
 - CI/CD pipeline runs on all pull requests
 - Documentation complete and reviewed
 
@@ -224,7 +224,7 @@ Deliver the multi-tenant platform with user registration, family creation, devic
 
 ### Exit Criteria
 
-- Users can sign up and create families via Azure AD B2C
+- Users can sign up and create families with passkey or email
 - Device linking flow works end-to-end
 - Family members can be invited and managed
 - Web dashboard displays family information
@@ -307,7 +307,7 @@ Deliver native iOS and Android apps with full feature access and push notificati
 #### 3.1 iOS App (Swift/SwiftUI)
 
 - [ ] **3.1.1** Xcode project with SwiftUI
-- [ ] **3.1.2** MSAL integration for Azure AD B2C
+- [ ] **3.1.2** Passkey integration with ASAuthorizationController
 - [ ] **3.1.3** API client with async/await
 - [ ] **3.1.4** Core Data for offline caching
 - [ ] **3.1.5** Navigation structure (TabView)
@@ -316,7 +316,7 @@ Deliver native iOS and Android apps with full feature access and push notificati
 #### 3.2 Android App (Kotlin/Compose)
 
 - [ ] **3.2.1** Android Studio project with Jetpack Compose
-- [ ] **3.2.2** MSAL integration for Azure AD B2C
+- [ ] **3.2.2** Passkey integration with Credential Manager API
 - [ ] **3.2.3** Retrofit API client with coroutines
 - [ ] **3.2.4** Room for offline caching
 - [ ] **3.2.5** Navigation component
@@ -333,7 +333,7 @@ Deliver native iOS and Android apps with full feature access and push notificati
 
 - [ ] **3.4.1** Device linking via code entry
 - [ ] **3.4.2** Family member management
-- [ ] **3.4.3** Biometric authentication
+- [ ] **3.4.3** Biometric authentication (passkey unlock)
 - [ ] **3.4.4** Widget support (iOS/Android)
 
 ### Exit Criteria
@@ -341,7 +341,7 @@ Deliver native iOS and Android apps with full feature access and push notificati
 - iOS app available on App Store (TestFlight initially)
 - Android app available on Play Store (Beta track initially)
 - Push notifications work for events and reminders
-- Apps authenticate via Azure AD B2C
+- Apps authenticate via passkey or social login
 - Offline mode with local caching
 
 ---
@@ -518,7 +518,7 @@ These features are under consideration for future development:
 | Electron | Tauri | Smaller bundle, better performance |
 | Angular | Angular with Signals | Reactive improvements |
 | Cosmos DB | Azure Cosmos DB Serverless | Cost optimization for smaller deployments |
-| Azure AD B2C | Entra External ID | Unified identity platform |
+| In-house Auth | External IdP | Consider delegating if maintenance burden increases |
 | Azure Functions | Azure Container Apps | More flexibility for long-running jobs |
 
 ---

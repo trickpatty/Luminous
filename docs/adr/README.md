@@ -23,7 +23,7 @@ New ADRs should follow the template in [ADR-000-template.md](./ADR-000-template.
 | [ADR-007](./ADR-007-bicep-avm-iac.md) | Bicep with AVMs for IaC | Accepted | 2025-12-21 |
 | [ADR-008](./ADR-008-magic-import-approval.md) | Magic Import Requires Approval | Accepted | 2025-12-21 |
 | [ADR-009](./ADR-009-zero-distraction-principle.md) | Zero-Distraction Design Principle | Accepted | 2025-12-21 |
-| [ADR-010](./ADR-010-azure-ad-b2c-identity.md) | Azure AD B2C for Identity | Accepted | 2025-12-21 |
+| [ADR-010](./ADR-010-passwordless-authentication.md) | In-House Passwordless Authentication | Accepted | 2025-12-21 |
 
 ## Superseded ADRs (Historical Reference)
 
