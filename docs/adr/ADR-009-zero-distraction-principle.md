@@ -1,4 +1,4 @@
-# ADR-006: Zero-Distraction Design Principle
+# ADR-009: Zero-Distraction Design Principle
 
 > **Status:** Accepted
 > **Date:** 2025-12-21
@@ -144,13 +144,15 @@ Luminous will follow a **zero-distraction design principle**. The following capa
 
 ### Technical Enforcement
 
-1. **No browser component**: Display app doesn't include web rendering for arbitrary URLs (only specific integrations like weather)
+1. **No browser component**: Angular app doesn't include arbitrary URL rendering (only specific integrations like weather APIs)
 
-2. **Kiosk mode**: Display runs in locked-down mode, no escape to OS
+2. **Kiosk mode**: Electron display app runs in locked-down kiosk mode, no escape to OS
 
 3. **No URL input**: No user-facing way to enter arbitrary URLs
 
 4. **Curated integrations**: External services are curated and purpose-specific
+
+5. **Mobile app focus**: Native iOS and Android apps are similarly focused on coordination only
 
 ### Messaging
 
@@ -170,7 +172,8 @@ When users request entertainment features, respond with:
 
 ## Related Decisions
 
-- [ADR-005: Magic Import Requires Approval](./ADR-005-magic-import-approval.md)
+- [ADR-008: Magic Import Requires Approval](./ADR-008-magic-import-approval.md)
+- [ADR-002: Angular as Web Framework](./ADR-002-angular-web-framework.md)
 
 ## References
 

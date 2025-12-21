@@ -1,6 +1,6 @@
 # Luminous Architecture Document
 
-> **Document Version:** 1.0.0
+> **Document Version:** 2.0.0
 > **Last Updated:** 2025-12-21
 > **Status:** Draft
 > **TOGAF Phase:** Phase B-D (Architecture Development)
@@ -17,8 +17,10 @@
 6. [Technology Architecture](#technology-architecture)
 7. [Security Architecture](#security-architecture)
 8. [Integration Architecture](#integration-architecture)
-9. [Deployment Architecture](#deployment-architecture)
-10. [Architecture Decisions](#architecture-decisions)
+9. [Azure Cloud Architecture](#azure-cloud-architecture)
+10. [Multi-Tenancy Architecture](#multi-tenancy-architecture)
+11. [Local Development Architecture](#local-development-architecture)
+12. [Architecture Decisions](#architecture-decisions)
 
 ---
 
@@ -33,14 +35,14 @@ Following TOGAF Enterprise Architecture principles, Luminous adheres to these fo
 | **BP-1: Family-Centric Design** | All features must serve real family coordination needs | Features are validated against family use cases; no feature creep toward entertainment |
 | **BP-2: Zero Distraction** | The product differentiates by what it omits | Explicitly exclude entertainment, browsing, and social features |
 | **BP-3: Inclusive by Default** | Families include members of all ages and abilities | Design for youngest (6+) and oldest users; accessibility is mandatory |
-| **BP-4: Privacy as a Feature** | Families trust us with sensitive information | Self-hosting option; no mandatory telemetry; data minimization |
+| **BP-4: Privacy as a Feature** | Families trust us with sensitive information | Data isolation per tenant; compliance with privacy regulations |
 
 ### Data Principles
 
 | Principle | Rationale | Implications |
 |-----------|-----------|--------------|
-| **DP-1: Local-First Data** | Reliability requires offline capability | Data stored locally first; sync is secondary; no cloud dependency |
-| **DP-2: User Data Ownership** | Families own their information | Export in open formats; no lock-in; self-hosting support |
+| **DP-1: Cloud-Native Storage** | Scalability and availability requirements | CosmosDB for global distribution; Azure storage for media |
+| **DP-2: Tenant Data Isolation** | Multi-family security requirement | Partition strategies per family; no cross-tenant data access |
 | **DP-3: Single Source of Truth** | Conflicts create confusion | Clear ownership rules per data type; deterministic conflict resolution |
 | **DP-4: Data Minimization** | Collect only what's necessary | No tracking; minimal metadata; privacy by design |
 
@@ -48,19 +50,19 @@ Following TOGAF Enterprise Architecture principles, Luminous adheres to these fo
 
 | Principle | Rationale | Implications |
 |-----------|-----------|--------------|
-| **AP-1: Modular Composability** | Features evolve independently | Bounded contexts; clean interfaces; plugin architecture |
-| **AP-2: Cross-Platform Consistency** | Experience must be unified | Shared design system; consistent behavior across display/mobile/web |
+| **AP-1: Modular Composability** | Features evolve independently | Bounded contexts; clean interfaces; microservices where appropriate |
+| **AP-2: Cross-Platform Consistency** | Experience must be unified | Shared API; consistent behavior across display/mobile/web |
 | **AP-3: Graceful Degradation** | Partial failures shouldn't block usage | Offline mode; fallback behaviors; error boundaries |
-| **AP-4: Performance on Constraints** | Target hardware is modest | Optimize for Raspberry Pi 4; minimize memory; efficient rendering |
+| **AP-4: Cloud-First, Local-Ready** | Support both deployment models | Design for Azure; enable local development |
 
 ### Technology Principles
 
 | Principle | Rationale | Implications |
 |-----------|-----------|--------------|
-| **TP-1: Open Source Stack** | Aligned with project values; community contribution | No proprietary dependencies in core; permissive or copyleft licenses |
-| **TP-2: Commodity Hardware** | Accessibility and affordability | ARM and x86 support; no specialized hardware requirements |
-| **TP-3: Standards-Based Integration** | Interoperability with existing systems | OAuth 2.0; CalDAV/ICS; REST/GraphQL APIs; OpenAPI specs |
-| **TP-4: Operational Simplicity** | Self-hosters need low maintenance | Auto-updates; self-healing; minimal configuration |
+| **TP-1: Azure-Native Stack** | Enterprise-grade hosting with managed services | Use PaaS services; AVMs for IaC; Azure-native integrations |
+| **TP-2: Platform-Native Mobile** | Best user experience on mobile devices | Swift for iOS; Kotlin for Android; shared API contracts |
+| **TP-3: Standards-Based Integration** | Interoperability with existing systems | OAuth 2.0/OpenID Connect; CalDAV/ICS; REST APIs |
+| **TP-4: Infrastructure as Code** | Reproducible deployments | Bicep with AVMs; environment parity |
 
 ---
 
@@ -69,51 +71,66 @@ Following TOGAF Enterprise Architecture principles, Luminous adheres to these fo
 ### Target State Architecture
 
 ```
-+------------------------------------------------------------------+
-|                      LUMINOUS ECOSYSTEM                           |
-+------------------------------------------------------------------+
-|                                                                    |
-|  +-------------------+  +-------------------+  +----------------+  |
-|  |   DISPLAY APP     |  |    MOBILE APP     |  |    WEB APP     |  |
-|  |   (Kiosk Mode)    |  |   (iOS/Android)   |  |   (Browser)    |  |
-|  +--------+----------+  +--------+----------+  +-------+--------+  |
-|           |                      |                     |           |
-|           +----------------------+---------------------+           |
-|                                  |                                 |
-|                    +-------------v--------------+                  |
-|                    |       LUMINOUS CORE        |                  |
-|                    |    (Shared Domain Logic)   |                  |
-|                    +-------------+--------------+                  |
-|                                  |                                 |
-|           +----------------------+---------------------+           |
-|           |                      |                     |           |
-|  +--------v----------+  +--------v----------+  +-------v--------+  |
-|  |   LOCAL STORAGE   |  |    SYNC ENGINE    |  |  INTEGRATIONS  |  |
-|  |   (SQLite/OPFS)   |  |   (CRDT-based)    |  |   (Calendar,   |  |
-|  +-------------------+  +-------------------+  |    Weather)    |  |
-|                                                +----------------+  |
-|                                                                    |
-+------------------------------------------------------------------+
-                                  |
-                                  v
-+------------------------------------------------------------------+
-|                    OPTIONAL SYNC SERVER                           |
-|  +-------------------+  +-------------------+  +----------------+  |
-|  |   AUTH SERVICE    |  |   SYNC SERVICE    |  |  PUSH SERVICE  |  |
-|  +-------------------+  +-------------------+  +----------------+  |
-+------------------------------------------------------------------+
++-----------------------------------------------------------------------------------+
+|                           LUMINOUS CLOUD PLATFORM                                  |
++-----------------------------------------------------------------------------------+
+|                                                                                    |
+|  CLIENT TIER                                                                       |
+|  +-------------------+  +-------------------+  +----------------+  +------------+  |
+|  |   DISPLAY APP     |  |    iOS APP        |  |  ANDROID APP   |  |  WEB APP   |  |
+|  |   (Angular/       |  |    (Swift/        |  |  (Kotlin/      |  |  (Angular) |  |
+|  |    Electron)      |  |     SwiftUI)      |  |   Compose)     |  |            |  |
+|  +--------+----------+  +--------+----------+  +-------+--------+  +-----+------+  |
+|           |                      |                     |                 |         |
+|           +----------------------+---------------------+-----------------+         |
+|                                  |                                                 |
+|  API TIER                        v                                                 |
+|  +-------------------------------------------------------------------------+      |
+|  |                    AZURE API MANAGEMENT                                  |      |
+|  +--------------------------------+----------------------------------------+      |
+|                                   |                                                |
+|           +------------------+----+----+------------------+                        |
+|           |                  |         |                  |                        |
+|           v                  v         v                  v                        |
+|  +-----------------+ +--------------+ +-------------+ +------------------+         |
+|  |  APP SERVICE    | | FUNCTION APP | | FUNCTION APP| |   APP SERVICE    |         |
+|  |  (Core API)     | | (Sync Jobs)  | | (Import)    | |  (SignalR)       |         |
+|  |  .NET 10        | | .NET 10      | | .NET 10     | |  .NET 10         |         |
+|  +-----------------+ +--------------+ +-------------+ +------------------+         |
+|           |                  |               |                |                    |
+|  DATA TIER                   |               |                |                    |
+|  +---------------------------+---------------+----------------+--------------+     |
+|  |                                                                           |     |
+|  |  +----------------+  +------------------+  +----------------+             |     |
+|  |  |   COSMOS DB    |  |  BLOB STORAGE    |  |  SERVICE BUS   |             |     |
+|  |  |  (Core Data)   |  |  (Media/Files)   |  |  (Messaging)   |             |     |
+|  |  +----------------+  +------------------+  +----------------+             |     |
+|  |                                                                           |     |
+|  |  +----------------+  +------------------+  +----------------+             |     |
+|  |  |   REDIS CACHE  |  |  KEY VAULT       |  |  APP CONFIG    |             |     |
+|  |  |  (Sessions)    |  |  (Secrets)       |  |  (Settings)    |             |     |
+|  |  +----------------+  +------------------+  +----------------+             |     |
+|  |                                                                           |     |
+|  +---------------------------------------------------------------------------+     |
+|                                                                                    |
+|  IDENTITY TIER                                                                     |
+|  +-------------------------------------------------------------------------+      |
+|  |                    AZURE AD B2C / ENTRA EXTERNAL ID                      |      |
+|  +-------------------------------------------------------------------------+      |
+|                                                                                    |
++------------------------------------------------------------------------------------+
 ```
 
 ### Key Architecture Characteristics
 
 | Characteristic | Priority | Description |
 |----------------|----------|-------------|
-| **Reliability** | Critical | 24/7 operation; auto-recovery; crash resilience |
+| **Scalability** | Critical | Multi-tenant; handle thousands of families |
+| **Reliability** | Critical | 99.9% uptime; auto-recovery; geo-redundancy |
+| **Security** | Critical | Tenant isolation; OAuth 2.0; encryption |
 | **Usability** | Critical | Child-friendly; glanceable; intuitive |
-| **Performance** | High | Fast rendering; low latency; efficient memory |
-| **Scalability** | Medium | Support large families; many calendars |
-| **Portability** | High | Cross-platform; commodity hardware |
-| **Maintainability** | High | Clean code; comprehensive testing; documentation |
+| **Performance** | High | Fast API response; real-time sync |
+| **Maintainability** | High | Clean code; comprehensive testing; IaC |
 
 ---
 
@@ -122,271 +139,210 @@ Following TOGAF Enterprise Architecture principles, Luminous adheres to these fo
 ### Business Capability Model
 
 ```
-LUMINOUS FAMILY HUB
-├── SCHEDULING CAPABILITY
-│   ├── Calendar Aggregation
-│   ├── Event Management
-│   ├── Reminder Management
-│   └── Schedule Sharing
-│
-├── TASK MANAGEMENT CAPABILITY
-│   ├── Chore Management
-│   ├── Routine Management
-│   ├── Progress Tracking
-│   └── Reward Management
-│
-├── HOUSEHOLD MANAGEMENT CAPABILITY
-│   ├── Profile Management
-│   ├── Meal Planning
-│   ├── List Management
-│   └── Caregiver Coordination
-│
-├── INFORMATION DISPLAY CAPABILITY
-│   ├── Dashboard Rendering
-│   ├── Notification Display
-│   ├── Ambient Information
-│   └── Privacy Mode
-│
-└── PLATFORM CAPABILITY
-    ├── Authentication & Authorization
-    ├── Data Synchronization
-    ├── External Integration
-    └── System Administration
+LUMINOUS FAMILY HUB (MULTI-TENANT)
+|
++-- PLATFORM CAPABILITY
+|   +-- Tenant Management
+|   +-- User Authentication (Azure AD B2C)
+|   +-- Device Registration (Board Linking)
+|   +-- Subscription Management
+|   +-- Usage Analytics
+|
++-- SCHEDULING CAPABILITY
+|   +-- Calendar Aggregation
+|   +-- Event Management
+|   +-- Reminder Management
+|   +-- Schedule Sharing
+|
++-- TASK MANAGEMENT CAPABILITY
+|   +-- Chore Management
+|   +-- Routine Management
+|   +-- Progress Tracking
+|   +-- Reward Management
+|
++-- HOUSEHOLD MANAGEMENT CAPABILITY
+|   +-- Profile Management
+|   +-- Meal Planning
+|   +-- List Management
+|   +-- Caregiver Coordination
+|
++-- INFORMATION DISPLAY CAPABILITY
+|   +-- Dashboard Rendering
+|   +-- Notification Display
+|   +-- Ambient Information
+|   +-- Privacy Mode
+|
++-- INTEGRATION CAPABILITY
+    +-- Calendar Provider Integration
+    +-- Push Notification Service
+    +-- Magic Import Processing
+    +-- External API Access
 ```
 
-### Business Process Map
-
-#### BP-001: Daily Family Coordination
+### Multi-Tenant Business Model
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    DAILY FAMILY COORDINATION                         │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│  ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐      │
-│  │ Morning  │───▶│  View    │───▶│ Complete │───▶│ Receive  │      │
-│  │  Wake    │    │  Today   │    │ Routines │    │ Rewards  │      │
-│  └──────────┘    └──────────┘    └──────────┘    └──────────┘      │
-│       │                                                              │
-│       ▼                                                              │
-│  ┌──────────┐    ┌──────────┐    ┌──────────┐                      │
-│  │  Check   │───▶│  Handle  │───▶│  Update  │                      │
-│  │ Calendar │    │  Events  │    │  Status  │                      │
-│  └──────────┘    └──────────┘    └──────────┘                      │
-│                                                                      │
-└─────────────────────────────────────────────────────────────────────┘
++---------------------------------------------------------------------+
+|                      TENANT LIFECYCLE                                |
++---------------------------------------------------------------------+
+|                                                                      |
+|  +----------+    +----------+    +----------+    +----------+       |
+|  | Sign Up  |--->| Create   |--->| Invite   |--->|  Link    |       |
+|  | (User)   |    | Family   |    | Members  |    |  Boards  |       |
+|  +----------+    +----------+    +----------+    +----------+       |
+|                                                                      |
+|  User registers --> Creates family --> Invites family --> Links     |
+|  via Azure AD B2C   (tenant)          members           display     |
+|                                                                      |
++---------------------------------------------------------------------+
 ```
 
 ### Actor-Role Matrix
 
-| Actor | Calendar | Chores | Lists | Profiles | Settings |
-|-------|----------|--------|-------|----------|----------|
-| **Household Admin** | Full | Full | Full | Full | Full |
-| **Adult Member** | Full | Full | Full | Own | View |
-| **Teen Member** | Own + Family | Own | Shared | Own | None |
-| **Child Member** | View | Complete | View | View | None |
-| **External Caregiver** | View (limited) | View | View | View (care info) | None |
+| Actor | Family Scope | Calendar | Chores | Lists | Profiles | Settings |
+|-------|--------------|----------|--------|-------|----------|----------|
+| **Family Owner** | Single | Full | Full | Full | Full | Full |
+| **Admin Member** | Single | Full | Full | Full | Full | Limited |
+| **Adult Member** | Single | Full | Full | Full | Own | View |
+| **Teen Member** | Single | Own + Family | Own | Shared | Own | None |
+| **Child Member** | Single | View | Complete | View | View | None |
+| **External Caregiver** | Limited | View | View | View | View (care) | None |
 
 ---
 
 ## Data Architecture
 
-### Domain Model
+### CosmosDB Data Model
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         DOMAIN MODEL                                 │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│  ┌─────────────────┐         ┌─────────────────┐                    │
-│  │    HOUSEHOLD    │────────▶│     PROFILE     │                    │
-│  │    (Aggregate)  │  1   *  │    (Entity)     │                    │
-│  └────────┬────────┘         └────────┬────────┘                    │
-│           │                           │                              │
-│           │ 1                         │ *                            │
-│           ▼                           ▼                              │
-│  ┌─────────────────┐         ┌─────────────────┐                    │
-│  │   CALENDAR      │         │     CHORE       │                    │
-│  │   CONNECTION    │         │   (Entity)      │                    │
-│  │   (Entity)      │         └────────┬────────┘                    │
-│  └────────┬────────┘                  │                              │
-│           │                           │                              │
-│           │ *                         │ *                            │
-│           ▼                           ▼                              │
-│  ┌─────────────────┐         ┌─────────────────┐                    │
-│  │     EVENT       │         │   COMPLETION    │                    │
-│  │   (Entity)      │         │   (Value Obj)   │                    │
-│  └─────────────────┘         └─────────────────┘                    │
-│                                                                      │
-│  ┌─────────────────┐         ┌─────────────────┐                    │
-│  │    ROUTINE      │────────▶│   ROUTINE STEP  │                    │
-│  │   (Aggregate)   │  1   *  │  (Value Obj)    │                    │
-│  └─────────────────┘         └─────────────────┘                    │
-│                                                                      │
-│  ┌─────────────────┐         ┌─────────────────┐                    │
-│  │      LIST       │────────▶│   LIST ITEM     │                    │
-│  │   (Aggregate)   │  1   *  │   (Entity)      │                    │
-│  └─────────────────┘         └─────────────────┘                    │
-│                                                                      │
-│  ┌─────────────────┐         ┌─────────────────┐                    │
-│  │   MEAL PLAN     │────────▶│     RECIPE      │                    │
-│  │   (Aggregate)   │  *   *  │   (Entity)      │                    │
-│  └─────────────────┘         └─────────────────┘                    │
-│                                                                      │
-└─────────────────────────────────────────────────────────────────────┘
++---------------------------------------------------------------------+
+|                    COSMOS DB CONTAINERS                              |
++---------------------------------------------------------------------+
+|                                                                      |
+|  CONTAINER: families                                                 |
+|  Partition Key: /id                                                  |
+|  +---------------------------------------------------------------+  |
+|  | { id, name, timezone, settings, createdAt, subscription }     |  |
+|  +---------------------------------------------------------------+  |
+|                                                                      |
+|  CONTAINER: users                                                    |
+|  Partition Key: /familyId                                            |
+|  +---------------------------------------------------------------+  |
+|  | { id, familyId, email, displayName, role, profile, ... }      |  |
+|  +---------------------------------------------------------------+  |
+|                                                                      |
+|  CONTAINER: events                                                   |
+|  Partition Key: /familyId                                            |
+|  +---------------------------------------------------------------+  |
+|  | { id, familyId, title, start, end, assignees, source, ... }   |  |
+|  +---------------------------------------------------------------+  |
+|                                                                      |
+|  CONTAINER: chores                                                   |
+|  Partition Key: /familyId                                            |
+|  +---------------------------------------------------------------+  |
+|  | { id, familyId, title, assignees, recurrence, points, ... }   |  |
+|  +---------------------------------------------------------------+  |
+|                                                                      |
+|  CONTAINER: devices                                                  |
+|  Partition Key: /familyId                                            |
+|  +---------------------------------------------------------------+  |
+|  | { id, familyId, deviceType, linkCode, linkedAt, ... }         |  |
+|  +---------------------------------------------------------------+  |
+|                                                                      |
+|  (Additional: lists, meals, routines, completions, ...)             |
+|                                                                      |
++---------------------------------------------------------------------+
 ```
 
 ### Core Entities
 
-#### Household (Aggregate Root)
+#### Family (Tenant Root)
 
-```typescript
-interface Household {
-  id: HouseholdId;
-  name: string;
-  timezone: Timezone;
-  createdAt: DateTime;
-  settings: HouseholdSettings;
-  profiles: Profile[];
-  calendarConnections: CalendarConnection[];
+```csharp
+public class Family
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string Name { get; set; } = string.Empty;
+    public string Timezone { get; set; } = "UTC";
+    public FamilySettings Settings { get; set; } = new();
+    public SubscriptionInfo? Subscription { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public string CreatedBy { get; set; } = string.Empty;
+}
+
+public class FamilySettings
+{
+    public string DefaultView { get; set; } = "day";
+    public bool PrivacyModeEnabled { get; set; } = true;
+    public TimeSpan PrivacyModeTimeout { get; set; } = TimeSpan.FromMinutes(5);
+    public SleepModeSettings SleepMode { get; set; } = new();
 }
 ```
 
-#### Profile
+#### User (Family Member)
 
-```typescript
-interface Profile {
-  id: ProfileId;
-  householdId: HouseholdId;
-  displayName: string;
-  avatarUrl?: string;
-  color: HexColor;
-  role: ProfileRole; // ADMIN | ADULT | TEEN | CHILD | PET
-  birthday?: LocalDate;
-  caregiverInfo?: CaregiverInfo;
-  permissions: Permission[];
-  pinHash?: string;
-  createdAt: DateTime;
+```csharp
+public class User
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string FamilyId { get; set; } = string.Empty;  // Partition key
+    public string ExternalId { get; set; } = string.Empty; // Azure AD B2C ID
+    public string Email { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
+    public UserRole Role { get; set; } = UserRole.Member;
+    public UserProfile Profile { get; set; } = new();
+    public CaregiverInfo? CaregiverInfo { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
-interface CaregiverInfo {
-  allergies: string[];
-  medications: string[];
-  emergencyContacts: Contact[];
-  doctorInfo?: Contact;
-  notes: string;
-}
-```
-
-#### Event
-
-```typescript
-interface Event {
-  id: EventId;
-  householdId: HouseholdId;
-  calendarConnectionId?: CalendarConnectionId;
-  externalId?: string;
-  title: string;
-  description?: string;
-  location?: Location;
-  startTime: DateTime;
-  endTime: DateTime;
-  allDay: boolean;
-  recurrence?: RecurrenceRule;
-  assignedProfiles: ProfileId[];
-  reminders: Reminder[];
-  isCountdown: boolean;
-  createdAt: DateTime;
-  updatedAt: DateTime;
-  syncStatus: SyncStatus;
+public enum UserRole
+{
+    Owner,      // Can delete family, manage billing
+    Admin,      // Full access except billing
+    Adult,      // Full feature access
+    Teen,       // Limited access
+    Child,      // View and complete only
+    Caregiver   // External, view only
 }
 ```
 
-#### Chore
+#### Device (Linked Board)
 
-```typescript
-interface Chore {
-  id: ChoreId;
-  householdId: HouseholdId;
-  title: string;
-  description?: string;
-  icon: IconId;
-  assignedProfiles: ProfileId[]; // empty = "anyone"
-  recurrence?: RecurrenceRule;
-  dueTime?: LocalTime;
-  pointValue: number;
-  priority?: Priority;
-  completions: ChoreCompletion[];
-  createdAt: DateTime;
+```csharp
+public class Device
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string FamilyId { get; set; } = string.Empty;  // Partition key
+    public DeviceType Type { get; set; } = DeviceType.Display;
+    public string Name { get; set; } = string.Empty;
+    public string? LinkCode { get; set; }  // 6-digit code for linking
+    public DateTime? LinkCodeExpiry { get; set; }
+    public DateTime? LinkedAt { get; set; }
+    public string? LinkedBy { get; set; }
+    public DeviceSettings Settings { get; set; } = new();
+    public DateTime LastSeenAt { get; set; }
 }
 
-interface ChoreCompletion {
-  date: LocalDate;
-  completedBy: ProfileId;
-  completedAt: DateTime;
-  pointsAwarded: number;
+public enum DeviceType
+{
+    Display,    // Wall-mounted display
+    Mobile,     // iOS or Android app
+    Web         // Web browser
 }
 ```
 
 ### Data Storage Strategy
 
-| Data Type | Storage | Sync Strategy | Conflict Resolution |
-|-----------|---------|---------------|---------------------|
-| **Household Config** | Local SQLite | Full sync | Last-write-wins with vector clock |
-| **Profiles** | Local SQLite | Full sync | Server authority |
-| **Events (internal)** | Local SQLite | CRDT merge | Operational transform |
-| **Events (external)** | Cached | Pull from source | Source authority |
-| **Chores/Routines** | Local SQLite | CRDT merge | Operational transform |
-| **Lists** | Local SQLite | CRDT merge | Append-only with tombstones |
-| **Completions** | Local SQLite | Append-only | No conflicts (immutable) |
-| **Media (avatars)** | Local filesystem | Hash-addressed | Content-addressed (no conflicts) |
-
-### Data Flow Diagram
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                       DATA FLOW ARCHITECTURE                         │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│                         EXTERNAL SOURCES                             │
-│    ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐          │
-│    │  Google  │  │  Outlook │  │  iCloud  │  │   ICS    │          │
-│    │ Calendar │  │ Calendar │  │ Calendar │  │  Feeds   │          │
-│    └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘          │
-│         │             │             │             │                  │
-│         └─────────────┴──────┬──────┴─────────────┘                  │
-│                              ▼                                       │
-│                    ┌─────────────────┐                              │
-│                    │   SYNC ENGINE   │                              │
-│                    │   (Adapter per  │                              │
-│                    │    provider)    │                              │
-│                    └────────┬────────┘                              │
-│                             │                                        │
-│                             ▼                                        │
-│    ┌────────────────────────────────────────────────────────┐       │
-│    │                   LOCAL DATA STORE                      │       │
-│    │  ┌──────────┐  ┌──────────┐  ┌──────────┐             │       │
-│    │  │  Events  │  │  Chores  │  │   Lists  │  ...        │       │
-│    │  └──────────┘  └──────────┘  └──────────┘             │       │
-│    └────────────────────────┬───────────────────────────────┘       │
-│                             │                                        │
-│         ┌───────────────────┼───────────────────┐                   │
-│         ▼                   ▼                   ▼                   │
-│  ┌────────────┐     ┌────────────┐     ┌────────────┐              │
-│  │  DISPLAY   │     │   MOBILE   │     │    WEB     │              │
-│  │    APP     │◀───▶│    APP     │◀───▶│    APP     │              │
-│  └────────────┘     └────────────┘     └────────────┘              │
-│         │                   │                   │                   │
-│         └───────────────────┴───────────────────┘                   │
-│                             │                                        │
-│                             ▼                                        │
-│                    ┌─────────────────┐                              │
-│                    │   SYNC SERVER   │ (Optional)                   │
-│                    │  (Multi-device) │                              │
-│                    └─────────────────┘                              │
-│                                                                      │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Data Type | Storage | Partition Strategy | Notes |
+|-----------|---------|-------------------|-------|
+| **Families** | CosmosDB | By family ID | Tenant root |
+| **Users** | CosmosDB | By family ID | Includes Azure AD B2C link |
+| **Events** | CosmosDB | By family ID | Calendar events |
+| **Chores** | CosmosDB | By family ID | Tasks and assignments |
+| **Devices** | CosmosDB | By family ID | Board registrations |
+| **Media** | Blob Storage | By family ID container | Avatars, recipe photos |
+| **Sessions** | Redis Cache | By session ID | Real-time sync state |
+| **Secrets** | Key Vault | N/A | API keys, certificates |
 
 ---
 
@@ -396,169 +352,52 @@ interface ChoreCompletion {
 
 Following Domain-Driven Design, Luminous is organized into these bounded contexts:
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                      BOUNDED CONTEXTS                                │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐  │
-│  │    SCHEDULING    │  │  TASK MANAGEMENT │  │    HOUSEHOLD     │  │
-│  │     CONTEXT      │  │     CONTEXT      │  │     CONTEXT      │  │
-│  │                  │  │                  │  │                  │  │
-│  │ - Calendar       │  │ - Chore          │  │ - Profile        │  │
-│  │ - Event          │  │ - Routine        │  │ - Household      │  │
-│  │ - CalendarConn   │  │ - Completion     │  │ - CaregiverInfo  │  │
-│  │ - Reminder       │  │ - Reward         │  │ - Permission     │  │
-│  └──────────────────┘  └──────────────────┘  └──────────────────┘  │
-│                                                                      │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐  │
-│  │   MEAL PLANNING  │  │  LIST MANAGEMENT │  │     DISPLAY      │  │
-│  │     CONTEXT      │  │     CONTEXT      │  │     CONTEXT      │  │
-│  │                  │  │                  │  │                  │  │
-│  │ - MealPlan       │  │ - List           │  │ - Dashboard      │  │
-│  │ - Recipe         │  │ - ListItem       │  │ - Widget         │  │
-│  │ - Ingredient     │  │ - Template       │  │ - PrivacyMode    │  │
-│  │ - DietaryPref    │  │                  │  │ - SleepMode      │  │
-│  └──────────────────┘  └──────────────────┘  └──────────────────┘  │
-│                                                                      │
-│  ┌──────────────────┐  ┌──────────────────┐                        │
-│  │   MAGIC IMPORT   │  │   INTEGRATION    │                        │
-│  │     CONTEXT      │  │     CONTEXT      │                        │
-│  │                  │  │                  │                        │
-│  │ - ImportRequest  │  │ - CalendarSync   │                        │
-│  │ - ParsedContent  │  │ - WeatherFetch   │                        │
-│  │ - ApprovalQueue  │  │ - InstacartLink  │                        │
-│  │                  │  │ - PushNotify     │                        │
-│  └──────────────────┘  └──────────────────┘                        │
-│                                                                      │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Context | Entities | Responsibility |
+|---------|----------|----------------|
+| **Identity** | Family, User, Device, Invitation | Authentication, authorization, multi-tenancy |
+| **Scheduling** | Calendar, Event, CalendarConnection, Reminder | Calendar aggregation and management |
+| **Task Management** | Chore, Routine, Completion, Reward | Chores, routines, and gamification |
+| **Meal Planning** | MealPlan, Recipe, Ingredient, DietaryPref | Meal planning and recipes |
+| **List Management** | List, ListItem, Template | Grocery and custom lists |
+| **Display** | Dashboard, Widget, PrivacyMode, DeviceConfig | Display rendering and modes |
+| **Magic Import** | ImportRequest, ParsedContent, ApprovalQueue | AI-powered content extraction |
+| **Notification** | Notification, PushToken, Preference | Push notifications |
 
-### Application Component Model
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    APPLICATION COMPONENTS                            │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│  PRESENTATION LAYER                                                  │
-│  ┌─────────────────────────────────────────────────────────────┐    │
-│  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────────┐    │    │
-│  │  │ Display │  │ Mobile  │  │   Web   │  │  Caregiver  │    │    │
-│  │  │   App   │  │   App   │  │   App   │  │   Portal    │    │    │
-│  │  └────┬────┘  └────┬────┘  └────┬────┘  └──────┬──────┘    │    │
-│  └───────┼────────────┼────────────┼──────────────┼───────────┘    │
-│          │            │            │              │                  │
-│          └────────────┴─────┬──────┴──────────────┘                  │
-│                             │                                        │
-│  SHARED UI LAYER            ▼                                        │
-│  ┌─────────────────────────────────────────────────────────────┐    │
-│  │                    DESIGN SYSTEM                             │    │
-│  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────────┐    │    │
-│  │  │  Theme  │  │  Core   │  │  Form   │  │  Composite  │    │    │
-│  │  │ Tokens  │  │ Widgets │  │ Elements│  │  Components │    │    │
-│  │  └─────────┘  └─────────┘  └─────────┘  └─────────────┘    │    │
-│  └─────────────────────────────────────────────────────────────┘    │
-│                             │                                        │
-│  DOMAIN LAYER               ▼                                        │
-│  ┌─────────────────────────────────────────────────────────────┐    │
-│  │                     LUMINOUS CORE                            │    │
-│  │  ┌───────────┐  ┌───────────┐  ┌───────────┐               │    │
-│  │  │  Domain   │  │  Domain   │  │  Domain   │  ...          │    │
-│  │  │  Models   │  │ Services  │  │   Events  │               │    │
-│  │  └───────────┘  └───────────┘  └───────────┘               │    │
-│  └─────────────────────────────────────────────────────────────┘    │
-│                             │                                        │
-│  INFRASTRUCTURE LAYER       ▼                                        │
-│  ┌─────────────────────────────────────────────────────────────┐    │
-│  │  ┌───────────┐  ┌───────────┐  ┌───────────┐               │    │
-│  │  │   Data    │  │   Sync    │  │  External │               │    │
-│  │  │Repository │  │  Engine   │  │ Adapters  │               │    │
-│  │  └───────────┘  └───────────┘  └───────────┘               │    │
-│  └─────────────────────────────────────────────────────────────┘    │
-│                                                                      │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-### Module Structure
+### Solution Structure
 
 ```
 luminous/
-├── packages/
-│   ├── core/                    # Shared domain logic
-│   │   ├── src/
-│   │   │   ├── domain/          # Domain models and entities
-│   │   │   │   ├── household/
-│   │   │   │   ├── scheduling/
-│   │   │   │   ├── tasks/
-│   │   │   │   ├── lists/
-│   │   │   │   └── meals/
-│   │   │   ├── services/        # Domain services
-│   │   │   ├── events/          # Domain events
-│   │   │   └── ports/           # Repository interfaces
-│   │   └── package.json
-│   │
-│   ├── ui/                      # Shared design system
-│   │   ├── src/
-│   │   │   ├── tokens/          # Design tokens
-│   │   │   ├── primitives/      # Base components
-│   │   │   ├── components/      # Composite components
-│   │   │   └── themes/          # Theme definitions
-│   │   └── package.json
-│   │
-│   ├── sync/                    # Synchronization engine
-│   │   ├── src/
-│   │   │   ├── crdt/            # CRDT implementations
-│   │   │   ├── adapters/        # Calendar provider adapters
-│   │   │   └── engine/          # Sync orchestration
-│   │   └── package.json
-│   │
-│   └── import/                  # Magic import service
-│       ├── src/
-│       │   ├── parsers/         # Input parsers (email, photo, etc.)
-│       │   ├── extractors/      # Content extractors
-│       │   └── queue/           # Approval queue
-│       └── package.json
-│
-├── apps/
-│   ├── display/                 # Wall display application
-│   │   ├── src/
-│   │   │   ├── views/           # Main display views
-│   │   │   ├── widgets/         # Display widgets
-│   │   │   ├── kiosk/           # Kiosk mode management
-│   │   │   └── store/           # State management
-│   │   └── package.json
-│   │
-│   ├── mobile/                  # Mobile application
-│   │   ├── src/
-│   │   │   ├── screens/         # App screens
-│   │   │   ├── navigation/      # Navigation config
-│   │   │   ├── push/            # Push notification handling
-│   │   │   └── store/           # State management
-│   │   └── package.json
-│   │
-│   ├── web/                     # Web application
-│   │   ├── src/
-│   │   │   ├── pages/           # Page components
-│   │   │   ├── layouts/         # Layout components
-│   │   │   └── store/           # State management
-│   │   └── package.json
-│   │
-│   └── server/                  # Optional sync server
-│       ├── src/
-│       │   ├── api/             # REST/GraphQL API
-│       │   ├── auth/            # Authentication
-│       │   ├── sync/            # Sync coordination
-│       │   └── push/            # Push notification service
-│       └── package.json
-│
-├── tools/                       # Development tools
-│   ├── cli/                     # CLI tooling
-│   └── scripts/                 # Build scripts
-│
-└── docs/                        # Documentation
-    ├── adr/                     # Architecture Decision Records
-    └── api/                     # API documentation
+|
++-- src/
+|   +-- Luminous.Domain/              # Domain models, interfaces
+|   +-- Luminous.Application/         # Application services, CQRS
+|   +-- Luminous.Infrastructure/      # Data access, external services
+|   +-- Luminous.Api/                 # ASP.NET Core Web API
+|   +-- Luminous.Functions/           # Azure Functions
+|   +-- Luminous.Shared/              # Shared DTOs, contracts
+|
++-- clients/
+|   +-- web/                          # Angular web application
+|   +-- display/                      # Angular + Electron display app
+|   +-- ios/                          # Native iOS app (Swift)
+|   +-- android/                      # Native Android app (Kotlin)
+|
++-- infra/
+|   +-- bicep/                        # Bicep IaC with AVMs
+|   |   +-- main.bicep
+|   |   +-- modules/
+|   |   +-- parameters/
+|   +-- scripts/
+|
++-- tests/
+|   +-- Luminous.Domain.Tests/
+|   +-- Luminous.Application.Tests/
+|   +-- Luminous.Api.Tests/
+|   +-- Luminous.Integration.Tests/
+|
++-- docs/
+|
++-- Luminous.sln
 ```
 
 ---
@@ -567,326 +406,302 @@ luminous/
 
 ### Technology Stack
 
-| Layer | Technology | Rationale |
-|-------|------------|-----------|
-| **Language** | TypeScript | Type safety, tooling, ecosystem |
-| **UI Framework** | React | Component model, ecosystem, cross-platform (React Native) |
-| **State Management** | Zustand | Lightweight, TypeScript-first, easy testing |
-| **Local Database** | SQLite (via sql.js) / OPFS | Offline-first, portable, performant |
-| **Sync Protocol** | Custom CRDT-based | Conflict-free offline operation |
-| **Mobile** | React Native | Code sharing with display/web |
-| **Desktop/Display** | Electron or Tauri | Native kiosk capabilities |
-| **Server (Optional)** | Node.js + Fastify | TypeScript consistency, performance |
-| **Build System** | Turborepo | Monorepo management, caching |
-| **Testing** | Vitest + Playwright | Fast unit tests, E2E coverage |
-
-### Technology Reference Model
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                  TECHNOLOGY REFERENCE MODEL                          │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│  DEVELOPMENT PLATFORM                                                │
-│  ┌────────────────────────────────────────────────────────────────┐ │
-│  │  TypeScript 5.x │ Node.js 20 LTS │ pnpm │ Turborepo           │ │
-│  └────────────────────────────────────────────────────────────────┘ │
-│                                                                      │
-│  APPLICATION FRAMEWORKS                                              │
-│  ┌────────────────────────────────────────────────────────────────┐ │
-│  │  React 19 │ React Native │ Electron/Tauri │ Fastify            │ │
-│  └────────────────────────────────────────────────────────────────┘ │
-│                                                                      │
-│  UI/UX INFRASTRUCTURE                                                │
-│  ┌────────────────────────────────────────────────────────────────┐ │
-│  │  Tailwind CSS │ Radix UI │ Framer Motion │ React Aria          │ │
-│  └────────────────────────────────────────────────────────────────┘ │
-│                                                                      │
-│  DATA INFRASTRUCTURE                                                 │
-│  ┌────────────────────────────────────────────────────────────────┐ │
-│  │  SQLite (sql.js) │ OPFS │ IndexedDB │ Yjs (CRDT)              │ │
-│  └────────────────────────────────────────────────────────────────┘ │
-│                                                                      │
-│  INTEGRATION INFRASTRUCTURE                                          │
-│  ┌────────────────────────────────────────────────────────────────┐ │
-│  │  OAuth 2.0 │ CalDAV │ REST │ WebSocket │ Web Push             │ │
-│  └────────────────────────────────────────────────────────────────┘ │
-│                                                                      │
-│  QUALITY INFRASTRUCTURE                                              │
-│  ┌────────────────────────────────────────────────────────────────┐ │
-│  │  Vitest │ Playwright │ ESLint │ Prettier │ TypeScript ESLint  │ │
-│  └────────────────────────────────────────────────────────────────┘ │
-│                                                                      │
-│  DEPLOYMENT INFRASTRUCTURE                                           │
-│  ┌────────────────────────────────────────────────────────────────┐ │
-│  │  Docker │ GitHub Actions │ Renovate │ Changesets              │ │
-│  └────────────────────────────────────────────────────────────────┘ │
-│                                                                      │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Layer | Technology | Version | Rationale |
+|-------|------------|---------|-----------|
+| **Backend Runtime** | .NET | 10 | LTS, performance, Azure integration |
+| **Backend Framework** | ASP.NET Core | 10 | Web API, SignalR, middleware |
+| **Serverless** | Azure Functions | .NET 10 isolated | Event-driven processing |
+| **Web Frontend** | Angular | 19+ | Enterprise-grade, TypeScript-first |
+| **Display App** | Angular + Electron | Latest | Cross-platform desktop |
+| **iOS App** | Swift/SwiftUI | iOS 17+ | Native performance, UX |
+| **Android App** | Kotlin/Compose | Android 13+ | Native performance, UX |
+| **Database** | Azure Cosmos DB | Latest | Global scale, multi-model |
+| **Cache** | Azure Redis Cache | Latest | Session, real-time state |
+| **Storage** | Azure Blob Storage | Latest | Media, files |
+| **Messaging** | Azure Service Bus | Latest | Async processing |
+| **Real-time** | Azure SignalR Service | Latest | WebSocket at scale |
+| **Identity** | Azure AD B2C | Latest | Consumer identity |
+| **IaC** | Bicep + AVMs | Latest | Azure-native, verified modules |
 
 ### Platform Matrix
 
-| Platform | Runtime | Database | Notes |
-|----------|---------|----------|-------|
-| **Display (Linux)** | Electron | SQLite | Kiosk mode, ARM64 support |
-| **Display (Raspberry Pi)** | Electron/Chromium | SQLite | Optimized for Pi 4/5 |
-| **Mobile (iOS)** | React Native | SQLite | App Store distribution |
-| **Mobile (Android)** | React Native | SQLite | Play Store + sideload |
-| **Web** | Browser | OPFS/IndexedDB | Progressive Web App |
-| **Server** | Node.js | PostgreSQL/SQLite | Docker deployment |
+| Platform | Technology | Distribution |
+|----------|------------|--------------|
+| **Web App** | Angular, Static Web App | Azure Static Web Apps |
+| **Display App** | Angular + Electron | Direct download, auto-update |
+| **iOS App** | Swift/SwiftUI | Apple App Store |
+| **Android App** | Kotlin/Compose | Google Play Store |
+| **API** | .NET 10, App Service | Azure App Service |
+| **Functions** | .NET 10 isolated | Azure Functions |
 
 ---
 
 ## Security Architecture
 
-### Security Model
+### Identity and Access Management
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                       SECURITY ARCHITECTURE                          │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│  AUTHENTICATION                                                      │
-│  ┌────────────────────────────────────────────────────────────────┐ │
-│  │                                                                │  │
-│  │  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐      │  │
-│  │  │ Local PIN    │   │  OAuth 2.0   │   │   Passkey    │      │  │
-│  │  │ (Display)    │   │  (Mobile)    │   │  (Future)    │      │  │
-│  │  └──────────────┘   └──────────────┘   └──────────────┘      │  │
-│  │                                                                │  │
-│  └────────────────────────────────────────────────────────────────┘ │
-│                                                                      │
-│  AUTHORIZATION                                                       │
-│  ┌────────────────────────────────────────────────────────────────┐ │
-│  │                                                                │  │
-│  │  Role-Based Access Control (RBAC)                             │  │
-│  │  ┌────────────────────────────────────────────────────────┐   │  │
-│  │  │  ADMIN → ADULT → TEEN → CHILD → CAREGIVER (External)  │   │  │
-│  │  └────────────────────────────────────────────────────────┘   │  │
-│  │                                                                │  │
-│  └────────────────────────────────────────────────────────────────┘ │
-│                                                                      │
-│  DATA PROTECTION                                                     │
-│  ┌────────────────────────────────────────────────────────────────┐ │
-│  │                                                                │  │
-│  │  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐      │  │
-│  │  │ Encryption   │   │ Encryption   │   │   Secure     │      │  │
-│  │  │ at Rest      │   │ in Transit   │   │   Backup     │      │  │
-│  │  │ (SQLCipher)  │   │ (TLS 1.3)    │   │              │      │  │
-│  │  └──────────────┘   └──────────────┘   └──────────────┘      │  │
-│  │                                                                │  │
-│  └────────────────────────────────────────────────────────────────┘ │
-│                                                                      │
-└─────────────────────────────────────────────────────────────────────┘
++---------------------------------------------------------------------+
+|                       IDENTITY ARCHITECTURE                          |
++---------------------------------------------------------------------+
+|                                                                      |
+|  +---------------------------------------------------------------+  |
+|  |                    AZURE AD B2C                                |  |
+|  |                                                                |  |
+|  |  +--------------+  +--------------+  +--------------+          |  |
+|  |  |   Sign Up    |  |   Sign In    |  |   Password   |          |  |
+|  |  |    Flow      |  |    Flow      |  |    Reset     |          |  |
+|  |  +--------------+  +--------------+  +--------------+          |  |
+|  |                                                                |  |
+|  |  +--------------+  +--------------+                            |  |
+|  |  |   Social     |  |    MFA       |                            |  |
+|  |  |   Providers  |  |  (Optional)  |                            |  |
+|  |  |  (Google,    |  |              |                            |  |
+|  |  |   Apple)     |  |              |                            |  |
+|  |  +--------------+  +--------------+                            |  |
+|  |                                                                |  |
+|  +---------------------------------------------------------------+  |
+|                              |                                       |
+|                              v                                       |
+|  +---------------------------------------------------------------+  |
+|  |                    JWT ACCESS TOKEN                            |  |
+|  |  { sub, family_id, roles, permissions, exp, ... }              |  |
+|  +---------------------------------------------------------------+  |
+|                              |                                       |
+|                              v                                       |
+|  +---------------------------------------------------------------+  |
+|  |                    API AUTHORIZATION                           |  |
+|  |                                                                |  |
+|  |  [Authorize(Policy = "FamilyMember")]                          |  |
+|  |  [Authorize(Policy = "FamilyAdmin")]                           |  |
+|  |  [Authorize(Policy = "DeviceAccess")]                          |  |
+|  |                                                                |  |
+|  +---------------------------------------------------------------+  |
+|                                                                      |
++---------------------------------------------------------------------+
 ```
 
-### Role Permission Matrix
+### Device Linking Flow
 
-| Capability | Admin | Adult | Teen | Child | Caregiver |
-|------------|-------|-------|------|-------|-----------|
-| View all calendars | Yes | Yes | Limited | Limited | Limited |
-| Edit events | Yes | Yes | Own | No | No |
-| Create chores | Yes | Yes | No | No | No |
-| Complete chores | Yes | Yes | Own | Own | No |
-| Manage profiles | Yes | No | No | No | No |
-| View caregiver info | Yes | Yes | No | No | Own-assigned |
-| System settings | Yes | No | No | No | No |
-| Invite caregivers | Yes | Yes | No | No | No |
+1. **Display requests link code** - Generates 6-digit code with 15-minute expiry
+2. **User opens mobile app** - Logs in with Azure AD B2C
+3. **User enters code** - Associates device with their family
+4. **Display receives confirmation** - Gets device token for API access
+5. **Display syncs family data** - Pulls events, chores, settings
 
 ### Security Requirements
 
 | Category | Requirement | Implementation |
 |----------|-------------|----------------|
-| **Authentication** | Multi-factor for admin actions | PIN + device auth |
-| **Session** | Automatic timeout on mobile | 15-minute idle logout |
-| **Data** | Encryption at rest | SQLCipher for local data |
-| **Transit** | TLS for all connections | TLS 1.3 minimum |
-| **Secrets** | No secrets in code | Environment variables, secret manager |
-| **Dependencies** | Regular vulnerability scans | Renovate + npm audit |
-| **Audit** | Log security-relevant actions | Immutable audit log |
+| **Authentication** | OAuth 2.0 / OpenID Connect | Azure AD B2C |
+| **Authorization** | Role-based + Family-scoped | Custom policies |
+| **Data Isolation** | Tenant data separation | CosmosDB partitioning |
+| **Data Encryption** | At rest and in transit | Azure managed encryption, TLS 1.3 |
+| **Secrets** | Secure secret storage | Azure Key Vault |
+| **API Security** | Rate limiting, validation | API Management + middleware |
+| **Device Auth** | Secure device tokens | JWT with refresh rotation |
 
 ---
 
-## Integration Architecture
+## Azure Cloud Architecture
 
-### External Integration Points
+### Resource Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    INTEGRATION ARCHITECTURE                          │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│                          LUMINOUS                                    │
-│                             │                                        │
-│       ┌─────────────────────┼─────────────────────┐                 │
-│       │                     │                     │                 │
-│       ▼                     ▼                     ▼                 │
-│  ┌─────────────┐     ┌─────────────┐     ┌─────────────┐           │
-│  │  CALENDAR   │     │   WEATHER   │     │   GROCERY   │           │
-│  │ PROVIDERS   │     │   SERVICE   │     │  DELIVERY   │           │
-│  ├─────────────┤     ├─────────────┤     ├─────────────┤           │
-│  │ Google Cal  │     │ OpenWeather │     │  Instacart  │           │
-│  │ Outlook/M365│     │   NWS API   │     │   (Future)  │           │
-│  │ iCloud      │     │   Pirate    │     │             │           │
-│  │ CalDAV      │     │   Weather   │     │             │           │
-│  │ ICS URLs    │     │             │     │             │           │
-│  └─────────────┘     └─────────────┘     └─────────────┘           │
-│                                                                      │
-│       ┌─────────────────────┼─────────────────────┐                 │
-│       │                     │                     │                 │
-│       ▼                     ▼                     ▼                 │
-│  ┌─────────────┐     ┌─────────────┐     ┌─────────────┐           │
-│  │    PUSH     │     │   MAGIC     │     │    MAPS     │           │
-│  │   NOTIFY    │     │   IMPORT    │     │   SERVICE   │           │
-│  ├─────────────┤     ├─────────────┤     ├─────────────┤           │
-│  │ Apple APNS  │     │ OCR Service │     │ OpenStreet  │           │
-│  │ Google FCM  │     │ Email Parse │     │   Map       │           │
-│  │ Web Push    │     │ LLM Extract │     │             │           │
-│  └─────────────┘     └─────────────┘     └─────────────┘           │
-│                                                                      │
-└─────────────────────────────────────────────────────────────────────┘
+RESOURCE GROUP: rg-luminous-{env}
+|
++-- COMPUTE
+|   +-- App Service (API): app-lum-api-{env}
+|   +-- Function App (Sync): func-lum-sync-{env}
+|   +-- Function App (Import): func-lum-import-{env}
+|
++-- DATA
+|   +-- Cosmos DB: cosmos-lum-{env}
+|   +-- Redis Cache: redis-lum-{env}
+|   +-- Storage Account: stlum{env}
+|
++-- MESSAGING
+|   +-- Service Bus: sb-lum-{env}
+|   +-- SignalR Service: sigr-lum-{env}
+|
++-- SECURITY
+|   +-- Key Vault: kv-lum-{env}
+|   +-- App Configuration: appcs-lum-{env}
+|
++-- WEB
+|   +-- Static Web App: stapp-lum-{env}
+|
++-- MONITORING
+    +-- Application Insights: appi-lum-{env}
+    +-- Log Analytics: log-lum-{env}
 ```
 
-### Calendar Integration Patterns
+### Bicep with Azure Verified Modules (AVMs)
 
-| Provider | Protocol | Sync Direction | Auth Method |
-|----------|----------|----------------|-------------|
-| **Google Calendar** | REST API | Two-way | OAuth 2.0 |
-| **Microsoft 365** | Graph API | Two-way | OAuth 2.0 |
-| **iCloud** | CalDAV | Read-only (initially) | App-specific password |
-| **CalDAV Generic** | CalDAV | Read-only | Basic / OAuth |
-| **ICS URL** | HTTP(S) | Read-only | None / Basic |
+```bicep
+// main.bicep - Using Azure Verified Modules
+targetScope = 'subscription'
 
-### Integration API Design
+@description('Environment name')
+@allowed(['dev', 'staging', 'prod'])
+param environment string
 
-All external integrations follow the Adapter pattern:
+@description('Azure region')
+param location string = 'eastus2'
 
-```typescript
-interface CalendarAdapter {
-  readonly providerId: CalendarProviderId;
-
-  authenticate(credentials: AuthCredentials): Promise<AuthSession>;
-  refreshToken(session: AuthSession): Promise<AuthSession>;
-
-  listCalendars(session: AuthSession): Promise<ExternalCalendar[]>;
-
-  fetchEvents(
-    session: AuthSession,
-    calendarId: string,
-    range: DateRange
-  ): Promise<ExternalEvent[]>;
-
-  createEvent?(
-    session: AuthSession,
-    calendarId: string,
-    event: EventCreateInput
-  ): Promise<ExternalEvent>;
-
-  updateEvent?(
-    session: AuthSession,
-    calendarId: string,
-    eventId: string,
-    event: EventUpdateInput
-  ): Promise<ExternalEvent>;
-
-  deleteEvent?(
-    session: AuthSession,
-    calendarId: string,
-    eventId: string
-  ): Promise<void>;
+// Resource Group
+module resourceGroup 'br/public:avm/res/resources/resource-group:0.2.0' = {
+  name: 'rg-luminous-${environment}'
+  params: {
+    name: 'rg-luminous-${environment}'
+    location: location
+  }
 }
+
+// Cosmos DB using AVM
+module cosmosDb 'br/public:avm/res/document-db/database-account:0.6.0' = {
+  name: 'cosmos-luminous-${environment}'
+  scope: resourceGroup
+  params: {
+    name: 'cosmos-lum-${environment}'
+    location: location
+    sqlDatabases: [
+      {
+        name: 'luminous'
+        containers: [
+          { name: 'families', partitionKeyPath: '/id' }
+          { name: 'users', partitionKeyPath: '/familyId' }
+          { name: 'events', partitionKeyPath: '/familyId' }
+          { name: 'chores', partitionKeyPath: '/familyId' }
+          { name: 'devices', partitionKeyPath: '/familyId' }
+        ]
+      }
+    ]
+  }
+}
+
+// App Service using AVM
+module appService 'br/public:avm/res/web/site:0.3.0' = {
+  name: 'api-luminous-${environment}'
+  scope: resourceGroup
+  params: {
+    name: 'app-lum-api-${environment}'
+    location: location
+    kind: 'app'
+    serverFarmResourceId: appServicePlan.outputs.resourceId
+  }
+}
+
+// Additional modules...
 ```
+
+### Environment Strategy
+
+| Environment | Purpose | Resources |
+|-------------|---------|-----------|
+| **dev** | Development | Minimal SKUs, single region |
+| **staging** | Pre-production testing | Production-like, single region |
+| **prod** | Production | Full SKUs, multi-region optional |
 
 ---
 
-## Deployment Architecture
+## Multi-Tenancy Architecture
 
-### Self-Hosted Deployment
+### Tenant Isolation Strategy
+
+| Layer | Isolation Method | Description |
+|-------|-----------------|-------------|
+| **Data** | CosmosDB Partitioning | Each family's data in separate logical partition |
+| **Storage** | Container per family | Blob storage organized by family ID |
+| **API** | JWT Claims | Family ID in token, validated on every request |
+| **SignalR** | Groups | Real-time updates scoped to family group |
+
+### Family Onboarding Flow
+
+1. **User Registration** - Azure AD B2C sign-up (email/password or social)
+2. **Family Creation** - POST /api/families creates tenant
+3. **Profile Setup** - Add family member profiles
+4. **Calendar Connection** - OAuth to Google/Outlook
+5. **Device Linking** - Link wall display to family
+
+---
+
+## Local Development Architecture
+
+### Local Development Stack
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                   SELF-HOSTED DEPLOYMENT                             │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│  HOME NETWORK                                                        │
-│  ┌────────────────────────────────────────────────────────────────┐ │
-│  │                                                                │  │
-│  │  ┌────────────────┐         ┌────────────────┐                │  │
-│  │  │  WALL DISPLAY  │         │  SYNC SERVER   │  (Optional)   │  │
-│  │  │  (Kiosk Mode)  │◀───────▶│  (Raspberry Pi │                │  │
-│  │  │                │   LAN   │   or NAS)      │                │  │
-│  │  └────────────────┘         └────────┬───────┘                │  │
-│  │                                      │                         │  │
-│  │                                      │ LAN                     │  │
-│  │  ┌────────────────┐                  │                         │  │
-│  │  │  MOBILE APPS   │◀─────────────────┘                         │  │
-│  │  │  (on WiFi)     │                                            │  │
-│  │  └────────────────┘                                            │  │
-│  │                                                                │  │
-│  └────────────────────────────────────────────────────────────────┘ │
-│                            │                                         │
-│                            │ Internet (for calendar sync)           │
-│                            ▼                                         │
-│  ┌────────────────────────────────────────────────────────────────┐ │
-│  │  EXTERNAL SERVICES                                              │ │
-│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐       │ │
-│  │  │ Google   │  │ Outlook  │  │ Weather  │  │  Push    │       │ │
-│  │  │ Calendar │  │ Calendar │  │   API    │  │ Services │       │ │
-│  │  └──────────┘  └──────────┘  └──────────┘  └──────────┘       │ │
-│  └────────────────────────────────────────────────────────────────┘ │
-│                                                                      │
-└─────────────────────────────────────────────────────────────────────┘
++---------------------------------------------------------------------+
+|                    LOCAL DEVELOPMENT ENVIRONMENT                     |
++---------------------------------------------------------------------+
+|                                                                      |
+|  EMULATORS / LOCAL SERVICES                                          |
+|  +---------------------------------------------------------------+  |
+|  |  +----------------+  +----------------+  +----------------+    |  |
+|  |  | Cosmos DB      |  | Azurite        |  | Local Redis    |    |  |
+|  |  | Emulator       |  | (Blob/Queue)   |  | (Docker)       |    |  |
+|  |  +----------------+  +----------------+  +----------------+    |  |
+|  +---------------------------------------------------------------+  |
+|                                                                      |
+|  DEVELOPMENT SERVERS                                                 |
+|  +---------------------------------------------------------------+  |
+|  |  +----------------+  +----------------+  +----------------+    |  |
+|  |  | .NET API       |  | Angular        |  | Electron       |    |  |
+|  |  | (Kestrel)      |  | (ng serve)     |  | (dev mode)     |    |  |
+|  |  | :5000          |  | :4200          |  |                |    |  |
+|  |  +----------------+  +----------------+  +----------------+    |  |
+|  +---------------------------------------------------------------+  |
+|                                                                      |
++---------------------------------------------------------------------+
 ```
 
-### Display Hardware Specifications
-
-| Tier | Device | RAM | Storage | Notes |
-|------|--------|-----|---------|-------|
-| **Budget** | Raspberry Pi 4 | 4GB | 32GB SD | Minimum viable |
-| **Recommended** | Raspberry Pi 5 | 8GB | 64GB SD | Smooth experience |
-| **Premium** | Intel NUC / Mini PC | 8GB+ | 128GB SSD | Best performance |
-| **Tablet** | iPad / Android Tablet | 4GB+ | 64GB+ | No kiosk hardware needed |
-
-### Container Deployment (Server)
+### Docker Compose for Local Development
 
 ```yaml
-# docker-compose.yml (example)
+# docker-compose.yml
 version: '3.8'
-services:
-  luminous-server:
-    image: luminous/server:latest
-    ports:
-      - "3000:3000"
-    volumes:
-      - luminous-data:/data
-    environment:
-      - DATABASE_URL=file:/data/luminous.db
-      - PUSH_VAPID_PUBLIC_KEY=${VAPID_PUBLIC}
-      - PUSH_VAPID_PRIVATE_KEY=${VAPID_PRIVATE}
-    restart: unless-stopped
 
-volumes:
-  luminous-data:
+services:
+  cosmosdb:
+    image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest
+    ports:
+      - "8081:8081"
+      - "10251-10254:10251-10254"
+    environment:
+      - AZURE_COSMOS_EMULATOR_PARTITION_COUNT=10
+      - AZURE_COSMOS_EMULATOR_ENABLE_DATA_PERSISTENCE=true
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    ports:
+      - "10000:10000"  # Blob
+      - "10001:10001"  # Queue
+      - "10002:10002"  # Table
 ```
 
 ---
 
 ## Architecture Decisions
 
-All significant architecture decisions are documented as Architecture Decision Records (ADRs) in the `/docs/adr/` directory.
-
 ### ADR Index
 
 | ADR | Title | Status | Date |
 |-----|-------|--------|------|
-| [ADR-001](./adr/ADR-001-typescript-primary-language.md) | TypeScript as Primary Language | Accepted | 2025-12-21 |
-| [ADR-002](./adr/ADR-002-react-ui-framework.md) | React as UI Framework | Accepted | 2025-12-21 |
-| [ADR-003](./adr/ADR-003-local-first-architecture.md) | Local-First Data Architecture | Accepted | 2025-12-21 |
-| [ADR-004](./adr/ADR-004-two-way-sync-google-first.md) | Two-Way Sync Initially Google-Only | Accepted | 2025-12-21 |
-| [ADR-005](./adr/ADR-005-magic-import-approval.md) | Magic Import Requires Approval | Accepted | 2025-12-21 |
-| [ADR-006](./adr/ADR-006-zero-distraction-principle.md) | Zero-Distraction Design Principle | Accepted | 2025-12-21 |
-| [ADR-007](./adr/ADR-007-self-hosting-first.md) | Self-Hosting as Primary Model | Accepted | 2025-12-21 |
+| [ADR-001](./adr/ADR-001-dotnet-backend.md) | .NET 10 as Backend Platform | Accepted | 2025-12-21 |
+| [ADR-002](./adr/ADR-002-angular-web-framework.md) | Angular as Web Framework | Accepted | 2025-12-21 |
+| [ADR-003](./adr/ADR-003-azure-cloud-platform.md) | Azure as Cloud Platform | Accepted | 2025-12-21 |
+| [ADR-004](./adr/ADR-004-native-mobile-apps.md) | Native iOS and Android Apps | Accepted | 2025-12-21 |
+| [ADR-005](./adr/ADR-005-cosmosdb-data-store.md) | CosmosDB as Primary Data Store | Accepted | 2025-12-21 |
+| [ADR-006](./adr/ADR-006-multi-tenant-architecture.md) | Multi-Tenant Architecture | Accepted | 2025-12-21 |
+| [ADR-007](./adr/ADR-007-bicep-avm-iac.md) | Bicep with AVMs for IaC | Accepted | 2025-12-21 |
+| [ADR-008](./adr/ADR-008-magic-import-approval.md) | Magic Import Requires Approval | Accepted | 2025-12-21 |
+| [ADR-009](./adr/ADR-009-zero-distraction-principle.md) | Zero-Distraction Design Principle | Accepted | 2025-12-21 |
+| [ADR-010](./adr/ADR-010-azure-ad-b2c-identity.md) | Azure AD B2C for Identity | Accepted | 2025-12-21 |
 
 ---
 
@@ -895,6 +710,7 @@ All significant architecture decisions are documented as Architecture Decision R
 - [Project Overview](./PROJECT-OVERVIEW.md)
 - [Development Roadmap](./ROADMAP.md)
 - [Architecture Decision Records](./adr/)
+- [Azure Infrastructure](./AZURE-INFRASTRUCTURE.md)
 - [CLAUDE.md (Development Guidelines)](../CLAUDE.md)
 
 ---
@@ -904,3 +720,4 @@ All significant architecture decisions are documented as Architecture Decision R
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0.0 | 2025-12-21 | Luminous Team | Initial architecture document |
+| 2.0.0 | 2025-12-21 | Luminous Team | Updated for Azure/.NET/Angular stack, multi-tenancy |

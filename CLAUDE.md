@@ -50,9 +50,9 @@ We follow TOGAF ADM phases in our development process:
 
 | ID | Principle | Description |
 |----|-----------|-------------|
-| DP-1 | **Local-First Data** | Data stored locally first; sync is secondary |
-| DP-2 | **User Data Ownership** | Users can export and self-host |
-| DP-3 | **Single Source of Truth** | Clear ownership rules per data type |
+| DP-1 | **Cloud-First with Local Cache** | Primary data in Azure; local caching for offline support |
+| DP-2 | **User Data Ownership** | Users can export their data; multi-tenant isolation guaranteed |
+| DP-3 | **Single Source of Truth** | CosmosDB as source; partition isolation per family |
 | DP-4 | **Data Minimization** | Collect only what's necessary |
 
 #### Application Principles
@@ -68,10 +68,10 @@ We follow TOGAF ADM phases in our development process:
 
 | ID | Principle | Description |
 |----|-----------|-------------|
-| TP-1 | **Open Source Stack** | No proprietary dependencies in core |
-| TP-2 | **Commodity Hardware** | ARM and x86 support; no specialized hardware |
-| TP-3 | **Standards-Based Integration** | OAuth 2.0, CalDAV, REST/GraphQL |
-| TP-4 | **Operational Simplicity** | Auto-updates, self-healing, minimal config |
+| TP-1 | **Azure-Native Stack** | Leverage Azure PaaS services; .NET/Angular/native mobile |
+| TP-2 | **Commodity Hardware** | ARM and x86 support for displays; any device for mobile |
+| TP-3 | **Standards-Based Integration** | OAuth 2.0/OIDC, REST APIs, OpenAPI contracts |
+| TP-4 | **Infrastructure as Code** | Bicep with AVMs for reproducible deployments |
 
 ### Architecture Governance
 
@@ -142,24 +142,56 @@ All code must be:
 #### Directory Structure Expectations
 
 ```
+# .NET Backend (Clean Architecture)
 src/
-├── components/       # Reusable UI components
-├── features/         # Feature-based modules (vertical slices)
-├── domain/           # Domain models and business logic
-├── services/         # External service integrations
-├── hooks/            # Shared React hooks (if applicable)
-├── utils/            # Pure utility functions
-├── types/            # TypeScript type definitions
-└── config/           # Configuration and constants
+├── Luminous.Domain/           # Domain entities, value objects, interfaces
+├── Luminous.Application/      # Use cases, DTOs, application services
+├── Luminous.Infrastructure/   # Data access, external services, Azure integrations
+├── Luminous.Api/              # ASP.NET Core Web API, controllers
+└── Luminous.Functions/        # Azure Functions for background processing
+
+# Angular Web/Display Applications
+clients/
+├── web/                       # Main web application
+│   ├── src/app/
+│   │   ├── core/              # Singleton services, guards, interceptors
+│   │   ├── shared/            # Shared components, pipes, directives
+│   │   ├── features/          # Feature modules (lazy-loaded)
+│   │   └── models/            # TypeScript interfaces and types
+├── display/                   # Electron display application
+└── shared/                    # Shared Angular libraries
+
+# Native Mobile Applications
+mobile/
+├── ios/                       # Swift/SwiftUI iOS app
+└── android/                   # Kotlin/Compose Android app
+
+# Infrastructure as Code
+infra/
+├── modules/                   # Bicep modules wrapping AVMs
+├── environments/              # Parameter files per environment
+└── main.bicep                 # Main orchestration
 ```
 
 #### Component Guidelines
 
-- One component per file
-- Co-locate component tests, styles, and stories
-- Props should be typed and documented
-- Avoid prop drilling; use context or state management appropriately
-- Components should be presentational or container, not both
+**Angular (Web/Display)**
+- One component per file with co-located template and styles
+- Use standalone components (Angular 19+)
+- Inputs/Outputs should be typed and documented
+- Use services for state management, avoid deep component hierarchies
+- Components should be presentational or smart, not both
+
+**Native Mobile**
+- iOS: Follow SwiftUI patterns with ObservableObject for state
+- Android: Use Compose with ViewModel and StateFlow
+- Share API models via OpenAPI-generated clients
+
+**.NET Backend**
+- Follow Clean Architecture layer separation
+- Use MediatR for CQRS pattern
+- Repository pattern for data access
+- Domain entities should be persistence-ignorant
 
 ---
 
@@ -234,6 +266,7 @@ All commits MUST follow the format:
 
 Use scopes to indicate the affected area:
 
+**Features**
 - `calendar` - Calendar-related changes
 - `tasks` - Task/chore management
 - `routines` - Routine management
@@ -242,19 +275,30 @@ Use scopes to indicate the affected area:
 - `lists` - List management
 - `profiles` - Profile and household management
 - `notes` - Notes and reminders
-- `ui` - General UI components
-- `display` - Display/kiosk mode
-- `mobile` - Mobile application
-- `web` - Web application
-- `sync` - Synchronization engine
 - `import` - Magic import feature
-- `config` - Configuration
-- `api` - API/backend changes
-- `auth` - Authentication
-- `db` - Database changes
-- `infra` - Infrastructure
+- `sync` - Real-time synchronization (SignalR)
+- `linking` - Device linking flow
+
+**Applications**
+- `api` - .NET API backend
+- `functions` - Azure Functions
+- `web` - Angular web application
+- `display` - Angular/Electron display application
+- `ios` - iOS native application
+- `android` - Android native application
+
+**Infrastructure**
+- `ui` - General UI components
+- `auth` - Authentication (Azure AD B2C)
+- `cosmos` - CosmosDB/data layer changes
+- `storage` - Blob storage changes
+- `infra` - Bicep/IaC infrastructure
+- `config` - Configuration and settings
+
+**Meta**
 - `docs` - Documentation
 - `adr` - Architecture Decision Records
+- `ci` - CI/CD pipeline changes
 
 ### Commit Examples
 
@@ -341,18 +385,55 @@ Luminous must be usable by all household members:
 
 ## Build & Development Commands
 
+### Local Development Setup
+
+```bash
+# Start local Azure emulators (CosmosDB, Storage, Redis)
+docker-compose up -d
+
+# .NET API
+cd src/Luminous.Api
+dotnet restore
+dotnet run
+
+# Angular Web App
+cd clients/web
+npm install
+npm start
+
+# Angular Display App (Electron)
+cd clients/display
+npm install
+npm run electron:dev
+```
+
+### .NET Backend Commands
+
+```bash
+# Build solution
+dotnet build
+
+# Run tests
+dotnet test
+
+# Run API with hot reload
+dotnet watch run --project src/Luminous.Api
+
+# Run Azure Functions locally
+func start --csharp
+```
+
+### Angular Frontend Commands
+
 ```bash
 # Install dependencies
 npm install
 
-# Run development server
-npm run dev
+# Development server
+npm start
 
 # Run tests
 npm test
-
-# Run tests in watch mode
-npm run test:watch
 
 # Build for production
 npm run build
@@ -360,11 +441,33 @@ npm run build
 # Lint code
 npm run lint
 
-# Format code
-npm run format
-
 # Type check
 npm run typecheck
+```
+
+### Infrastructure Commands
+
+```bash
+# Validate Bicep
+az bicep build --file infra/main.bicep
+
+# Deploy to Azure (dev environment)
+./infra/scripts/deploy.sh dev
+
+# Deploy to Azure (prod environment)
+./infra/scripts/deploy.sh prod
+```
+
+### Mobile Development
+
+```bash
+# iOS (requires macOS with Xcode)
+cd mobile/ios
+xcodebuild -scheme Luminous -sdk iphonesimulator
+
+# Android
+cd mobile/android
+./gradlew assembleDebug
 ```
 
 ---

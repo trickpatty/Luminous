@@ -1,6 +1,6 @@
 # Luminous Development Roadmap
 
-> **Document Version:** 1.0.0
+> **Document Version:** 2.0.0
 > **Last Updated:** 2025-12-21
 > **Status:** Draft
 > **TOGAF Phase:** Phase E/F (Opportunities, Solutions & Migration Planning)
@@ -50,46 +50,48 @@ Following TOGAF's principle of iterative architecture development:
 
 ```
 Phase 0: Foundation
-├── Development Environment
-├── Monorepo Structure
-├── Core Domain Models
-└── Design System Foundation
++-- Azure Infrastructure (Bicep/AVMs)
++-- .NET 10 Solution Structure
++-- Angular Web Application Shell
++-- Azure AD B2C Configuration
++-- Local Development Environment
 
-Phase 1: Core Display
-├── Display Application Shell
-├── Calendar Context
-├── Event Display Widgets
-└── Offline Data Layer
+Phase 1: Core Platform
++-- Multi-Tenant API
++-- CosmosDB Data Layer
++-- User Registration & Family Creation
++-- Device Linking Flow
++-- Web Dashboard MVP
 
-Phase 2: Task Management
-├── Chore/Task Context
-├── Routine Context
-├── Rewards Context
-└── Progress Visualization
+Phase 2: Display & Calendar
++-- Display Application (Angular + Electron)
++-- Calendar Integration (Google, Outlook)
++-- Event Display Widgets
++-- Real-time Sync (SignalR)
 
-Phase 3: Mobile Companion
-├── Mobile Application Shell
-├── Push Notification Service
-├── Sync Engine
-└── Remote Data Layer
+Phase 3: Native Mobile Apps
++-- iOS App (Swift/SwiftUI)
++-- Android App (Kotlin/Compose)
++-- Push Notification Service
++-- Mobile-specific UX
 
-Phase 4: Household Management
-├── Profile Management
-├── Meal Planning Context
-├── List Management Context
-└── Caregiver Portal
+Phase 4: Task Management
++-- Chore/Task Context
++-- Routine Context
++-- Rewards System
++-- Progress Visualization
 
-Phase 5: Intelligence
-├── Magic Import Service
-├── AI Suggestion Engine
-├── Natural Language Processing
-└── Learning Pipeline
+Phase 5: Household Features
++-- Profile Management
++-- Meal Planning
++-- List Management
++-- Caregiver Portal
 
-Phase 6: Ecosystem
-├── Plugin Architecture
-├── API Gateway
-├── Third-Party Integrations
-└── Community Contributions
+Phase 6: Intelligence & Ecosystem
++-- Magic Import Service
++-- AI Suggestions
++-- Third-Party Integrations
++-- API for Extensions
 ```
 
 ---
@@ -100,13 +102,13 @@ Phase 6: Ecosystem
 
 | Phase | Name | Focus | Key Deliverables |
 |-------|------|-------|------------------|
-| **0** | Foundation | Infrastructure | Monorepo, CI/CD, design system, domain models |
-| **1** | Core Display | Calendar visibility | Display app, calendar integration, offline mode |
-| **2** | Task Management | Chores and routines | Task creation, completion tracking, rewards |
-| **3** | Mobile Companion | Mobile control | iOS/Android apps, push notifications, sync |
-| **4** | Household Management | Expanded features | Profiles, meals, lists, caregiver sharing |
-| **5** | Intelligence Layer | AI features | Magic import, suggestions, automation |
-| **6** | Ecosystem Expansion | Platform growth | Plugins, APIs, community tools |
+| **0** | Foundation | Infrastructure | Azure IaC, .NET solution, Angular shell, Azure AD B2C |
+| **1** | Core Platform | Multi-tenancy | Family sign-up, device linking, CosmosDB, web MVP |
+| **2** | Display & Calendar | Calendar visibility | Display app, calendar integration, SignalR sync |
+| **3** | Native Mobile | Mobile apps | iOS (Swift), Android (Kotlin), push notifications |
+| **4** | Task Management | Chores and routines | Task creation, completion tracking, rewards |
+| **5** | Household Features | Expanded features | Profiles, meals, lists, caregiver portal |
+| **6** | Intelligence & Ecosystem | AI and extensions | Magic import, suggestions, third-party APIs |
 
 ---
 
@@ -114,294 +116,287 @@ Phase 6: Ecosystem
 
 ### Objective
 
-Establish the technical foundation, development environment, and architectural patterns that all subsequent phases will build upon.
+Establish the Azure infrastructure, .NET backend, Angular frontend, and development environment that all subsequent phases will build upon.
 
 ### Scope
 
-#### 0.1 Development Environment
+#### 0.1 Azure Infrastructure (Bicep with AVMs)
 
-- [ ] **0.1.1** Initialize monorepo with Turborepo
-- [ ] **0.1.2** Configure TypeScript with strict settings
-- [ ] **0.1.3** Set up ESLint and Prettier configurations
-- [ ] **0.1.4** Configure Vitest for unit testing
-- [ ] **0.1.5** Set up Playwright for E2E testing
-- [ ] **0.1.6** Implement pre-commit hooks (Husky + lint-staged)
-- [ ] **0.1.7** Configure Changesets for versioning
+- [ ] **0.1.1** Create Bicep modules for all Azure resources using AVMs
+- [ ] **0.1.2** Configure Cosmos DB with required containers
+- [ ] **0.1.3** Set up Azure AD B2C tenant and user flows
+- [ ] **0.1.4** Configure App Service for .NET API
+- [ ] **0.1.5** Set up Azure Static Web Apps for Angular
+- [ ] **0.1.6** Configure Key Vault for secrets
+- [ ] **0.1.7** Set up environment parameter files (dev, staging, prod)
 
-#### 0.2 CI/CD Pipeline
+#### 0.2 .NET Solution Structure
 
-- [ ] **0.2.1** GitHub Actions workflow for linting
-- [ ] **0.2.2** GitHub Actions workflow for testing
-- [ ] **0.2.3** GitHub Actions workflow for building
-- [ ] **0.2.4** Dependabot/Renovate for dependency updates
-- [ ] **0.2.5** Code coverage reporting
-- [ ] **0.2.6** Release automation pipeline
+- [ ] **0.2.1** Create solution with Clean Architecture layers
+- [ ] **0.2.2** Set up Luminous.Domain with entities and value objects
+- [ ] **0.2.3** Set up Luminous.Application with CQRS handlers
+- [ ] **0.2.4** Set up Luminous.Infrastructure with CosmosDB repositories
+- [ ] **0.2.5** Set up Luminous.Api with controllers and middleware
+- [ ] **0.2.6** Configure dependency injection and options pattern
+- [ ] **0.2.7** Set up xUnit test projects
 
-#### 0.3 Core Package Structure
+#### 0.3 Angular Web Application
 
-- [ ] **0.3.1** Create `packages/core` with domain model stubs
-- [ ] **0.3.2** Create `packages/ui` with design system foundation
-- [ ] **0.3.3** Create `packages/sync` with sync engine interfaces
-- [ ] **0.3.4** Configure package inter-dependencies
-- [ ] **0.3.5** Set up path aliases and TypeScript references
+- [ ] **0.3.1** Initialize Angular 19+ project with strict mode
+- [ ] **0.3.2** Configure Angular Material or Tailwind CSS
+- [ ] **0.3.3** Set up core module with authentication service
+- [ ] **0.3.4** Implement MSAL integration for Azure AD B2C
+- [ ] **0.3.5** Create shared component library
+- [ ] **0.3.6** Configure environment-based API URLs
 
-#### 0.4 Design System Foundation
+#### 0.4 Local Development Environment
 
-- [ ] **0.4.1** Define design tokens (colors, typography, spacing)
-- [ ] **0.4.2** Create base theme configuration
-- [ ] **0.4.3** Implement primitive components (Button, Input, Text)
-- [ ] **0.4.4** Set up Storybook for component development
-- [ ] **0.4.5** Document accessibility requirements per component
+- [ ] **0.4.1** Create Docker Compose for local services
+- [ ] **0.4.2** Document Cosmos DB Emulator setup
+- [ ] **0.4.3** Create local development scripts (PowerShell/Bash)
+- [ ] **0.4.4** Configure launch profiles for debugging
+- [ ] **0.4.5** Set up local JWT issuer for development
 
-#### 0.5 Domain Model Implementation
+#### 0.5 CI/CD Pipeline
 
-- [ ] **0.5.1** Implement `Household` aggregate
-- [ ] **0.5.2** Implement `Profile` entity
-- [ ] **0.5.3** Implement `Event` entity
-- [ ] **0.5.4** Implement `Chore` entity
-- [ ] **0.5.5** Implement shared value objects (DateTime, Color, etc.)
-- [ ] **0.5.6** Define domain events
-- [ ] **0.5.7** Implement repository interfaces (ports)
+- [ ] **0.5.1** GitHub Actions for .NET build and test
+- [ ] **0.5.2** GitHub Actions for Angular build and test
+- [ ] **0.5.3** GitHub Actions for Bicep deployment
+- [ ] **0.5.4** Configure environment-specific deployments
+- [ ] **0.5.5** Set up Dependabot for dependency updates
 
 #### 0.6 Documentation
 
 - [ ] **0.6.1** Complete PROJECT-OVERVIEW.md
 - [ ] **0.6.2** Complete ARCHITECTURE.md
 - [ ] **0.6.3** Complete ROADMAP.md
-- [ ] **0.6.4** Create initial ADRs
-- [ ] **0.6.5** Set up documentation site (optional)
+- [ ] **0.6.4** Create ADRs for technology decisions
+- [ ] **0.6.5** Create local development setup guide
 
 ### Exit Criteria
 
-- All packages build and lint successfully
-- Unit test framework operational with example tests
-- Design system Storybook accessible
-- Domain models pass validation tests
-- CI pipeline runs on all pull requests
+- Azure infrastructure deploys successfully to dev environment
+- .NET API runs locally with Cosmos DB Emulator
+- Angular app authenticates via Azure AD B2C
+- CI/CD pipeline runs on all pull requests
+- Documentation complete and reviewed
 
 ---
 
-## Phase 1: Core Display
+## Phase 1: Core Platform
 
 ### Objective
 
-Deliver a functional wall-mounted display that shows family calendars in a glanceable format with offline capability.
+Deliver the multi-tenant platform with user registration, family creation, device linking, and a basic web dashboard.
 
 ### Scope
 
-#### 1.1 Display Application Shell
+#### 1.1 Multi-Tenant API
 
-- [ ] **1.1.1** Create `apps/display` with Electron/Tauri
-- [ ] **1.1.2** Implement kiosk mode (fullscreen, no escape)
-- [ ] **1.1.3** Auto-start on system boot
-- [ ] **1.1.4** Watchdog for crash recovery
-- [ ] **1.1.5** Basic settings screen (PIN-protected)
+- [ ] **1.1.1** Implement family (tenant) creation endpoint
+- [ ] **1.1.2** Implement user registration and profile creation
+- [ ] **1.1.3** Implement JWT claims with family context
+- [ ] **1.1.4** Add family-scoped authorization policies
+- [ ] **1.1.5** Implement tenant data isolation in repositories
 
-#### 1.2 Calendar Context Implementation
+#### 1.2 Device Linking
 
-- [ ] **1.2.1** Implement Google Calendar adapter
-- [ ] **1.2.2** Implement ICS URL subscription adapter
-- [ ] **1.2.3** OAuth flow for Google authentication
-- [ ] **1.2.4** Calendar-to-profile assignment
-- [ ] **1.2.5** Recurring event support
-- [ ] **1.2.6** Event color mapping
+- [ ] **1.2.1** Implement link code generation endpoint
+- [ ] **1.2.2** Implement link code validation and device registration
+- [ ] **1.2.3** Implement device token issuance
+- [ ] **1.2.4** Create device management endpoints
+- [ ] **1.2.5** Implement device heartbeat/status tracking
 
-#### 1.3 Calendar Views
+#### 1.3 Family Member Management
 
-- [ ] **1.3.1** Day view (next 24 hours focus)
-- [ ] **1.3.2** Week view (7-day overview)
-- [ ] **1.3.3** Month view (calendar grid)
-- [ ] **1.3.4** Agenda view (chronological list)
-- [ ] **1.3.5** View switching and navigation
-- [ ] **1.3.6** Profile filtering
+- [ ] **1.3.1** Implement member invitation flow
+- [ ] **1.3.2** Implement role assignment (Owner, Admin, Adult, Teen, Child)
+- [ ] **1.3.3** Create profile management endpoints
+- [ ] **1.3.4** Implement caregiver access tokens
 
-#### 1.4 Event Display Widgets
+#### 1.4 Web Dashboard MVP
 
-- [ ] **1.4.1** Event card component (color-coded by profile)
-- [ ] **1.4.2** "What's Next" widget (next 3 events)
-- [ ] **1.4.3** Countdown widget (days until major events)
-- [ ] **1.4.4** Today summary widget
-
-#### 1.5 Ambient Widgets
-
-- [ ] **1.5.1** Clock widget (with timezone)
-- [ ] **1.5.2** Weather widget (current + forecast)
-- [ ] **1.5.3** Weather API integration (configurable provider)
-
-#### 1.6 Display Modes
-
-- [ ] **1.6.1** Normal display mode
-- [ ] **1.6.2** Privacy mode (wallpaper/clock only)
-- [ ] **1.6.3** Sleep mode (screen off on schedule)
-- [ ] **1.6.4** Auto-brightness (if hardware supports)
-
-#### 1.7 Offline Capability
-
-- [ ] **1.7.1** SQLite database setup (sql.js)
-- [ ] **1.7.2** Local event cache
-- [ ] **1.7.3** Offline indicator
-- [ ] **1.7.4** Sync status indicator
-- [ ] **1.7.5** Automatic sync on reconnection
-
-#### 1.8 Accessibility
-
-- [ ] **1.8.1** Large text mode
-- [ ] **1.8.2** High contrast mode
-- [ ] **1.8.3** Touch target sizing (44x44px minimum)
-- [ ] **1.8.4** Readable from 10+ feet
+- [ ] **1.4.1** Create family dashboard layout
+- [ ] **1.4.2** Implement family settings page
+- [ ] **1.4.3** Create member management UI
+- [ ] **1.4.4** Implement device management UI
+- [ ] **1.4.5** Create responsive design for mobile web
 
 ### Exit Criteria
 
-- Display shows events from connected Google Calendar
-- Display functions offline with cached data
-- Privacy and sleep modes functional
-- Tested on Raspberry Pi 4 target hardware
+- Users can sign up and create families via Azure AD B2C
+- Device linking flow works end-to-end
+- Family members can be invited and managed
+- Web dashboard displays family information
+- All data properly isolated per tenant
+
+---
+
+## Phase 2: Display & Calendar
+
+### Objective
+
+Deliver the display application with calendar integration, real-time sync, and glanceable views.
+
+### Scope
+
+#### 2.1 Display Application (Angular + Electron)
+
+- [ ] **2.1.1** Create Angular Electron project structure
+- [ ] **2.1.2** Implement kiosk mode (fullscreen, no escape)
+- [ ] **2.1.3** Auto-start on system boot
+- [ ] **2.1.4** Watchdog for crash recovery
+- [ ] **2.1.5** Device token authentication
+- [ ] **2.1.6** Local caching for offline capability
+
+#### 2.2 Calendar Integration
+
+- [ ] **2.2.1** Google Calendar OAuth integration
+- [ ] **2.2.2** Microsoft Graph (Outlook) integration
+- [ ] **2.2.3** ICS URL subscription support
+- [ ] **2.2.4** Calendar-to-profile assignment
+- [ ] **2.2.5** Azure Function for calendar sync jobs
+- [ ] **2.2.6** Recurring event support
+
+#### 2.3 Calendar Views
+
+- [ ] **2.3.1** Day view (next 24 hours focus)
+- [ ] **2.3.2** Week view (7-day overview)
+- [ ] **2.3.3** Month view (calendar grid)
+- [ ] **2.3.4** Agenda view (chronological list)
+- [ ] **2.3.5** Profile filtering
+
+#### 2.4 Display Widgets
+
+- [ ] **2.4.1** "What's Next" widget
+- [ ] **2.4.2** Countdown widget for major events
+- [ ] **2.4.3** Weather widget
+- [ ] **2.4.4** Clock widget
+
+#### 2.5 Real-time Sync (SignalR)
+
+- [ ] **2.5.1** Azure SignalR Service integration
+- [ ] **2.5.2** Family-scoped message groups
+- [ ] **2.5.3** Push updates to connected displays
+- [ ] **2.5.4** Connection recovery handling
+
+#### 2.6 Display Modes
+
+- [ ] **2.6.1** Normal display mode
+- [ ] **2.6.2** Privacy mode (wallpaper only)
+- [ ] **2.6.3** Sleep mode (scheduled)
+
+### Exit Criteria
+
+- Display app runs in kiosk mode on various hardware
+- Calendar events sync from Google and Outlook
+- Real-time updates via SignalR
+- Offline mode works with cached data
 - WCAG 2.1 AA compliance verified
 
 ---
 
-## Phase 2: Task Management
+## Phase 3: Native Mobile Apps
 
 ### Objective
 
-Add chores, routines, and rewards to transform the display from view-only to interactive family coordination.
+Deliver native iOS and Android apps with full feature access and push notifications.
 
 ### Scope
 
-#### 2.1 Chore/Task Context
+#### 3.1 iOS App (Swift/SwiftUI)
 
-- [ ] **2.1.1** Chore creation UI
-- [ ] **2.1.2** Chore assignment (profiles or "anyone")
-- [ ] **2.1.3** Recurrence patterns
-- [ ] **2.1.4** Due date/time support
-- [ ] **2.1.5** Priority levels (optional)
-- [ ] **2.1.6** Chore completion flow (touch to complete)
-- [ ] **2.1.7** Completion history
+- [ ] **3.1.1** Xcode project with SwiftUI
+- [ ] **3.1.2** MSAL integration for Azure AD B2C
+- [ ] **3.1.3** API client with async/await
+- [ ] **3.1.4** Core Data for offline caching
+- [ ] **3.1.5** Navigation structure (TabView)
+- [ ] **3.1.6** Push notifications (APNs)
 
-#### 2.2 Routine Context
+#### 3.2 Android App (Kotlin/Compose)
 
-- [ ] **2.2.1** Routine builder (sequence of steps)
-- [ ] **2.2.2** Step icons (kid-friendly library)
-- [ ] **2.2.3** Timer per step (optional)
-- [ ] **2.2.4** Multiple display modes (list, cards, slideshow)
-- [ ] **2.2.5** Routine progress tracking
-- [ ] **2.2.6** Streak tracking
-
-#### 2.3 Starter Content
-
-- [ ] **2.3.1** Morning routine template
-- [ ] **2.3.2** Bedtime routine template
-- [ ] **2.3.3** After-school routine template
-- [ ] **2.3.4** Common chore templates
-- [ ] **2.3.5** Icon library (100+ kid-friendly icons)
-
-#### 2.4 Rewards System
-
-- [ ] **2.4.1** Point assignment to chores/routines
-- [ ] **2.4.2** Per-profile point balance
-- [ ] **2.4.3** Custom reward definitions
-- [ ] **2.4.4** Reward request/approval workflow
-- [ ] **2.4.5** Progress-to-goal visualization
-- [ ] **2.4.6** Celebration animations
-
-#### 2.5 Task Display Widgets
-
-- [ ] **2.5.1** "Today's Tasks" widget
-- [ ] **2.5.2** Profile task summary
-- [ ] **2.5.3** Routine progress widget
-- [ ] **2.5.4** Points/rewards widget
-- [ ] **2.5.5** Streak display
-
-#### 2.6 Kid Mode
-
-- [ ] **2.6.1** Simplified UI for children
-- [ ] **2.6.2** Large touch targets
-- [ ] **2.6.3** Emoji/icon-based labels
-- [ ] **2.6.4** Non-reader friendly design
-- [ ] **2.6.5** Limited destructive actions
-
-### Exit Criteria
-
-- Chores can be created, assigned, and completed on display
-- Routines guide children through multi-step processes
-- Points accumulate and rewards can be claimed
-- Kid mode is intuitive for 6+ year olds
-- All task data persists offline
-
----
-
-## Phase 3: Mobile Companion
-
-### Objective
-
-Deliver iOS and Android companion apps that provide full control and notifications, keeping family members informed on the go.
-
-### Scope
-
-#### 3.1 Mobile Application Shell
-
-- [ ] **3.1.1** React Native project setup
-- [ ] **3.1.2** Navigation structure
-- [ ] **3.1.3** Authentication flow
-- [ ] **3.1.4** Offline capability
-- [ ] **3.1.5** Deep linking support
-
-#### 3.2 Sync Engine
-
-- [ ] **3.2.1** CRDT-based sync protocol
-- [ ] **3.2.2** Conflict resolution logic
-- [ ] **3.2.3** Sync status indicators
-- [ ] **3.2.4** Background sync
-- [ ] **3.2.5** Manual sync trigger
+- [ ] **3.2.1** Android Studio project with Jetpack Compose
+- [ ] **3.2.2** MSAL integration for Azure AD B2C
+- [ ] **3.2.3** Retrofit API client with coroutines
+- [ ] **3.2.4** Room for offline caching
+- [ ] **3.2.5** Navigation component
+- [ ] **3.2.6** Push notifications (FCM)
 
 #### 3.3 Mobile Calendar Features
 
-- [ ] **3.3.1** Calendar views (day, week, month, agenda)
+- [ ] **3.3.1** Calendar views (day, week, month)
 - [ ] **3.3.2** Event creation and editing
 - [ ] **3.3.3** Calendar connection management
 - [ ] **3.3.4** Profile filtering
 
-#### 3.4 Mobile Task Features
+#### 3.4 Mobile Device Features
 
-- [ ] **3.4.1** Chore creation and management
-- [ ] **3.4.2** Routine creation and management
-- [ ] **3.4.3** Task completion (for self)
-- [ ] **3.4.4** Reward management
-
-#### 3.5 Push Notifications
-
-- [ ] **3.5.1** Push notification service (APNs + FCM)
-- [ ] **3.5.2** Event reminders
-- [ ] **3.5.3** Chore due notifications
-- [ ] **3.5.4** Completion notifications (kids completed X)
-- [ ] **3.5.5** Notification preferences
-
-#### 3.6 Mobile Widgets
-
-- [ ] **3.6.1** iOS Today widget (schedule)
-- [ ] **3.6.2** iOS lock screen widget
-- [ ] **3.6.3** Android widget support
-
-#### 3.7 Sync Server (Optional)
-
-- [ ] **3.7.1** Server application shell
-- [ ] **3.7.2** REST API for sync
-- [ ] **3.7.3** WebSocket for real-time updates
-- [ ] **3.7.4** User authentication (OAuth)
-- [ ] **3.7.5** Push notification dispatch
-- [ ] **3.7.6** Docker deployment
+- [ ] **3.4.1** Device linking via code entry
+- [ ] **3.4.2** Family member management
+- [ ] **3.4.3** Biometric authentication
+- [ ] **3.4.4** Widget support (iOS/Android)
 
 ### Exit Criteria
 
-- Mobile apps available on iOS and Android
-- Changes sync between display and mobile within 60 seconds
-- Push notifications delivered reliably
-- Offline mode functional on mobile
-- App Store / Play Store ready
+- iOS app available on App Store (TestFlight initially)
+- Android app available on Play Store (Beta track initially)
+- Push notifications work for events and reminders
+- Apps authenticate via Azure AD B2C
+- Offline mode with local caching
 
 ---
 
-## Phase 4: Household Management
+## Phase 4: Task Management
+
+### Objective
+
+Add chores, routines, and rewards system across all platforms.
+
+### Scope
+
+#### 4.1 Chore Management
+
+- [ ] **4.1.1** Chore creation API and UI
+- [ ] **4.1.2** Assignment to profiles or "anyone"
+- [ ] **4.1.3** Recurrence patterns
+- [ ] **4.1.4** Due date/time support
+- [ ] **4.1.5** Chore completion flow
+- [ ] **4.1.6** Completion history
+
+#### 4.2 Routine Management
+
+- [ ] **4.2.1** Routine builder (sequence of steps)
+- [ ] **4.2.2** Step icons and images
+- [ ] **4.2.3** Timer per step (optional)
+- [ ] **4.2.4** Routine progress tracking
+- [ ] **4.2.5** Streak tracking
+
+#### 4.3 Rewards System
+
+- [ ] **4.3.1** Point assignment to chores/routines
+- [ ] **4.3.2** Per-profile point balance
+- [ ] **4.3.3** Custom reward definitions
+- [ ] **4.3.4** Reward request/approval workflow
+- [ ] **4.3.5** Progress visualization
+- [ ] **4.3.6** Celebration animations
+
+#### 4.4 Display Task Widgets
+
+- [ ] **4.4.1** "Today's Tasks" widget
+- [ ] **4.4.2** Routine progress widget
+- [ ] **4.4.3** Points/rewards widget
+- [ ] **4.4.4** Kid-friendly mode
+
+### Exit Criteria
+
+- Chores can be created and completed on all platforms
+- Routines guide children through multi-step processes
+- Points accumulate and rewards can be claimed
+- Real-time sync of task status
+
+---
+
+## Phase 5: Household Features
 
 ### Objective
 
@@ -409,186 +404,94 @@ Complete the household coordination features including profiles, meal planning, 
 
 ### Scope
 
-#### 4.1 Profile Management
+#### 5.1 Profile Management
 
-- [ ] **4.1.1** Profile creation and editing
-- [ ] **4.1.2** Avatar/photo upload
-- [ ] **4.1.3** Color selection
-- [ ] **4.1.4** Birthday tracking
-- [ ] **4.1.5** Caregiver info section
-- [ ] **4.1.6** Pet profiles
-- [ ] **4.1.7** Role assignment
+- [ ] **5.1.1** Enhanced profile editing
+- [ ] **5.1.2** Avatar/photo upload to Blob Storage
+- [ ] **5.1.3** Caregiver info section
+- [ ] **5.1.4** Pet profiles
 
-#### 4.2 Meal Planning Context
+#### 5.2 Meal Planning
 
-- [ ] **4.2.1** Weekly meal plan view
-- [ ] **4.2.2** Meal slots (breakfast, lunch, dinner, snacks)
-- [ ] **4.2.3** Recipe storage
-- [ ] **4.2.4** Recipe import from URLs
-- [ ] **4.2.5** Ingredient management
-- [ ] **4.2.6** "Add to grocery list" action
-- [ ] **4.2.7** Per-profile dietary preferences
-- [ ] **4.2.8** Meal plan templates
+- [ ] **5.2.1** Weekly meal plan view
+- [ ] **5.2.2** Recipe storage and import
+- [ ] **5.2.3** Ingredient management
+- [ ] **5.2.4** "Add to grocery list" action
+- [ ] **5.2.5** Dietary preferences
 
-#### 4.3 List Management Context
+#### 5.3 List Management
 
-- [ ] **4.3.1** Custom list creation
-- [ ] **4.3.2** List templates (grocery, packing, etc.)
-- [ ] **4.3.3** Checklist view
-- [ ] **4.3.4** Board/kanban view
-- [ ] **4.3.5** Category grouping
-- [ ] **4.3.6** Item quantities and notes
-- [ ] **4.3.7** Private lists (mobile only)
-- [ ] **4.3.8** List sharing
+- [ ] **5.3.1** Custom list creation
+- [ ] **5.3.2** List templates
+- [ ] **5.3.3** Checklist and board views
+- [ ] **5.3.4** List sharing
 
-#### 4.4 Caregiver Access
+#### 5.4 Caregiver Portal
 
-- [ ] **4.4.1** Caregiver invitation flow
-- [ ] **4.4.2** Time-limited access tokens
-- [ ] **4.4.3** Caregiver portal (web, no app required)
-- [ ] **4.4.4** View-only calendar access
-- [ ] **4.4.5** Caregiver info display
-- [ ] **4.4.6** Configurable visibility
-
-#### 4.5 Display Enhancements
-
-- [ ] **4.5.1** Meal plan widget on display
-- [ ] **4.5.2** Grocery list widget
-- [ ] **4.5.3** Profile quick-view
-- [ ] **4.5.4** Dashboard customization
-
-#### 4.6 Grocery Integration (Optional)
-
-- [ ] **4.6.1** Instacart API integration (US only)
-- [ ] **4.6.2** Send list to Instacart
-- [ ] **4.6.3** Alternative delivery services
+- [ ] **5.4.1** Web-based caregiver access
+- [ ] **5.4.2** Time-limited access tokens
+- [ ] **5.4.3** Read-only calendar view
+- [ ] **5.4.4** Caregiver info display
 
 ### Exit Criteria
 
 - Complete profile management across all platforms
-- Meal planning functional with recipe storage
+- Meal planning with recipe storage
 - Lists usable for grocery and custom purposes
 - Caregivers can access via web link
-- All features sync across devices
 
 ---
 
-## Phase 5: Intelligence Layer
+## Phase 6: Intelligence & Ecosystem
 
 ### Objective
 
-Add AI-powered features that reduce manual data entry and provide intelligent suggestions.
+Add AI-powered features and platform extensibility for community contributions and third-party integrations.
 
 ### Scope
 
-#### 5.1 Magic Import Service
+#### 6.1 Magic Import Service (Azure Function)
 
-- [ ] **5.1.1** Email forwarding inbox
-- [ ] **5.1.2** Email parsing (ics attachments, event detection)
-- [ ] **5.1.3** Photo/screenshot OCR
-- [ ] **5.1.4** PDF parsing (school schedules)
-- [ ] **5.1.5** Natural language text parsing
-- [ ] **5.1.6** URL scraping (event pages)
-- [ ] **5.1.7** Approval queue UI
-- [ ] **5.1.8** Batch approval
+- [ ] **6.1.1** Email forwarding with Azure Logic Apps
+- [ ] **6.1.2** Azure Cognitive Services for OCR
+- [ ] **6.1.3** PDF parsing with Azure Form Recognizer
+- [ ] **6.1.4** Approval queue in web/mobile apps
+- [ ] **6.1.5** Azure OpenAI for content extraction
 
-#### 5.2 Content Extraction
+#### 6.2 AI Suggestions
 
-- [ ] **5.2.1** Event extraction (date, time, location, title)
-- [ ] **5.2.2** Recurring pattern detection
-- [ ] **5.2.3** Meal/recipe extraction from photos
-- [ ] **5.2.4** List item extraction from photos
-- [ ] **5.2.5** Handwriting recognition
+- [ ] **6.2.1** Meal plan suggestions
+- [ ] **6.2.2** Schedule conflict detection
+- [ ] **6.2.3** Chore assignment suggestions
 
-#### 5.3 AI Suggestions
+#### 6.3 Public API
 
-- [ ] **5.3.1** Meal plan suggestions (based on preferences)
-- [ ] **5.3.2** Chore assignment suggestions
-- [ ] **5.3.3** Schedule conflict detection
-- [ ] **5.3.4** Routine optimization tips
-- [ ] **5.3.5** Grocery list suggestions (from meal plan)
+- [ ] **6.3.1** API Management configuration
+- [ ] **6.3.2** OpenAPI documentation
+- [ ] **6.3.3** API key management
+- [ ] **6.3.4** Rate limiting
+- [ ] **6.3.5** Webhook support
 
-#### 5.4 Learning Pipeline
+#### 6.4 Additional Integrations
 
-- [ ] **5.4.1** Feedback collection (approvals/rejections)
-- [ ] **5.4.2** Model fine-tuning (if self-hosted)
-- [ ] **5.4.3** Privacy-preserving learning
+- [ ] **6.4.1** iCloud CalDAV sync
+- [ ] **6.4.2** TeamSnap integration
+- [ ] **6.4.3** School calendar integrations
+- [ ] **6.4.4** Home automation APIs
 
-#### 5.5 Voice Input (Optional, Constrained)
+#### 6.5 Community Tools
 
-- [ ] **5.5.1** Wake word detection (local)
-- [ ] **5.5.2** Voice-to-text for specific commands
-- [ ] **5.5.3** "Add event" voice command
-- [ ] **5.5.4** "Add to list" voice command
-- [ ] **5.5.5** No open-ended queries (zero distraction)
+- [ ] **6.5.1** Routine template sharing
+- [ ] **6.5.2** Icon pack contributions
+- [ ] **6.5.3** Theme sharing
+- [ ] **6.5.4** Internationalization (i18n)
 
 ### Exit Criteria
 
-- Emails can be forwarded to create calendar events
-- Photos of schedules are parsed with high accuracy
-- Approval queue prevents unwanted automatic changes
-- AI suggestions are helpful and non-intrusive
-- Privacy maintained (local processing preferred)
-
----
-
-## Phase 6: Ecosystem Expansion
-
-### Objective
-
-Transform Luminous into a platform that supports community contributions, third-party integrations, and extensibility.
-
-### Scope
-
-#### 6.1 Plugin Architecture
-
-- [ ] **6.1.1** Plugin manifest format
-- [ ] **6.1.2** Plugin sandboxing
-- [ ] **6.1.3** Plugin lifecycle management
-- [ ] **6.1.4** Widget plugins (custom display widgets)
-- [ ] **6.1.5** Integration plugins (new calendar providers)
-- [ ] **6.1.6** Plugin marketplace/registry
-
-#### 6.2 API Gateway
-
-- [ ] **6.2.1** Public REST API
-- [ ] **6.2.2** GraphQL API (optional)
-- [ ] **6.2.3** API documentation (OpenAPI)
-- [ ] **6.2.4** API key management
-- [ ] **6.2.5** Rate limiting
-- [ ] **6.2.6** Webhook support
-
-#### 6.3 Additional Integrations
-
-- [ ] **6.3.1** Microsoft 365 two-way sync
-- [ ] **6.3.2** iCloud CalDAV two-way sync
-- [ ] **6.3.3** TeamSnap integration
-- [ ] **6.3.4** School calendar integrations
-- [ ] **6.3.5** Home automation (Home Assistant)
-- [ ] **6.3.6** Smart display (non-Luminous) API
-
-#### 6.4 Community Tools
-
-- [ ] **6.4.1** Routine template sharing
-- [ ] **6.4.2** Icon pack contributions
-- [ ] **6.4.3** Theme sharing
-- [ ] **6.4.4** Translation contributions (i18n)
-- [ ] **6.4.5** Community forum/Discord
-
-#### 6.5 Enterprise Features (Optional)
-
-- [ ] **6.5.1** Multi-household support
-- [ ] **6.5.2** Centralized administration
-- [ ] **6.5.3** SSO/SAML integration
-- [ ] **6.5.4** Audit logging
-
-### Exit Criteria
-
-- Third-party developers can create plugins
-- Public API enables automation and integrations
-- Community can contribute routines, icons, themes
-- Internationalization supports major languages
-- Platform is self-sustaining with community contributions
+- Magic Import processes forwarded emails and photos
+- AI suggestions are helpful and privacy-preserving
+- Public API enables third-party integrations
+- Community can contribute content
 
 ---
 
@@ -613,9 +516,10 @@ These features are under consideration for future development:
 | Current | Future Consideration | Rationale |
 |---------|---------------------|-----------|
 | Electron | Tauri | Smaller bundle, better performance |
-| SQLite | Durable Objects (Cloudflare) | Managed sync infrastructure |
-| React | React 19 Server Components | Improved performance |
-| Manual Themes | AI-generated themes | Personalization |
+| Angular | Angular with Signals | Reactive improvements |
+| Cosmos DB | Azure Cosmos DB Serverless | Cost optimization for smaller deployments |
+| Azure AD B2C | Entra External ID | Unified identity platform |
+| Azure Functions | Azure Container Apps | More flexibility for long-running jobs |
 
 ---
 
