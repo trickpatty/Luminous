@@ -14,13 +14,27 @@ New ADRs should follow the template in [ADR-000-template.md](./ADR-000-template.
 
 | ADR | Title | Status | Date |
 |-----|-------|--------|------|
-| [ADR-001](./ADR-001-typescript-primary-language.md) | TypeScript as Primary Language | Accepted | 2025-12-21 |
-| [ADR-002](./ADR-002-react-ui-framework.md) | React as UI Framework | Accepted | 2025-12-21 |
-| [ADR-003](./ADR-003-local-first-architecture.md) | Local-First Data Architecture | Accepted | 2025-12-21 |
-| [ADR-004](./ADR-004-two-way-sync-google-first.md) | Two-Way Sync Initially Google-Only | Accepted | 2025-12-21 |
-| [ADR-005](./ADR-005-magic-import-approval.md) | Magic Import Requires Approval | Accepted | 2025-12-21 |
-| [ADR-006](./ADR-006-zero-distraction-principle.md) | Zero-Distraction Design Principle | Accepted | 2025-12-21 |
-| [ADR-007](./ADR-007-self-hosting-first.md) | Self-Hosting as Primary Model | Accepted | 2025-12-21 |
+| [ADR-001](./ADR-001-dotnet-backend.md) | .NET 10 as Backend Platform | Accepted | 2025-12-21 |
+| [ADR-002](./ADR-002-angular-web-framework.md) | Angular as Web Framework | Accepted | 2025-12-21 |
+| [ADR-003](./ADR-003-azure-cloud-platform.md) | Azure as Cloud Platform | Accepted | 2025-12-21 |
+| [ADR-004](./ADR-004-native-mobile-apps.md) | Native iOS and Android Apps | Accepted | 2025-12-21 |
+| [ADR-005](./ADR-005-cosmosdb-data-store.md) | CosmosDB as Primary Data Store | Accepted | 2025-12-21 |
+| [ADR-006](./ADR-006-multi-tenant-architecture.md) | Multi-Tenant Architecture | Accepted | 2025-12-21 |
+| [ADR-007](./ADR-007-bicep-avm-iac.md) | Bicep with AVMs for IaC | Accepted | 2025-12-21 |
+| [ADR-008](./ADR-008-magic-import-approval.md) | Magic Import Requires Approval | Accepted | 2025-12-21 |
+| [ADR-009](./ADR-009-zero-distraction-principle.md) | Zero-Distraction Design Principle | Accepted | 2025-12-21 |
+| [ADR-010](./ADR-010-azure-ad-b2c-identity.md) | Azure AD B2C for Identity | Accepted | 2025-12-21 |
+
+## Superseded ADRs (Historical Reference)
+
+The following ADRs from the initial architecture have been superseded:
+
+| Old ADR | Title | Superseded By |
+|---------|-------|---------------|
+| ADR-001-typescript | TypeScript as Primary Language | ADR-001, ADR-002 (C#/TypeScript) |
+| ADR-002-react | React as UI Framework | ADR-002 (Angular) |
+| ADR-003-local-first | Local-First Data Architecture | ADR-003 (Azure Cloud) |
+| ADR-007-self-hosting | Self-Hosting as Primary Model | ADR-003 (Azure Cloud) |
 
 ## ADR Lifecycle
 

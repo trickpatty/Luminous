@@ -1,6 +1,6 @@
 # Luminous Project Overview
 
-> **Document Version:** 1.0.0
+> **Document Version:** 2.0.0
 > **Last Updated:** 2025-12-21
 > **Status:** Draft
 > **TOGAF Phase:** Architecture Vision (Phase A)
@@ -12,14 +12,15 @@
 1. [Executive Summary](#executive-summary)
 2. [Business Context](#business-context)
 3. [Product Definition](#product-definition)
-4. [Stakeholders and Personas](#stakeholders-and-personas)
-5. [Core UX Principles](#core-ux-principles)
-6. [Functional Scope](#functional-scope)
-7. [Non-Functional Requirements](#non-functional-requirements)
-8. [Design Constraints](#design-constraints)
-9. [Key Design Decisions](#key-design-decisions)
-10. [Success Metrics](#success-metrics)
-11. [Glossary](#glossary)
+4. [Deployment Model](#deployment-model)
+5. [Stakeholders and Personas](#stakeholders-and-personas)
+6. [Core UX Principles](#core-ux-principles)
+7. [Functional Scope](#functional-scope)
+8. [Non-Functional Requirements](#non-functional-requirements)
+9. [Design Constraints](#design-constraints)
+10. [Key Design Decisions](#key-design-decisions)
+11. [Success Metrics](#success-metrics)
+12. [Glossary](#glossary)
 
 ---
 
@@ -64,11 +65,12 @@ The family organization space is served by products like Skylight, Hearth, and C
 
 | Goal | Description | Priority |
 |------|-------------|----------|
-| SG-1 | Provide a fully open-source family command center | Critical |
-| SG-2 | Support diverse hardware (tablets, displays, DIY solutions) | High |
-| SG-3 | Enable self-hosting for privacy-conscious families | High |
-| SG-4 | Create an ecosystem of companion apps | Medium |
-| SG-5 | Build a community of contributors and users | Medium |
+| SG-1 | Provide a cloud-hosted family command center with Azure | Critical |
+| SG-2 | Support multi-tenant architecture for family sign-up | Critical |
+| SG-3 | Enable native mobile apps for iOS and Android | High |
+| SG-4 | Support diverse hardware for display (tablets, mini PCs) | High |
+| SG-5 | Enable local development alongside cloud deployment | Medium |
+| SG-6 | Build a community of contributors and users | Medium |
 
 ---
 
@@ -89,6 +91,93 @@ A wall-mounted, always-on, distraction-free family hub that makes schedules, cho
 - Games or entertainment features
 
 This constraint is intentional and strategic, aligning with research showing that multi-purpose smart displays often become sources of distraction rather than productivity.
+
+---
+
+## Deployment Model
+
+### Cloud-Hosted Multi-Tenant Platform
+
+Luminous is deployed as a cloud-hosted platform on Microsoft Azure, supporting multiple families (tenants) with complete data isolation.
+
+#### Platform Architecture
+
+| Component | Description | Azure Service |
+|-----------|-------------|---------------|
+| **Web Application** | Angular-based web interface | Azure Static Web Apps |
+| **API Backend** | .NET 10 REST API | Azure App Service |
+| **Real-time Sync** | WebSocket-based synchronization | Azure SignalR Service |
+| **Data Storage** | Document database per family | Azure Cosmos DB |
+| **File Storage** | Media and file uploads | Azure Blob Storage |
+| **Identity** | User authentication and authorization | Azure AD B2C |
+| **Background Jobs** | Calendar sync, import processing | Azure Functions |
+
+#### Multi-Tenancy Model
+
+Each family represents a **tenant** with complete data isolation:
+
+1. **Sign-Up Flow**: Users register via Azure AD B2C (email/password or social login)
+2. **Family Creation**: First user creates a family (tenant) and becomes the Owner
+3. **Member Invitation**: Owner invites family members via email or link
+4. **Device Linking**: Wall displays are linked to families via 6-digit codes
+
+#### Device Linking Flow
+
+```
++------------------+                    +------------------+
+|   DISPLAY APP    |                    |    MOBILE APP    |
++------------------+                    +------------------+
+        |                                       |
+        | 1. Display shows                      |
+        |    6-digit link code                  |
+        |    (expires in 15 min)                |
+        |                                       |
+        |                               2. User logs in
+        |                                  via Azure AD B2C
+        |                                       |
+        |                               3. User enters
+        |                                  link code
+        |                                       |
+        |       4. API validates code           |
+        |          and links device             |
+        |          to family                    |
+        |<--------------------------------------|
+        |                                       |
+        | 5. Display receives                   |
+        |    device token and                   |
+        |    syncs family data                  |
+        |                                       |
++------------------+                    +------------------+
+```
+
+### Native Mobile Applications
+
+Companion apps are built as **native applications** for optimal user experience:
+
+| Platform | Technology | Distribution |
+|----------|------------|--------------|
+| **iOS** | Swift / SwiftUI | Apple App Store |
+| **Android** | Kotlin / Jetpack Compose | Google Play Store |
+
+Native apps provide:
+- Push notifications via APNs (iOS) and FCM (Android)
+- Biometric authentication
+- Offline capability with local caching
+- Platform-specific UI/UX patterns
+
+### Local Development Environment
+
+Developers can run the full stack locally using:
+
+| Service | Local Alternative |
+|---------|-------------------|
+| Cosmos DB | Cosmos DB Emulator |
+| Blob Storage | Azurite |
+| Redis Cache | Docker Redis |
+| Azure Functions | Azure Functions Core Tools |
+| Azure AD B2C | Dev B2C tenant or local JWT issuer |
+
+See [Local Development Guide](./DEVELOPMENT.md) for setup instructions.
 
 ---
 

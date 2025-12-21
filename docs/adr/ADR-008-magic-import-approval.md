@@ -1,4 +1,4 @@
-# ADR-005: Magic Import Requires Approval
+# ADR-008: Magic Import Requires Approval
 
 > **Status:** Accepted
 > **Date:** 2025-12-21
@@ -164,6 +164,16 @@ No AI-extracted content will appear on the family calendar or lists until a hous
 └─────────────────────────────────────────────────────┘
 ```
 
+### Azure Implementation
+
+The Magic Import pipeline runs as Azure Functions:
+
+1. **Import Trigger Function**: Receives emails/uploads via Azure Blob Storage
+2. **Extraction Function**: Uses Azure AI Document Intelligence for OCR and extraction
+3. **Queue Storage**: Pending imports stored in Cosmos DB with `status: 'pending'`
+4. **Approval API**: .NET API endpoint for approve/reject actions
+5. **SignalR Notification**: Real-time updates when new imports arrive
+
 ### Future Considerations
 
 We may revisit this decision if:
@@ -175,9 +185,11 @@ Any such change would be opt-in and default to approval-required.
 
 ## Related Decisions
 
-- [ADR-006: Zero-Distraction Design Principle](./ADR-006-zero-distraction-principle.md)
+- [ADR-009: Zero-Distraction Design Principle](./ADR-009-zero-distraction-principle.md)
+- [ADR-005: CosmosDB as Primary Data Store](./ADR-005-cosmosdb-data-store.md)
 
 ## References
 
 - [Hearth Display Helper Feature](https://www.hearthapp.com/)
 - [Design for Trust in AI Systems](https://www.nngroup.com/articles/ai-trust/)
+- [Azure AI Document Intelligence](https://learn.microsoft.com/azure/ai-services/document-intelligence/)
