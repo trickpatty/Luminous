@@ -289,7 +289,7 @@ Use scopes to indicate the affected area:
 
 **Infrastructure**
 - `ui` - General UI components
-- `auth` - Authentication (Azure AD B2C)
+- `auth` - Authentication (Passkeys/WebAuthn/OAuth)
 - `cosmos` - CosmosDB/data layer changes
 - `storage` - Blob storage changes
 - `infra` - Bicep/IaC infrastructure
