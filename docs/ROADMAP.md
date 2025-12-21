@@ -1,6 +1,6 @@
 # Luminous Development Roadmap
 
-> **Document Version:** 2.1.0
+> **Document Version:** 2.2.0
 > **Last Updated:** 2025-12-21
 > **Status:** Active
 > **TOGAF Phase:** Phase E/F (Opportunities, Solutions & Migration Planning)
@@ -102,7 +102,7 @@ Phase 6: Intelligence & Ecosystem
 
 | Phase | Name | Focus | Key Deliverables | Status |
 |-------|------|-------|------------------|--------|
-| **0** | Foundation | Infrastructure | Azure IaC, .NET solution, Angular shell, Passwordless Auth | 🟡 In Progress (0.1 Complete) |
+| **0** | Foundation | Infrastructure | Azure IaC, .NET solution, Angular shell, Passwordless Auth | 🟡 In Progress (0.1, 0.2 Complete) |
 | **1** | Core Platform | Multi-tenancy | Family sign-up, device linking, CosmosDB, web MVP | ⬜ Not Started |
 | **2** | Display & Calendar | Calendar visibility | Display app, calendar integration, SignalR sync | ⬜ Not Started |
 | **3** | Native Mobile | Mobile apps | iOS (Swift), Android (Kotlin), push notifications | ⬜ Not Started |
@@ -147,15 +147,28 @@ Establish the Azure infrastructure, .NET backend, Angular frontend, and developm
 - [x] Redis Cache for session management
 - [x] Log Analytics and Application Insights for monitoring
 
-#### 0.2 .NET Solution Structure
+#### 0.2 .NET Solution Structure ✅ COMPLETED
 
-- [ ] **0.2.1** Create solution with Clean Architecture layers
-- [ ] **0.2.2** Set up Luminous.Domain with entities and value objects
-- [ ] **0.2.3** Set up Luminous.Application with CQRS handlers
-- [ ] **0.2.4** Set up Luminous.Infrastructure with CosmosDB repositories
-- [ ] **0.2.5** Set up Luminous.Api with controllers and middleware
-- [ ] **0.2.6** Configure dependency injection and options pattern
-- [ ] **0.2.7** Set up xUnit test projects
+- [x] **0.2.1** Create solution with Clean Architecture layers
+  - *Implemented: Luminous.sln with Directory.Build.props, Directory.Packages.props for centralized package management*
+- [x] **0.2.2** Set up Luminous.Domain with entities and value objects
+  - *Implemented: 10+ entities (Family, User, Device, Event, Chore, Routine, etc.), 8+ value objects, repository interfaces, domain events*
+- [x] **0.2.3** Set up Luminous.Application with CQRS handlers
+  - *Implemented: MediatR-based CQRS with commands/queries, FluentValidation validators, pipeline behaviors*
+- [x] **0.2.4** Set up Luminous.Infrastructure with CosmosDB repositories
+  - *Implemented: CosmosDbContext, base repository pattern, concrete repositories for all entities, Unit of Work*
+- [x] **0.2.5** Set up Luminous.Api with controllers and middleware
+  - *Implemented: ASP.NET Core API with controllers, exception handling middleware, Swagger/OpenAPI*
+- [x] **0.2.6** Configure dependency injection and options pattern
+  - *Implemented: DependencyInjection.cs in each layer, options pattern for CosmosDB settings*
+- [x] **0.2.7** Set up xUnit test projects
+  - *Implemented: 4 test projects (Domain.Tests, Application.Tests, Api.Tests, Integration.Tests) with sample tests*
+
+**Additional deliverables:**
+- [x] Luminous.Shared project for shared DTOs and contracts
+- [x] Centralized package version management (Directory.Packages.props)
+- [x] Global.json for SDK version pinning
+- [x] Sample unit tests demonstrating testing patterns
 
 #### 0.3 Angular Web Application
 
@@ -630,3 +643,4 @@ These can be developed in parallel after Phase 0:
 | 2.0.0 | 2025-12-21 | Luminous Team | Updated for Azure/.NET/Angular stack |
 | 2.1.0 | 2025-12-21 | Luminous Team | Phase 0.1 Azure Infrastructure completed |
 | 2.1.1 | 2025-12-21 | Luminous Team | Refactored to use AVMs directly from public registry |
+| 2.2.0 | 2025-12-21 | Luminous Team | Phase 0.2 .NET Solution Structure completed |

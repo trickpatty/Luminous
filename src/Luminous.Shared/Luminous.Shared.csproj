@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Luminous.Shared</RootNamespace>
+    <AssemblyName>Luminous.Shared</AssemblyName>
+    <Description>Shared DTOs and contracts for API communication</Description>
+  </PropertyGroup>
+
+</Project>

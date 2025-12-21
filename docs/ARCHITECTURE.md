@@ -1,6 +1,6 @@
 # Luminous Architecture Document
 
-> **Document Version:** 2.0.0
+> **Document Version:** 2.1.0
 > **Last Updated:** 2025-12-21
 > **Status:** Draft
 > **TOGAF Phase:** Phase B-D (Architecture Development)
@@ -259,9 +259,10 @@ LUMINOUS FAMILY HUB (MULTI-TENANT)
 #### Family (Tenant Root)
 
 ```csharp
+// Uses NanoId for URL-friendly, compact unique identifiers
 public class Family
 {
-    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string Id { get; set; } = Nanoid.Generate();  // NanoId: compact, URL-safe
     public string Name { get; set; } = string.Empty;
     public string Timezone { get; set; } = "UTC";
     public FamilySettings Settings { get; set; } = new();
@@ -284,7 +285,7 @@ public class FamilySettings
 ```csharp
 public class User
 {
-    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string Id { get; set; } = Nanoid.Generate();  // NanoId: compact, URL-safe
     public string FamilyId { get; set; } = string.Empty;  // Partition key
     public string ExternalId { get; set; } = string.Empty; // Internal auth ID
     public string Email { get; set; } = string.Empty;
@@ -311,7 +312,7 @@ public enum UserRole
 ```csharp
 public class Device
 {
-    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string Id { get; set; } = Nanoid.Generate();  // NanoId: compact, URL-safe
     public string FamilyId { get; set; } = string.Empty;  // Partition key
     public DeviceType Type { get; set; } = DeviceType.Display;
     public string Name { get; set; } = string.Empty;
@@ -422,6 +423,7 @@ luminous/
 | **Real-time** | Azure SignalR Service | Latest | WebSocket at scale |
 | **Identity** | In-house (FIDO2/WebAuthn) | Latest | Passwordless-first auth |
 | **IaC** | Bicep + AVMs | Latest | Azure-native, verified modules |
+| **Identifiers** | NanoId | 3.1.0 | URL-friendly, compact unique IDs |
 
 ### Platform Matrix
 
@@ -724,3 +726,4 @@ services:
 |---------|------|--------|---------|
 | 1.0.0 | 2025-12-21 | Luminous Team | Initial architecture document |
 | 2.0.0 | 2025-12-21 | Luminous Team | Updated for Azure/.NET/Angular stack, multi-tenancy |
+| 2.1.0 | 2025-12-21 | Luminous Team | Migrate from Guid to NanoId for unique identifiers |
