@@ -1,8 +1,8 @@
 # Luminous Development Roadmap
 
-> **Document Version:** 2.0.0
+> **Document Version:** 2.1.0
 > **Last Updated:** 2025-12-21
-> **Status:** Draft
+> **Status:** Active
 > **TOGAF Phase:** Phase E/F (Opportunities, Solutions & Migration Planning)
 
 ---
@@ -100,15 +100,15 @@ Phase 6: Intelligence & Ecosystem
 
 ### Phase Summary
 
-| Phase | Name | Focus | Key Deliverables |
-|-------|------|-------|------------------|
-| **0** | Foundation | Infrastructure | Azure IaC, .NET solution, Angular shell, Passwordless Auth |
-| **1** | Core Platform | Multi-tenancy | Family sign-up, device linking, CosmosDB, web MVP |
-| **2** | Display & Calendar | Calendar visibility | Display app, calendar integration, SignalR sync |
-| **3** | Native Mobile | Mobile apps | iOS (Swift), Android (Kotlin), push notifications |
-| **4** | Task Management | Chores and routines | Task creation, completion tracking, rewards |
-| **5** | Household Features | Expanded features | Profiles, meals, lists, caregiver portal |
-| **6** | Intelligence & Ecosystem | AI and extensions | Magic import, suggestions, third-party APIs |
+| Phase | Name | Focus | Key Deliverables | Status |
+|-------|------|-------|------------------|--------|
+| **0** | Foundation | Infrastructure | Azure IaC, .NET solution, Angular shell, Passwordless Auth | 🟡 In Progress (0.1 Complete) |
+| **1** | Core Platform | Multi-tenancy | Family sign-up, device linking, CosmosDB, web MVP | ⬜ Not Started |
+| **2** | Display & Calendar | Calendar visibility | Display app, calendar integration, SignalR sync | ⬜ Not Started |
+| **3** | Native Mobile | Mobile apps | iOS (Swift), Android (Kotlin), push notifications | ⬜ Not Started |
+| **4** | Task Management | Chores and routines | Task creation, completion tracking, rewards | ⬜ Not Started |
+| **5** | Household Features | Expanded features | Profiles, meals, lists, caregiver portal | ⬜ Not Started |
+| **6** | Intelligence & Ecosystem | AI and extensions | Magic import, suggestions, third-party APIs | ⬜ Not Started |
 
 ---
 
@@ -120,15 +120,32 @@ Establish the Azure infrastructure, .NET backend, Angular frontend, and developm
 
 ### Scope
 
-#### 0.1 Azure Infrastructure (Bicep with AVMs)
+#### 0.1 Azure Infrastructure (Bicep with AVMs) ✅ COMPLETED
 
-- [ ] **0.1.1** Create Bicep modules for all Azure resources using AVMs
-- [ ] **0.1.2** Configure Cosmos DB with required containers
-- [ ] **0.1.3** Set up in-house identity service with WebAuthn/passkey support
-- [ ] **0.1.4** Configure App Service for .NET API
-- [ ] **0.1.5** Set up Azure Static Web Apps for Angular
-- [ ] **0.1.6** Configure Key Vault for secrets
-- [ ] **0.1.7** Set up environment parameter files (dev, staging, prod)
+- [x] **0.1.1** Create Bicep modules for all Azure resources using AVMs
+  - *Implemented: main.bicep using 13 AVMs directly from the public Bicep registry (br/public:avm/res/...)*
+  - *Resources: resource-group, log-analytics, app-insights, key-vault, app-configuration, cosmos-db, storage-account, redis-cache, service-bus, signalr, app-service-plan, web-site, static-web-app*
+- [x] **0.1.2** Configure Cosmos DB with required containers
+  - *Implemented: 11 containers via AVM (families, users, events, chores, devices, routines, lists, meals, completions, invitations, credentials)*
+- [x] **0.1.3** Set up in-house identity service with WebAuthn/passkey support
+  - *Implemented: credentials container in Cosmos DB for WebAuthn credential storage; App Service configured for passwordless auth integration*
+- [x] **0.1.4** Configure App Service for .NET API
+  - *Implemented: Using br/public:avm/res/web/site with .NET 9, managed identity, health checks*
+- [x] **0.1.5** Set up Azure Static Web Apps for Angular
+  - *Implemented: Using br/public:avm/res/web/static-site with staging environment support*
+- [x] **0.1.6** Configure Key Vault for secrets
+  - *Implemented: Using br/public:avm/res/key-vault/vault with RBAC authorization, soft delete*
+- [x] **0.1.7** Set up environment parameter files (dev, staging, prod)
+  - *Implemented: dev.bicepparam, staging.bicepparam, prod.bicepparam with environment-appropriate SKUs and settings*
+
+**Additional deliverables:**
+- [x] Deployment scripts (deploy.sh, deploy.ps1) for automated deployment
+- [x] Azure Infrastructure documentation (docs/AZURE-INFRASTRUCTURE.md)
+- [x] Function Apps for sync and import processing
+- [x] Service Bus with queues for async messaging
+- [x] SignalR Service for real-time sync
+- [x] Redis Cache for session management
+- [x] Log Analytics and Application Insights for monitoring
 
 #### 0.2 .NET Solution Structure
 
@@ -610,3 +627,6 @@ These can be developed in parallel after Phase 0:
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0.0 | 2025-12-21 | Luminous Team | Initial roadmap |
+| 2.0.0 | 2025-12-21 | Luminous Team | Updated for Azure/.NET/Angular stack |
+| 2.1.0 | 2025-12-21 | Luminous Team | Phase 0.1 Azure Infrastructure completed |
+| 2.1.1 | 2025-12-21 | Luminous Team | Refactored to use AVMs directly from public registry |
