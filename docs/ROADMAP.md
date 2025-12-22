@@ -1,6 +1,6 @@
 # Luminous Development Roadmap
 
-> **Document Version:** 2.4.0
+> **Document Version:** 2.5.0
 > **Last Updated:** 2025-12-22
 > **Status:** Active
 > **TOGAF Phase:** Phase E/F (Opportunities, Solutions & Migration Planning)
@@ -102,7 +102,7 @@ Phase 6: Intelligence & Ecosystem
 
 | Phase | Name | Focus | Key Deliverables | Status |
 |-------|------|-------|------------------|--------|
-| **0** | Foundation | Infrastructure | Azure IaC, .NET solution, Angular shell, Passwordless Auth, Local Dev | 🟡 In Progress (0.1, 0.2, 0.3, 0.4 Complete) |
+| **0** | Foundation | Infrastructure | Azure IaC, .NET solution, Angular shell, Passwordless Auth, Local Dev, CI/CD | 🟡 In Progress (0.1-0.5 Complete) |
 | **1** | Core Platform | Multi-tenancy | Family sign-up, device linking, CosmosDB, web MVP | ⬜ Not Started |
 | **2** | Display & Calendar | Calendar visibility | Display app, calendar integration, SignalR sync | ⬜ Not Started |
 | **3** | Native Mobile | Mobile apps | iOS (Swift), Android (Kotlin), push notifications | ⬜ Not Started |
@@ -211,13 +211,25 @@ Establish the Azure infrastructure, .NET backend, Angular frontend, and developm
 - [x] Authorization policies (FamilyMember, FamilyAdmin, FamilyOwner)
 - [x] Development authentication endpoint (POST /api/devauth/token)
 
-#### 0.5 CI/CD Pipeline
+#### 0.5 CI/CD Pipeline ✅ COMPLETED
 
-- [ ] **0.5.1** GitHub Actions for .NET build and test
-- [ ] **0.5.2** GitHub Actions for Angular build and test
-- [ ] **0.5.3** GitHub Actions for Bicep deployment
-- [ ] **0.5.4** Configure environment-specific deployments
-- [ ] **0.5.5** Set up Dependabot for dependency updates
+- [x] **0.5.1** GitHub Actions for .NET build and test
+  - *Implemented: .github/workflows/dotnet.yml with build, test, coverage, and security scanning*
+- [x] **0.5.2** GitHub Actions for Angular build and test
+  - *Implemented: .github/workflows/angular.yml with lint, typecheck, test, build, and security audit*
+- [x] **0.5.3** GitHub Actions for Bicep deployment
+  - *Implemented: .github/workflows/infrastructure.yml with validate, what-if, and deploy stages*
+- [x] **0.5.4** Configure environment-specific deployments
+  - *Implemented: .github/workflows/deploy.yml with dev/staging/prod environments, Azure OIDC auth*
+- [x] **0.5.5** Set up Dependabot for dependency updates
+  - *Implemented: .github/dependabot.yml for NuGet, npm, GitHub Actions, and Docker ecosystems*
+
+**Additional deliverables:**
+- [x] CI/CD documentation (docs/CI-CD.md)
+- [x] Environment-specific deployment workflows with approval gates
+- [x] Security scanning for .NET (vulnerable packages) and npm (audit)
+- [x] Artifact management for build outputs
+- [x] Bundle size analysis for Angular builds
 
 #### 0.6 Documentation
 
@@ -670,3 +682,4 @@ These can be developed in parallel after Phase 0:
 | 2.2.0 | 2025-12-21 | Luminous Team | Phase 0.2 .NET Solution Structure completed |
 | 2.3.0 | 2025-12-21 | Luminous Team | Phase 0.3 Angular Web Application completed |
 | 2.4.0 | 2025-12-22 | Luminous Team | Phase 0.4 Local Development Environment completed |
+| 2.5.0 | 2025-12-22 | Luminous Team | Phase 0.5 CI/CD Pipeline completed |
