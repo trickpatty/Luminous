@@ -1,0 +1,155 @@
+# =============================================================================
+# Luminous - Local Development Docker Compose
+# =============================================================================
+# Provides local development services that emulate Azure cloud services.
+#
+# Usage:
+#   docker compose up -d                    # Start all services
+#   docker compose up -d cosmosdb redis     # Start specific services
+#   docker compose down                     # Stop all services
+#   docker compose down -v                  # Stop and remove volumes
+#
+# Services:
+#   - cosmosdb:  Azure Cosmos DB Emulator (port 8081)
+#   - azurite:   Azure Storage Emulator (Blob: 10000, Queue: 10001, Table: 10002)
+#   - redis:     Redis Cache (port 6379)
+#   - mailhog:   Email testing server (SMTP: 1025, Web UI: 8025)
+#
+# Note: Cosmos DB Emulator has specific system requirements.
+#       See docs/DEVELOPMENT.md for details.
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Azure Cosmos DB Emulator
+  # ---------------------------------------------------------------------------
+  # Documentation: https://learn.microsoft.com/en-us/azure/cosmos-db/emulator
+  # Default Key: C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==
+  # ---------------------------------------------------------------------------
+  cosmosdb:
+    image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest
+    container_name: luminous-cosmosdb
+    hostname: cosmosdb
+    mem_limit: 3g
+    cpu_count: 2
+    environment:
+      - AZURE_COSMOS_EMULATOR_PARTITION_COUNT=10
+      - AZURE_COSMOS_EMULATOR_ENABLE_DATA_PERSISTENCE=true
+      - AZURE_COSMOS_EMULATOR_IP_ADDRESS_OVERRIDE=127.0.0.1
+    ports:
+      - "8081:8081"      # HTTPS endpoint
+      - "10250:10250"    # Gateway port
+      - "10251:10251"    # Data partition 1
+      - "10252:10252"    # Data partition 2
+      - "10253:10253"    # Data partition 3
+      - "10254:10254"    # Data partition 4
+      - "10255:10255"    # Data partition 5
+    volumes:
+      - cosmosdb_data:/tmp/cosmos/appdata
+    networks:
+      - luminous-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fks https://localhost:8081/_explorer/emulator.pem || exit 1"]
+      interval: 30s
+      timeout: 15s
+      retries: 10
+      start_period: 120s
+
+  # ---------------------------------------------------------------------------
+  # Azurite - Azure Storage Emulator
+  # ---------------------------------------------------------------------------
+  # Documentation: https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite
+  # Connection String: DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;TableEndpoint=http://127.0.0.1:10002/devstoreaccount1;
+  # ---------------------------------------------------------------------------
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    container_name: luminous-azurite
+    hostname: azurite
+    command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --loose"
+    ports:
+      - "10000:10000"    # Blob service
+      - "10001:10001"    # Queue service
+      - "10002:10002"    # Table service
+    volumes:
+      - azurite_data:/data
+    networks:
+      - luminous-network
+
+  # ---------------------------------------------------------------------------
+  # Redis Cache
+  # ---------------------------------------------------------------------------
+  # Documentation: https://redis.io/docs/
+  # Connection: localhost:6379
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: luminous-redis
+    hostname: redis
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - luminous-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # MailHog - Email Testing Server
+  # ---------------------------------------------------------------------------
+  # Documentation: https://github.com/mailhog/MailHog
+  # SMTP: localhost:1025
+  # Web UI: http://localhost:8025
+  # ---------------------------------------------------------------------------
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: luminous-mailhog
+    hostname: mailhog
+    ports:
+      - "1025:1025"      # SMTP server
+      - "8025:8025"      # Web UI
+    networks:
+      - luminous-network
+
+  # ---------------------------------------------------------------------------
+  # Redis Commander - Redis Web UI (Optional)
+  # ---------------------------------------------------------------------------
+  # Web UI: http://localhost:8082
+  # ---------------------------------------------------------------------------
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: luminous-redis-commander
+    hostname: redis-commander
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8082:8081"
+    depends_on:
+      - redis
+    networks:
+      - luminous-network
+    profiles:
+      - tools
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  cosmosdb_data:
+    name: luminous-cosmosdb-data
+  azurite_data:
+    name: luminous-azurite-data
+  redis_data:
+    name: luminous-redis-data
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  luminous-network:
+    name: luminous-network
+    driver: bridge
