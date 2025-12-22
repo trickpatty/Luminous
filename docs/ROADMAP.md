@@ -1,7 +1,7 @@
 # Luminous Development Roadmap
 
-> **Document Version:** 2.3.0
-> **Last Updated:** 2025-12-21
+> **Document Version:** 2.4.0
+> **Last Updated:** 2025-12-22
 > **Status:** Active
 > **TOGAF Phase:** Phase E/F (Opportunities, Solutions & Migration Planning)
 
@@ -102,7 +102,7 @@ Phase 6: Intelligence & Ecosystem
 
 | Phase | Name | Focus | Key Deliverables | Status |
 |-------|------|-------|------------------|--------|
-| **0** | Foundation | Infrastructure | Azure IaC, .NET solution, Angular shell, Passwordless Auth | 🟡 In Progress (0.1, 0.2, 0.3 Complete) |
+| **0** | Foundation | Infrastructure | Azure IaC, .NET solution, Angular shell, Passwordless Auth, Local Dev | 🟡 In Progress (0.1, 0.2, 0.3, 0.4 Complete) |
 | **1** | Core Platform | Multi-tenancy | Family sign-up, device linking, CosmosDB, web MVP | ⬜ Not Started |
 | **2** | Display & Calendar | Calendar visibility | Display app, calendar integration, SignalR sync | ⬜ Not Started |
 | **3** | Native Mobile | Mobile apps | iOS (Swift), Android (Kotlin), push notifications | ⬜ Not Started |
@@ -192,13 +192,24 @@ Establish the Azure infrastructure, .NET backend, Angular frontend, and developm
 - [x] TypeScript models for User, Family, Auth entities
 - [x] HTTP interceptors for auth tokens and error handling
 
-#### 0.4 Local Development Environment
+#### 0.4 Local Development Environment ✅ COMPLETED
 
-- [ ] **0.4.1** Create Docker Compose for local services
-- [ ] **0.4.2** Document Cosmos DB Emulator setup
-- [ ] **0.4.3** Create local development scripts (PowerShell/Bash)
-- [ ] **0.4.4** Configure launch profiles for debugging
-- [ ] **0.4.5** Set up local JWT issuer for development
+- [x] **0.4.1** Create Docker Compose for local services
+  - *Implemented: docker-compose.yml with CosmosDB Emulator, Azurite, Redis, MailHog, and optional Redis Commander*
+- [x] **0.4.2** Document Cosmos DB Emulator setup
+  - *Implemented: Comprehensive DEVELOPMENT.md with SSL certificate setup, troubleshooting, and configuration*
+- [x] **0.4.3** Create local development scripts (PowerShell/Bash)
+  - *Implemented: scripts/dev-start.sh and scripts/dev-start.ps1 with service management, status checks, and certificate installation*
+- [x] **0.4.4** Configure launch profiles for debugging
+  - *Implemented: Properties/launchSettings.json with http, https, Docker, and Watch profiles*
+- [x] **0.4.5** Set up local JWT issuer for development
+  - *Implemented: LocalJwtTokenService, DevAuthController, JwtSettings configuration, and development token endpoints*
+
+**Additional deliverables:**
+- [x] Full appsettings.Development.json with all local service configurations
+- [x] Swagger UI with JWT authentication support
+- [x] Authorization policies (FamilyMember, FamilyAdmin, FamilyOwner)
+- [x] Development authentication endpoint (POST /api/devauth/token)
 
 #### 0.5 CI/CD Pipeline
 
@@ -658,3 +669,4 @@ These can be developed in parallel after Phase 0:
 | 2.1.1 | 2025-12-21 | Luminous Team | Refactored to use AVMs directly from public registry |
 | 2.2.0 | 2025-12-21 | Luminous Team | Phase 0.2 .NET Solution Structure completed |
 | 2.3.0 | 2025-12-21 | Luminous Team | Phase 0.3 Angular Web Application completed |
+| 2.4.0 | 2025-12-22 | Luminous Team | Phase 0.4 Local Development Environment completed |

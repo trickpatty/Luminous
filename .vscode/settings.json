@@ -1,0 +1,217 @@
+{
+  // ==========================================================================
+  // Editor Settings
+  // ==========================================================================
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "editor.rulers": [100, 120],
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": true,
+
+  // ==========================================================================
+  // File Settings
+  // ==========================================================================
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "**/node_modules": true,
+    "**/.angular": true,
+    "**/dist": true,
+    "**/.git": true
+  },
+  "files.watcherExclude": {
+    "**/bin/**": true,
+    "**/obj/**": true,
+    "**/node_modules/**": true,
+    "**/.angular/**": true,
+    "**/dist/**": true
+  },
+
+  // ==========================================================================
+  // Search Settings
+  // ==========================================================================
+  "search.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "**/node_modules": true,
+    "**/.angular": true,
+    "**/dist": true,
+    "**/coverage": true,
+    "**/*.min.js": true,
+    "**/*.min.css": true
+  },
+
+  // ==========================================================================
+  // C# / .NET Settings
+  // ==========================================================================
+  "dotnet.defaultSolution": "Luminous.sln",
+  "omnisharp.enableEditorConfigSupport": true,
+  "omnisharp.enableRoslynAnalyzers": true,
+  "[csharp]": {
+    "editor.defaultFormatter": "ms-dotnettools.csharp",
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true
+  },
+
+  // ==========================================================================
+  // TypeScript / Angular Settings
+  // ==========================================================================
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+  },
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+  },
+  "[scss]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+  },
+
+  // ==========================================================================
+  // Angular Settings
+  // ==========================================================================
+  "angular.enable-strict-mode-prompt": false,
+
+  // ==========================================================================
+  // Tailwind CSS Settings
+  // ==========================================================================
+  "tailwindCSS.includeLanguages": {
+    "html": "html",
+    "typescript": "javascript"
+  },
+  "tailwindCSS.experimental.classRegex": [
+    ["class\\s*=\\s*['\"]([^'\"]*)['\"]", "([a-zA-Z0-9\\-:]+)"],
+    ["[a-zA-Z]+Class\\s*=\\s*['\"]([^'\"]*)['\"]", "([a-zA-Z0-9\\-:]+)"]
+  ],
+
+  // ==========================================================================
+  // ESLint Settings
+  // ==========================================================================
+  "eslint.workingDirectories": ["./clients/web"],
+  "eslint.validate": ["javascript", "typescript", "html"],
+
+  // ==========================================================================
+  // Prettier Settings
+  // ==========================================================================
+  "prettier.singleQuote": true,
+  "prettier.trailingComma": "es5",
+
+  // ==========================================================================
+  // Bicep Settings
+  // ==========================================================================
+  "[bicep]": {
+    "editor.defaultFormatter": "ms-azuretools.vscode-bicep",
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+  },
+
+  // ==========================================================================
+  // JSON Settings
+  // ==========================================================================
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+  },
+
+  // ==========================================================================
+  // Markdown Settings
+  // ==========================================================================
+  "[markdown]": {
+    "editor.wordWrap": "on",
+    "editor.quickSuggestions": {
+      "other": true,
+      "comments": false,
+      "strings": false
+    }
+  },
+
+  // ==========================================================================
+  // Docker Settings
+  // ==========================================================================
+  "docker.containers.label": "ContainerName",
+  "docker.containers.sortBy": "Label",
+
+  // ==========================================================================
+  // Git Settings
+  // ==========================================================================
+  "git.autofetch": true,
+  "git.confirmSync": false,
+  "git.enableSmartCommit": true,
+  "gitlens.currentLine.enabled": true,
+
+  // ==========================================================================
+  // Testing Settings
+  // ==========================================================================
+  "dotnet-test-explorer.testProjectPath": "**/*Tests.csproj",
+
+  // ==========================================================================
+  // Todo Tree Settings
+  // ==========================================================================
+  "todo-tree.general.tags": [
+    "BUG",
+    "HACK",
+    "FIXME",
+    "TODO",
+    "XXX",
+    "[ ]",
+    "[x]"
+  ],
+  "todo-tree.highlights.defaultHighlight": {
+    "icon": "alert",
+    "type": "text",
+    "foreground": "#FF8C00",
+    "background": "#1e1e1e",
+    "opacity": 50,
+    "iconColour": "#FF8C00"
+  },
+
+  // ==========================================================================
+  // REST Client Settings
+  // ==========================================================================
+  "rest-client.environmentVariables": {
+    "$shared": {},
+    "development": {
+      "baseUrl": "http://localhost:5000",
+      "token": ""
+    },
+    "staging": {
+      "baseUrl": "https://staging-api.luminous.app",
+      "token": ""
+    }
+  },
+
+  // ==========================================================================
+  // Spell Checker Settings
+  // ==========================================================================
+  "cSpell.words": [
+    "Azurite",
+    "bicep",
+    "blazor",
+    "cosmosdb",
+    "Luminous",
+    "mailhog",
+    "nanoid",
+    "passkey",
+    "passkeys",
+    "TOGAF",
+    "webauthn"
+  ]
+}
