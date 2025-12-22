@@ -13,10 +13,11 @@
 #   - cosmosdb:  Azure Cosmos DB Emulator (port 8081)
 #   - azurite:   Azure Storage Emulator (Blob: 10000, Queue: 10001, Table: 10002)
 #   - redis:     Redis Cache (port 6379)
-#   - mailhog:   Email testing server (SMTP: 1025, Web UI: 8025)
+#   - mailpit:   Email testing server (SMTP: 1025, Web UI: 8025)
 #
-# Note: Cosmos DB Emulator has specific system requirements.
-#       See docs/DEVELOPMENT.md for details.
+# ARM64 Support (Apple Silicon M1/M2/M3):
+#   All services are compatible with ARM64 architecture.
+#   See docs/DEVELOPMENT.md for platform-specific notes.
 # =============================================================================
 
 services:
@@ -25,11 +26,17 @@ services:
   # ---------------------------------------------------------------------------
   # Documentation: https://learn.microsoft.com/en-us/azure/cosmos-db/emulator
   # Default Key: C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==
+  #
+  # ARM64 Note: The Linux emulator supports ARM64 natively as of late 2023.
+  #             First startup may take 3-5 minutes on Apple Silicon.
   # ---------------------------------------------------------------------------
   cosmosdb:
     image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest
     container_name: luminous-cosmosdb
     hostname: cosmosdb
+    # Platform auto-detected; explicitly set if needed:
+    # platform: linux/amd64  # Use Rosetta 2 emulation on Apple Silicon
+    # platform: linux/arm64  # Use native ARM64 (recommended for M1/M2/M3)
     mem_limit: 3g
     cpu_count: 2
     environment:
@@ -52,14 +59,16 @@ services:
       test: ["CMD-SHELL", "curl -fks https://localhost:8081/_explorer/emulator.pem || exit 1"]
       interval: 30s
       timeout: 15s
-      retries: 10
-      start_period: 120s
+      retries: 15
+      start_period: 180s  # ARM64 may need longer startup time
 
   # ---------------------------------------------------------------------------
   # Azurite - Azure Storage Emulator
   # ---------------------------------------------------------------------------
   # Documentation: https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite
   # Connection String: DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;TableEndpoint=http://127.0.0.1:10002/devstoreaccount1;
+  #
+  # ARM64 Note: Azurite has native ARM64 support.
   # ---------------------------------------------------------------------------
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite:latest
@@ -80,6 +89,8 @@ services:
   # ---------------------------------------------------------------------------
   # Documentation: https://redis.io/docs/
   # Connection: localhost:6379
+  #
+  # ARM64 Note: Redis Alpine has native ARM64 support.
   # ---------------------------------------------------------------------------
   redis:
     image: redis:7-alpine
@@ -99,16 +110,22 @@ services:
       retries: 5
 
   # ---------------------------------------------------------------------------
-  # MailHog - Email Testing Server
+  # Mailpit - Email Testing Server (replaces MailHog)
   # ---------------------------------------------------------------------------
-  # Documentation: https://github.com/mailhog/MailHog
+  # Documentation: https://github.com/axllent/mailpit
   # SMTP: localhost:1025
   # Web UI: http://localhost:8025
+  #
+  # Note: Mailpit is a modern replacement for MailHog with better ARM64 support
+  #       and active maintenance. API-compatible with MailHog.
   # ---------------------------------------------------------------------------
-  mailhog:
-    image: mailhog/mailhog:latest
-    container_name: luminous-mailhog
-    hostname: mailhog
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: luminous-mailpit
+    hostname: mailpit
+    environment:
+      - MP_SMTP_AUTH_ACCEPT_ANY=true
+      - MP_SMTP_AUTH_ALLOW_INSECURE=true
     ports:
       - "1025:1025"      # SMTP server
       - "8025:8025"      # Web UI
@@ -119,11 +136,14 @@ services:
   # Redis Commander - Redis Web UI (Optional)
   # ---------------------------------------------------------------------------
   # Web UI: http://localhost:8082
+  #
+  # ARM64 Note: May require Rosetta 2 emulation on Apple Silicon.
   # ---------------------------------------------------------------------------
   redis-commander:
     image: rediscommander/redis-commander:latest
     container_name: luminous-redis-commander
     hostname: redis-commander
+    platform: linux/amd64  # Force x86_64 emulation if no ARM64 image
     environment:
       - REDIS_HOSTS=local:redis:6379
     ports:

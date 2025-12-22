@@ -1,6 +1,6 @@
 # Luminous Local Development Guide
 
-> **Document Version:** 1.0.0
+> **Document Version:** 1.2.0
 > **Last Updated:** 2025-12-22
 > **Status:** Active
 
@@ -47,6 +47,36 @@ The Cosmos DB Emulator has specific requirements:
 - **RAM**: Minimum 3GB available for Docker
 - **CPU**: 2+ cores recommended
 - **Disk**: 10GB free space for containers and data
+
+### Apple Silicon (M1/M2/M3) Support
+
+All Docker services are compatible with ARM64 architecture:
+
+| Service | ARM64 Support | Notes |
+|---------|---------------|-------|
+| **Cosmos DB Emulator** | Native | First startup takes 3-5 minutes |
+| **Azurite** | Native | No special configuration needed |
+| **Redis** | Native | No special configuration needed |
+| **Mailpit** | Native | Replaces MailHog for better ARM64 support |
+
+**Docker Desktop Settings for Apple Silicon:**
+
+1. Open Docker Desktop > Settings > General
+2. Ensure "Use Virtualization framework" is enabled
+3. Under Resources, allocate at least 4GB RAM (6GB recommended)
+4. Enable "Use Rosetta for x86/amd64 emulation" for any x86 containers
+
+**First-Time Setup:**
+```bash
+# Pull images (may take a few minutes)
+docker compose pull
+
+# Start services (Cosmos DB takes 3-5 minutes on first run)
+docker compose up -d
+
+# Monitor startup progress
+docker compose logs -f cosmosdb
+```
 
 ---
 
@@ -111,7 +141,7 @@ The `docker-compose.yml` file provides these local services:
 | **cosmosdb** | 8081 | Azure Cosmos DB Emulator |
 | **azurite** | 10000, 10001, 10002 | Azure Storage Emulator |
 | **redis** | 6379 | Redis Cache |
-| **mailhog** | 1025 (SMTP), 8025 (UI) | Email testing server |
+| **mailpit** | 1025 (SMTP), 8025 (UI) | Email testing server |
 
 ### Starting Services
 
@@ -454,6 +484,40 @@ npm install
 2. Check `Cors.AllowedOrigins` includes `http://localhost:4200`
 3. Verify you're using `http://localhost:4200` not `127.0.0.1`
 
+### Apple Silicon (ARM64) Issues
+
+**Cosmos DB Emulator won't start or is very slow:**
+```bash
+# Check Docker has enough resources (need 4GB+ RAM)
+docker stats
+
+# Try pulling the latest image explicitly
+docker pull mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest
+
+# Reset and try again
+docker compose down -v
+docker compose up -d cosmosdb
+
+# Watch the logs (startup can take 3-5 minutes)
+docker compose logs -f cosmosdb
+```
+
+**"no matching manifest for linux/arm64" error:**
+```bash
+# Some images may need x86_64 emulation via Rosetta 2
+# Ensure Rosetta is enabled in Docker Desktop settings
+
+# For specific services, you can force the platform:
+# Edit docker-compose.yml and add:
+#   platform: linux/amd64
+```
+
+**Slow performance on Apple Silicon:**
+1. Ensure Docker Desktop has "Use Virtualization framework" enabled
+2. Allocate at least 4GB RAM (6GB recommended) in Docker settings
+3. Enable "Use Rosetta for x86/amd64 emulation" for better x86 compatibility
+4. Consider using native ARM64 images where available (all Luminous services support ARM64)
+
 ### Reset Everything
 
 To completely reset the development environment:
@@ -506,7 +570,7 @@ Access via Command Palette > "Tasks: Run Task":
 
 | Task | Description |
 |------|-------------|
-| **Docker: Start All Services** | Start CosmosDB, Redis, Azurite, MailHog |
+| **Docker: Start All Services** | Start CosmosDB, Redis, Azurite, Mailpit |
 | **Docker: Stop All Services** | Stop all Docker containers |
 | **Solution: Build All** | Build entire .NET solution |
 | **Solution: Test All** | Run all tests |
@@ -584,3 +648,4 @@ The settings hide build artifacts (`bin/`, `obj/`, `node_modules/`) for cleaner 
 |---------|------|--------|---------|
 | 1.0.0 | 2025-12-22 | Luminous Team | Initial development guide |
 | 1.1.0 | 2025-12-22 | Luminous Team | Added comprehensive VS Code configuration |
+| 1.2.0 | 2025-12-22 | Luminous Team | Added ARM64/Apple Silicon support and Mailpit |
