@@ -1,0 +1,172 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    // ==========================================================================
+    // .NET API Debugging
+    // ==========================================================================
+    {
+      "name": "API: Debug",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "API: Build",
+      "program": "${workspaceFolder}/src/Luminous.Api/bin/Debug/net10.0/Luminous.Api.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/Luminous.Api",
+      "stopAtEntry": false,
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5000"
+      },
+      "console": "integratedTerminal",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+        "uriFormat": "%s/swagger"
+      }
+    },
+    {
+      "name": "API: Debug (HTTPS)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "API: Build",
+      "program": "${workspaceFolder}/src/Luminous.Api/bin/Debug/net10.0/Luminous.Api.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/Luminous.Api",
+      "stopAtEntry": false,
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "https://localhost:5001;http://localhost:5000"
+      },
+      "console": "integratedTerminal",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+        "uriFormat": "%s/swagger"
+      }
+    },
+    {
+      "name": "API: Attach to Process",
+      "type": "coreclr",
+      "request": "attach",
+      "processId": "${command:pickProcess}"
+    },
+
+    // ==========================================================================
+    // .NET Tests Debugging
+    // ==========================================================================
+    {
+      "name": "Tests: Debug Domain",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "Solution: Build All",
+      "program": "dotnet",
+      "args": [
+        "test",
+        "${workspaceFolder}/tests/Luminous.Domain.Tests/Luminous.Domain.Tests.csproj",
+        "--no-build"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Tests: Debug Application",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "Solution: Build All",
+      "program": "dotnet",
+      "args": [
+        "test",
+        "${workspaceFolder}/tests/Luminous.Application.Tests/Luminous.Application.Tests.csproj",
+        "--no-build"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Tests: Debug API",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "Solution: Build All",
+      "program": "dotnet",
+      "args": [
+        "test",
+        "${workspaceFolder}/tests/Luminous.Api.Tests/Luminous.Api.Tests.csproj",
+        "--no-build"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Tests: Debug All",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "Solution: Build All",
+      "program": "dotnet",
+      "args": ["test", "--no-build"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+
+    // ==========================================================================
+    // Angular Web App Debugging
+    // ==========================================================================
+    {
+      "name": "Web: Debug in Chrome",
+      "type": "chrome",
+      "request": "launch",
+      "preLaunchTask": "Web: Start Dev Server",
+      "url": "http://localhost:4200",
+      "webRoot": "${workspaceFolder}/clients/web/src",
+      "sourceMapPathOverrides": {
+        "webpack:/*": "${webRoot}/*"
+      }
+    },
+    {
+      "name": "Web: Debug in Edge",
+      "type": "msedge",
+      "request": "launch",
+      "preLaunchTask": "Web: Start Dev Server",
+      "url": "http://localhost:4200",
+      "webRoot": "${workspaceFolder}/clients/web/src",
+      "sourceMapPathOverrides": {
+        "webpack:/*": "${webRoot}/*"
+      }
+    },
+    {
+      "name": "Web: Attach to Chrome",
+      "type": "chrome",
+      "request": "attach",
+      "port": 9222,
+      "webRoot": "${workspaceFolder}/clients/web/src"
+    }
+  ],
+  "compounds": [
+    // ==========================================================================
+    // Full Stack Debugging
+    // ==========================================================================
+    {
+      "name": "Full Stack: API + Web (Chrome)",
+      "configurations": ["API: Debug", "Web: Debug in Chrome"],
+      "stopAll": true,
+      "presentation": {
+        "hidden": false,
+        "group": "Full Stack",
+        "order": 1
+      }
+    },
+    {
+      "name": "Full Stack: API + Web (Edge)",
+      "configurations": ["API: Debug", "Web: Debug in Edge"],
+      "stopAll": true,
+      "presentation": {
+        "hidden": false,
+        "group": "Full Stack",
+        "order": 2
+      }
+    }
+  ]
+}

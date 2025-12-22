@@ -1,9 +1,13 @@
+using System.Text;
 using Luminous.Api.Configuration;
 using Luminous.Api.Middleware;
 using Luminous.Api.Services;
 using Luminous.Application;
 using Luminous.Application.Common.Interfaces;
 using Luminous.Infrastructure;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,9 +24,70 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
+// Configure JWT settings
+builder.Services.Configure<JwtSettings>(
+    builder.Configuration.GetSection(JwtSettings.SectionName));
+
+// Register local JWT token service (for development)
+builder.Services.AddScoped<ILocalJwtTokenService, LocalJwtTokenService>();
+
 // Configure authentication
-builder.Services.AddAuthentication().AddJwtBearer();
-builder.Services.AddAuthorization();
+var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
+    ?? new JwtSettings();
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings.Issuer,
+        ValidAudience = jwtSettings.Audience,
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
+        ClockSkew = TimeSpan.FromMinutes(5)
+    };
+
+    // For development, allow HTTP
+    if (builder.Environment.IsDevelopment())
+    {
+        options.RequireHttpsMetadata = false;
+    }
+
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            if (context.Exception is SecurityTokenExpiredException)
+            {
+                context.Response.Headers.Append("Token-Expired", "true");
+            }
+            return Task.CompletedTask;
+        }
+    };
+});
+
+builder.Services.AddAuthorization(options =>
+{
+    // Add authorization policies for different roles
+    options.AddPolicy("FamilyMember", policy =>
+        policy.RequireClaim("family_id"));
+
+    options.AddPolicy("FamilyAdmin", policy =>
+        policy.RequireClaim("family_id")
+              .RequireRole("Owner", "Admin"));
+
+    options.AddPolicy("FamilyOwner", policy =>
+        policy.RequireClaim("family_id")
+              .RequireRole("Owner"));
+});
 
 // Configure controllers
 builder.Services.AddControllers();
@@ -31,11 +96,42 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("v1", new()
+    options.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "Luminous API",
         Version = "v1",
-        Description = "API for the Luminous Family Hub"
+        Description = "API for the Luminous Family Hub",
+        Contact = new OpenApiContact
+        {
+            Name = "Luminous Team",
+            Url = new Uri("https://github.com/trickpatty/Luminous")
+        }
+    });
+
+    // Add JWT authentication to Swagger
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter your JWT token. In development, use POST /api/devauth/token to get a token."
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
     });
 });
 
@@ -62,12 +158,20 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Luminous API v1");
+        options.DisplayRequestDuration();
+    });
 }
 
 app.UseSerilogRequestLogging();
 
-app.UseHttpsRedirection();
+// Only redirect to HTTPS in non-development environments
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseCors();
 
@@ -79,5 +183,15 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.MapControllers();
 app.MapHealthChecks("/health");
+
+// Log startup information
+Log.Information("Luminous API started in {Environment} mode", app.Environment.EnvironmentName);
+if (app.Environment.IsDevelopment())
+{
+    Log.Information("Development features enabled:");
+    Log.Information("  - Swagger UI: http://localhost:5000/swagger");
+    Log.Information("  - Dev Auth: POST http://localhost:5000/api/devauth/token");
+    Log.Information("  - Health Check: http://localhost:5000/health");
+}
 
 app.Run();
