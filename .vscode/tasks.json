@@ -1,0 +1,320 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    // ==========================================================================
+    // Docker Services
+    // ==========================================================================
+    {
+      "label": "Docker: Start All Services",
+      "type": "shell",
+      "command": "docker compose up -d",
+      "problemMatcher": [],
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Docker: Stop All Services",
+      "type": "shell",
+      "command": "docker compose down",
+      "problemMatcher": [],
+      "group": "none"
+    },
+    {
+      "label": "Docker: View Logs",
+      "type": "shell",
+      "command": "docker compose logs -f",
+      "problemMatcher": [],
+      "group": "none",
+      "isBackground": true
+    },
+    {
+      "label": "Docker: Reset (Remove Volumes)",
+      "type": "shell",
+      "command": "docker compose down -v",
+      "problemMatcher": [],
+      "group": "none"
+    },
+
+    // ==========================================================================
+    // .NET API
+    // ==========================================================================
+    {
+      "label": "API: Build",
+      "type": "shell",
+      "command": "dotnet",
+      "args": ["build", "--no-restore"],
+      "options": {
+        "cwd": "${workspaceFolder}/src/Luminous.Api"
+      },
+      "group": "build",
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "API: Run",
+      "type": "shell",
+      "command": "dotnet",
+      "args": ["run", "--no-build"],
+      "options": {
+        "cwd": "${workspaceFolder}/src/Luminous.Api"
+      },
+      "group": "none",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*Starting.*$",
+          "endsPattern": "^.*Now listening on.*$"
+        }
+      }
+    },
+    {
+      "label": "API: Watch (Hot Reload)",
+      "type": "shell",
+      "command": "dotnet",
+      "args": ["watch", "run"],
+      "options": {
+        "cwd": "${workspaceFolder}/src/Luminous.Api"
+      },
+      "group": "none",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*dotnet watch.*$",
+          "endsPattern": "^.*Now listening on.*$"
+        }
+      }
+    },
+    {
+      "label": "API: Restore Packages",
+      "type": "shell",
+      "command": "dotnet",
+      "args": ["restore"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$msCompile"
+    },
+
+    // ==========================================================================
+    // Solution-wide
+    // ==========================================================================
+    {
+      "label": "Solution: Build All",
+      "type": "shell",
+      "command": "dotnet",
+      "args": ["build"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Solution: Clean",
+      "type": "shell",
+      "command": "dotnet",
+      "args": ["clean"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Solution: Test All",
+      "type": "shell",
+      "command": "dotnet",
+      "args": ["test", "--no-build"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Solution: Test with Coverage",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "test",
+        "--collect:\"XPlat Code Coverage\"",
+        "--results-directory",
+        "${workspaceFolder}/coverage"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$msCompile"
+    },
+
+    // ==========================================================================
+    // Angular Web App
+    // ==========================================================================
+    {
+      "label": "Web: Install Dependencies",
+      "type": "shell",
+      "command": "npm",
+      "args": ["install"],
+      "options": {
+        "cwd": "${workspaceFolder}/clients/web"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Web: Start Dev Server",
+      "type": "shell",
+      "command": "npm",
+      "args": ["start"],
+      "options": {
+        "cwd": "${workspaceFolder}/clients/web"
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*Compiling.*$",
+          "endsPattern": "^.*Compiled successfully.*$"
+        }
+      }
+    },
+    {
+      "label": "Web: Build",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "build"],
+      "options": {
+        "cwd": "${workspaceFolder}/clients/web"
+      },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Web: Build Production",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "build:prod"],
+      "options": {
+        "cwd": "${workspaceFolder}/clients/web"
+      },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Web: Test",
+      "type": "shell",
+      "command": "npm",
+      "args": ["test"],
+      "options": {
+        "cwd": "${workspaceFolder}/clients/web"
+      },
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Web: Test (CI Mode)",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "test:ci"],
+      "options": {
+        "cwd": "${workspaceFolder}/clients/web"
+      },
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Web: Lint",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "lint"],
+      "options": {
+        "cwd": "${workspaceFolder}/clients/web"
+      },
+      "problemMatcher": ["$eslint-stylish"]
+    },
+    {
+      "label": "Web: Type Check",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "typecheck"],
+      "options": {
+        "cwd": "${workspaceFolder}/clients/web"
+      },
+      "problemMatcher": "$tsc"
+    },
+
+    // ==========================================================================
+    // Development Environment
+    // ==========================================================================
+    {
+      "label": "Dev: Start Full Stack",
+      "dependsOn": [
+        "Docker: Start All Services",
+        "API: Watch (Hot Reload)",
+        "Web: Start Dev Server"
+      ],
+      "dependsOrder": "sequence",
+      "problemMatcher": [],
+      "group": "none"
+    },
+    {
+      "label": "Dev: Get Auth Token",
+      "type": "shell",
+      "command": "curl",
+      "args": [
+        "-s",
+        "-X", "POST",
+        "http://localhost:5000/api/devauth/token",
+        "|",
+        "jq", "."
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+
+    // ==========================================================================
+    // Infrastructure
+    // ==========================================================================
+    {
+      "label": "Infra: Validate Bicep",
+      "type": "shell",
+      "command": "az",
+      "args": ["bicep", "build", "--file", "infra/bicep/main.bicep"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Infra: Deploy (Dev)",
+      "type": "shell",
+      "command": "${workspaceFolder}/infra/scripts/deploy.sh",
+      "args": ["dev"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Infra: What-If (Dev)",
+      "type": "shell",
+      "command": "${workspaceFolder}/infra/scripts/deploy.sh",
+      "args": ["dev", "--what-if"],
+      "problemMatcher": []
+    }
+  ]
+}

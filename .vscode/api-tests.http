@@ -1,0 +1,141 @@
+###############################################################################
+# Luminous API Test Requests
+###############################################################################
+# Use with the REST Client VS Code extension (humao.rest-client)
+#
+# Usage:
+# 1. Start the API (F5 or run "API: Debug" task)
+# 2. Click "Send Request" above any request
+# 3. View response in the split panel
+#
+# Environment variables are defined in .vscode/settings.json
+###############################################################################
+
+@baseUrl = http://localhost:5000
+@contentType = application/json
+
+###############################################################################
+# Health & Status
+###############################################################################
+
+### Health Check
+GET {{baseUrl}}/health
+
+### Check Dev Auth Status
+GET {{baseUrl}}/api/devauth/status
+
+###############################################################################
+# Development Authentication
+###############################################################################
+
+### Get Default Dev Token
+# @name getToken
+POST {{baseUrl}}/api/devauth/token
+
+### Store token from response
+@token = {{getToken.response.body.accessToken}}
+
+### Get Custom Dev Token (Owner role)
+POST {{baseUrl}}/api/devauth/token/custom
+Content-Type: {{contentType}}
+
+{
+  "userId": "test-user-001",
+  "familyId": "test-family-001",
+  "email": "owner@luminous.local",
+  "role": "Owner",
+  "displayName": "Test Owner"
+}
+
+### Get Custom Dev Token (Child role)
+POST {{baseUrl}}/api/devauth/token/custom
+Content-Type: {{contentType}}
+
+{
+  "userId": "child-user-001",
+  "familyId": "test-family-001",
+  "email": "child@luminous.local",
+  "role": "Child",
+  "displayName": "Test Child"
+}
+
+### Get Custom Dev Token (Caregiver role)
+POST {{baseUrl}}/api/devauth/token/custom
+Content-Type: {{contentType}}
+
+{
+  "userId": "caregiver-001",
+  "familyId": "test-family-001",
+  "email": "nanny@example.com",
+  "role": "Caregiver",
+  "displayName": "Test Caregiver"
+}
+
+###############################################################################
+# Family API (requires authentication)
+###############################################################################
+
+### Get Family Details
+GET {{baseUrl}}/api/families
+Authorization: Bearer {{token}}
+
+### Create Family
+POST {{baseUrl}}/api/families
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "name": "Smith Family",
+  "timezone": "America/New_York"
+}
+
+###############################################################################
+# User API (requires authentication)
+###############################################################################
+
+### Get Family Members
+GET {{baseUrl}}/api/users
+Authorization: Bearer {{token}}
+
+### Get Current User Profile
+GET {{baseUrl}}/api/users/me
+Authorization: Bearer {{token}}
+
+###############################################################################
+# Events API (requires authentication)
+###############################################################################
+
+### Get Events
+GET {{baseUrl}}/api/events
+Authorization: Bearer {{token}}
+
+### Get Events for Date Range
+GET {{baseUrl}}/api/events?startDate=2025-01-01&endDate=2025-01-31
+Authorization: Bearer {{token}}
+
+###############################################################################
+# Chores API (requires authentication)
+###############################################################################
+
+### Get Chores
+GET {{baseUrl}}/api/chores
+Authorization: Bearer {{token}}
+
+###############################################################################
+# Devices API (requires authentication)
+###############################################################################
+
+### Generate Device Link Code
+POST {{baseUrl}}/api/devices/link-code
+Authorization: Bearer {{token}}
+
+### Get Linked Devices
+GET {{baseUrl}}/api/devices
+Authorization: Bearer {{token}}
+
+###############################################################################
+# Swagger / OpenAPI
+###############################################################################
+
+### Get OpenAPI Spec
+GET {{baseUrl}}/swagger/v1/swagger.json

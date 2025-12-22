@@ -476,51 +476,95 @@ rm -rf clients/web/node_modules clients/web/dist
 
 ---
 
-## IDE Configuration
+## VS Code Setup
 
-### Visual Studio Code
+The repository includes complete VS Code configuration in the `.vscode/` folder.
 
-Recommended extensions:
-- C# Dev Kit
-- Angular Language Service
-- Tailwind CSS IntelliSense
-- Docker
-- REST Client
+### Installing Recommended Extensions
 
-### VS Code Tasks
+When you open the project, VS Code will prompt you to install recommended extensions. Alternatively:
 
-Create `.vscode/tasks.json`:
-```json
-{
-  "version": "2.0.0",
-  "tasks": [
-    {
-      "label": "Start Docker Services",
-      "type": "shell",
-      "command": "docker compose up -d",
-      "problemMatcher": []
-    },
-    {
-      "label": "Start API",
-      "type": "shell",
-      "command": "dotnet watch run",
-      "options": {
-        "cwd": "${workspaceFolder}/src/Luminous.Api"
-      },
-      "isBackground": true
-    },
-    {
-      "label": "Start Web",
-      "type": "shell",
-      "command": "npm start",
-      "options": {
-        "cwd": "${workspaceFolder}/clients/web"
-      },
-      "isBackground": true
-    }
-  ]
-}
+1. Open Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`)
+2. Run "Extensions: Show Recommended Extensions"
+3. Click "Install All" in the Workspace Recommendations section
+
+### Key Extensions
+
+| Extension | Purpose |
+|-----------|---------|
+| **C# Dev Kit** | C# language support, debugging, testing |
+| **Angular Language Service** | Angular template intellisense |
+| **Tailwind CSS IntelliSense** | Tailwind class autocomplete |
+| **Docker** | Container management |
+| **Bicep** | Azure infrastructure files |
+| **REST Client** | API testing from `.http` files |
+| **GitLens** | Enhanced Git integration |
+
+### Tasks (Ctrl+Shift+B)
+
+Access via Command Palette > "Tasks: Run Task":
+
+| Task | Description |
+|------|-------------|
+| **Docker: Start All Services** | Start CosmosDB, Redis, Azurite, MailHog |
+| **Docker: Stop All Services** | Stop all Docker containers |
+| **Solution: Build All** | Build entire .NET solution |
+| **Solution: Test All** | Run all tests |
+| **API: Watch (Hot Reload)** | Start API with hot reload |
+| **Web: Start Dev Server** | Start Angular dev server |
+| **Dev: Start Full Stack** | Start Docker + API + Web |
+| **Dev: Get Auth Token** | Get a development JWT token |
+
+### Debugging (F5)
+
+Pre-configured launch configurations:
+
+| Configuration | Description |
+|---------------|-------------|
+| **API: Debug** | Debug .NET API (opens Swagger) |
+| **API: Debug (HTTPS)** | Debug with HTTPS enabled |
+| **Web: Debug in Chrome** | Debug Angular app in Chrome |
+| **Web: Debug in Edge** | Debug Angular app in Edge |
+| **Full Stack: API + Web (Chrome)** | Debug both API and Web together |
+| **Tests: Debug All** | Debug all tests |
+
+### Compound Debugging
+
+For full-stack debugging:
+
+1. Select "Full Stack: API + Web (Chrome)" from the debug dropdown
+2. Press F5
+3. Both API and Web will start with debuggers attached
+4. Set breakpoints in both C# and TypeScript code
+
+### Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+Shift+B` | Run default build task |
+| `F5` | Start debugging |
+| `Ctrl+Shift+D` | Open Debug panel |
+| `Ctrl+Shift+P` | Command Palette |
+| `Ctrl+`` ` | Toggle terminal |
+
+### REST Client Usage
+
+Create `.http` files to test API endpoints:
+
+```http
+### Get Dev Token
+POST http://localhost:5000/api/devauth/token
+
+### Get Family (with token)
+GET http://localhost:5000/api/families
+Authorization: Bearer {{token}}
 ```
+
+Use the REST Client extension to send requests directly from VS Code.
+
+### Project Structure in Explorer
+
+The settings hide build artifacts (`bin/`, `obj/`, `node_modules/`) for cleaner navigation. To show hidden files, adjust `files.exclude` in settings.
 
 ---
 
@@ -539,3 +583,4 @@ Create `.vscode/tasks.json`:
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0.0 | 2025-12-22 | Luminous Team | Initial development guide |
+| 1.1.0 | 2025-12-22 | Luminous Team | Added comprehensive VS Code configuration |
