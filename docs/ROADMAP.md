@@ -1,6 +1,6 @@
 # Luminous Development Roadmap
 
-> **Document Version:** 2.2.0
+> **Document Version:** 2.3.0
 > **Last Updated:** 2025-12-21
 > **Status:** Active
 > **TOGAF Phase:** Phase E/F (Opportunities, Solutions & Migration Planning)
@@ -102,7 +102,7 @@ Phase 6: Intelligence & Ecosystem
 
 | Phase | Name | Focus | Key Deliverables | Status |
 |-------|------|-------|------------------|--------|
-| **0** | Foundation | Infrastructure | Azure IaC, .NET solution, Angular shell, Passwordless Auth | 🟡 In Progress (0.1, 0.2 Complete) |
+| **0** | Foundation | Infrastructure | Azure IaC, .NET solution, Angular shell, Passwordless Auth | 🟡 In Progress (0.1, 0.2, 0.3 Complete) |
 | **1** | Core Platform | Multi-tenancy | Family sign-up, device linking, CosmosDB, web MVP | ⬜ Not Started |
 | **2** | Display & Calendar | Calendar visibility | Display app, calendar integration, SignalR sync | ⬜ Not Started |
 | **3** | Native Mobile | Mobile apps | iOS (Swift), Android (Kotlin), push notifications | ⬜ Not Started |
@@ -170,14 +170,27 @@ Establish the Azure infrastructure, .NET backend, Angular frontend, and developm
 - [x] Global.json for SDK version pinning
 - [x] Sample unit tests demonstrating testing patterns
 
-#### 0.3 Angular Web Application
+#### 0.3 Angular Web Application ✅ COMPLETED
 
-- [ ] **0.3.1** Initialize Angular 19+ project with strict mode
-- [ ] **0.3.2** Configure Angular Material or Tailwind CSS
-- [ ] **0.3.3** Set up core module with authentication service
-- [ ] **0.3.4** Implement WebAuthn/passkey authentication integration
-- [ ] **0.3.5** Create shared component library
-- [ ] **0.3.6** Configure environment-based API URLs
+- [x] **0.3.1** Initialize Angular 19+ project with strict mode
+  - *Implemented: Angular 19.2 with standalone components, strict TypeScript, and routing*
+- [x] **0.3.2** Configure Angular Material or Tailwind CSS
+  - *Implemented: Tailwind CSS 3.x with custom theme (primary colors, family colors, touch-friendly spacing)*
+- [x] **0.3.3** Set up core module with authentication service
+  - *Implemented: Core services (ApiService, AuthService, StorageService, WebAuthnService), guards (authGuard, guestGuard, roleGuard), HTTP interceptors (authInterceptor, errorInterceptor)*
+- [x] **0.3.4** Implement WebAuthn/passkey authentication integration
+  - *Implemented: Full WebAuthn/passkey support with registration, authentication, conditional UI (autofill), plus email OTP fallback*
+- [x] **0.3.5** Create shared component library
+  - *Implemented: Reusable components (ButtonComponent, CardComponent, AlertComponent, AvatarComponent, InputComponent, SpinnerComponent) with TypeScript types*
+- [x] **0.3.6** Configure environment-based API URLs
+  - *Implemented: Environment files (development, staging, production) with API URLs and WebAuthn configuration*
+
+**Additional deliverables:**
+- [x] Login and Register pages with passkey/OTP authentication flows
+- [x] Dashboard placeholder with family-focused layout
+- [x] 404 and Unauthorized pages
+- [x] TypeScript models for User, Family, Auth entities
+- [x] HTTP interceptors for auth tokens and error handling
 
 #### 0.4 Local Development Environment
 
@@ -644,3 +657,4 @@ These can be developed in parallel after Phase 0:
 | 2.1.0 | 2025-12-21 | Luminous Team | Phase 0.1 Azure Infrastructure completed |
 | 2.1.1 | 2025-12-21 | Luminous Team | Refactored to use AVMs directly from public registry |
 | 2.2.0 | 2025-12-21 | Luminous Team | Phase 0.2 .NET Solution Structure completed |
+| 2.3.0 | 2025-12-21 | Luminous Team | Phase 0.3 Angular Web Application completed |
