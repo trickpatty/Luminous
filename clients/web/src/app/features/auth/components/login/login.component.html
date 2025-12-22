@@ -1,0 +1,156 @@
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full space-y-8">
+    <!-- Header -->
+    <div class="text-center">
+      <h1 class="text-3xl font-bold text-primary-600">Luminous</h1>
+      <h2 class="mt-4 text-2xl font-semibold text-gray-900">Welcome back</h2>
+      <p class="mt-2 text-gray-600">Sign in to your family hub</p>
+    </div>
+
+    <!-- Error Alert -->
+    @if (error()) {
+      <div class="rounded-lg bg-red-50 p-4 border border-red-200">
+        <div class="flex items-center">
+          <svg class="h-5 w-5 text-red-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+          </svg>
+          <p class="text-sm text-red-700">{{ error() }}</p>
+        </div>
+      </div>
+    }
+
+    <div class="card-lg">
+      <!-- Email Step -->
+      @if (step() === 'email') {
+        <form (ngSubmit)="requestOtp()" class="space-y-6">
+          <div>
+            <label for="email" class="label">Email address</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autocomplete="email webauthn"
+              required
+              [(ngModel)]="email"
+              class="input"
+              placeholder="you@example.com"
+              [disabled]="isLoading()"
+            />
+          </div>
+
+          <div class="space-y-3">
+            <button
+              type="submit"
+              class="btn-primary w-full"
+              [disabled]="isLoading() || !email"
+            >
+              @if (isLoading()) {
+                <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Sending...
+              } @else {
+                Continue with Email
+              }
+            </button>
+
+            @if (passkeySupported()) {
+              <div class="relative">
+                <div class="absolute inset-0 flex items-center">
+                  <div class="w-full border-t border-gray-200"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                  <span class="px-2 bg-white text-gray-500">or</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                (click)="authenticateWithPasskey()"
+                class="btn-secondary w-full"
+                [disabled]="isLoading()"
+              >
+                <svg class="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                Sign in with Passkey
+              </button>
+            }
+          </div>
+        </form>
+      }
+
+      <!-- OTP Step -->
+      @if (step() === 'otp') {
+        <form (ngSubmit)="verifyOtp()" class="space-y-6">
+          <div class="text-center mb-4">
+            <p class="text-sm text-gray-600">
+              We sent a verification code to
+            </p>
+            <p class="font-medium text-gray-900">{{ email }}</p>
+          </div>
+
+          <div>
+            <label for="otp" class="label">Verification code</label>
+            <input
+              id="otp"
+              name="otp"
+              type="text"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              required
+              [(ngModel)]="otpCode"
+              class="input text-center text-2xl tracking-widest"
+              placeholder="000000"
+              maxlength="6"
+              [disabled]="isLoading()"
+            />
+          </div>
+
+          <button
+            type="submit"
+            class="btn-primary w-full"
+            [disabled]="isLoading() || otpCode.length < 6"
+          >
+            @if (isLoading()) {
+              <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Verifying...
+            } @else {
+              Verify Code
+            }
+          </button>
+
+          <div class="flex items-center justify-between text-sm">
+            <button
+              type="button"
+              (click)="backToEmail()"
+              class="text-gray-600 hover:text-gray-900"
+            >
+              Use different email
+            </button>
+            <button
+              type="button"
+              (click)="resendOtp()"
+              class="text-primary-600 hover:text-primary-700"
+              [disabled]="isLoading()"
+            >
+              Resend code
+            </button>
+          </div>
+        </form>
+      }
+    </div>
+
+    <!-- Register Link -->
+    <p class="text-center text-sm text-gray-600">
+      New to Luminous?
+      <a routerLink="/auth/register" class="font-medium text-primary-600 hover:text-primary-500">
+        Create an account
+      </a>
+    </p>
+  </div>
+</div>
