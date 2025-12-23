@@ -1,5 +1,5 @@
 using Luminous.Domain.Common;
-using Nanoid;
+using NanoidDotNet;
 
 namespace Luminous.Domain.Entities;
 

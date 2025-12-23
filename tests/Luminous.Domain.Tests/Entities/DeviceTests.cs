@@ -1,7 +1,7 @@
 using FluentAssertions;
 using Luminous.Domain.Entities;
 using Luminous.Domain.Enums;
-using Nanoid;
+using NanoidDotNet;
 
 namespace Luminous.Domain.Tests.Entities;
 

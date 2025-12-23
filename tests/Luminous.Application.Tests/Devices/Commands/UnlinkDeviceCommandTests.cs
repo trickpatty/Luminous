@@ -7,7 +7,7 @@ using Luminous.Domain.Enums;
 using Luminous.Domain.Interfaces;
 using MediatR;
 using Moq;
-using Nanoid;
+using NanoidDotNet;
 
 namespace Luminous.Application.Tests.Devices.Commands;
 

@@ -1,6 +1,6 @@
 using Luminous.Domain.Common;
 using Luminous.Domain.Enums;
-using Nanoid;
+using NanoidDotNet;
 
 namespace Luminous.Domain.Entities;
 
