@@ -1,7 +1,7 @@
 # Luminous Development Roadmap
 
-> **Document Version:** 2.5.0
-> **Last Updated:** 2025-12-22
+> **Document Version:** 2.6.0
+> **Last Updated:** 2025-12-23
 > **Status:** Active
 > **TOGAF Phase:** Phase E/F (Opportunities, Solutions & Migration Planning)
 
@@ -102,7 +102,7 @@ Phase 6: Intelligence & Ecosystem
 
 | Phase | Name | Focus | Key Deliverables | Status |
 |-------|------|-------|------------------|--------|
-| **0** | Foundation | Infrastructure | Azure IaC, .NET solution, Angular shell, Passwordless Auth, Local Dev, CI/CD | 🟡 In Progress (0.1-0.5 Complete) |
+| **0** | Foundation | Infrastructure | Azure IaC, .NET solution, Angular shell, Passwordless Auth, Local Dev, CI/CD, Docs | ✅ Complete |
 | **1** | Core Platform | Multi-tenancy | Family sign-up, device linking, CosmosDB, web MVP | ⬜ Not Started |
 | **2** | Display & Calendar | Calendar visibility | Display app, calendar integration, SignalR sync | ⬜ Not Started |
 | **3** | Native Mobile | Mobile apps | iOS (Swift), Android (Kotlin), push notifications | ⬜ Not Started |
@@ -231,13 +231,24 @@ Establish the Azure infrastructure, .NET backend, Angular frontend, and developm
 - [x] Artifact management for build outputs
 - [x] Bundle size analysis for Angular builds
 
-#### 0.6 Documentation
+#### 0.6 Documentation ✅ COMPLETED
 
-- [ ] **0.6.1** Complete PROJECT-OVERVIEW.md
-- [ ] **0.6.2** Complete ARCHITECTURE.md
-- [ ] **0.6.3** Complete ROADMAP.md
-- [ ] **0.6.4** Create ADRs for technology decisions
-- [ ] **0.6.5** Create local development setup guide
+- [x] **0.6.1** Complete PROJECT-OVERVIEW.md
+  - *Implemented: Comprehensive product specification with deployment model, personas, UX principles, and functional scope*
+- [x] **0.6.2** Complete ARCHITECTURE.md
+  - *Implemented: Full architecture document covering all TOGAF phases (business, data, application, technology)*
+- [x] **0.6.3** Complete ROADMAP.md
+  - *Implemented: Detailed roadmap with phases 0-6, dependencies, and risk register*
+- [x] **0.6.4** Create ADRs for technology decisions
+  - *Implemented: 10 ADRs covering .NET backend, Angular, Azure, native mobile, CosmosDB, multi-tenancy, Bicep/AVMs, Magic Import, zero-distraction, and passwordless auth*
+- [x] **0.6.5** Create local development setup guide
+  - *Implemented: DEVELOPMENT.md with Docker Compose setup, VS Code configuration, troubleshooting, and ARM64 support*
+
+**Additional deliverables:**
+- [x] AZURE-INFRASTRUCTURE.md with detailed resource documentation
+- [x] CI-CD.md with GitHub Actions pipeline documentation
+- [x] ADR template (ADR-000-template.md) for future decisions
+- [x] CLAUDE.md with comprehensive development guidelines
 
 ### Exit Criteria
 
@@ -683,3 +694,4 @@ These can be developed in parallel after Phase 0:
 | 2.3.0 | 2025-12-21 | Luminous Team | Phase 0.3 Angular Web Application completed |
 | 2.4.0 | 2025-12-22 | Luminous Team | Phase 0.4 Local Development Environment completed |
 | 2.5.0 | 2025-12-22 | Luminous Team | Phase 0.5 CI/CD Pipeline completed |
+| 2.6.0 | 2025-12-23 | Luminous Team | Phase 0.6 Documentation completed; Phase 0 complete |
