@@ -1,0 +1,151 @@
+# =============================================================================
+# Luminous - Dependabot Configuration
+# =============================================================================
+# Configures automated dependency updates for all project ecosystems.
+#
+# Phase 0.5.5: Set up Dependabot for dependency updates
+# TOGAF Principle: TP-4 - Infrastructure as Code
+# =============================================================================
+
+version: 2
+
+registries:
+  nuget-org:
+    type: nuget-feed
+    url: https://api.nuget.org/v3/index.json
+
+updates:
+  # =============================================================================
+  # .NET Dependencies (NuGet)
+  # =============================================================================
+  - package-ecosystem: "nuget"
+    directory: "/"
+    registries:
+      - nuget-org
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "America/New_York"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "deps(nuget)"
+    labels:
+      - "dependencies"
+      - "nuget"
+      - ".net"
+    reviewers:
+      - "trickpatty"
+    groups:
+      # Group Microsoft packages together
+      microsoft:
+        patterns:
+          - "Microsoft.*"
+          - "System.*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group testing packages together
+      testing:
+        patterns:
+          - "xunit*"
+          - "Moq*"
+          - "FluentAssertions*"
+          - "NSubstitute*"
+      # Group Azure packages together
+      azure:
+        patterns:
+          - "Azure.*"
+          - "Microsoft.Azure.*"
+
+  # =============================================================================
+  # Angular/Node.js Dependencies (npm)
+  # =============================================================================
+  - package-ecosystem: "npm"
+    directory: "/clients/web"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "America/New_York"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "deps(npm)"
+    labels:
+      - "dependencies"
+      - "npm"
+      - "angular"
+    reviewers:
+      - "trickpatty"
+    groups:
+      # Group Angular packages together
+      angular:
+        patterns:
+          - "@angular/*"
+          - "@angular-devkit/*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group Tailwind packages together
+      tailwind:
+        patterns:
+          - "tailwindcss"
+          - "@tailwindcss/*"
+          - "autoprefixer"
+          - "postcss"
+      # Group testing packages together
+      testing:
+        patterns:
+          - "jasmine*"
+          - "karma*"
+          - "@types/jasmine"
+    ignore:
+      # Ignore major Angular updates (require manual migration)
+      - dependency-name: "@angular/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@angular-devkit/*"
+        update-types: ["version-update:semver-major"]
+
+  # =============================================================================
+  # GitHub Actions Dependencies
+  # =============================================================================
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "America/New_York"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps(actions)"
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "ci"
+    reviewers:
+      - "trickpatty"
+    groups:
+      # Group all GitHub Actions together
+      github-actions:
+        patterns:
+          - "*"
+
+  # =============================================================================
+  # Docker Dependencies
+  # =============================================================================
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "America/New_York"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps(docker)"
+    labels:
+      - "dependencies"
+      - "docker"
+    reviewers:
+      - "trickpatty"
