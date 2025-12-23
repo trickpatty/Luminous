@@ -1,7 +1,7 @@
 # Luminous Architecture Document
 
-> **Document Version:** 2.1.0
-> **Last Updated:** 2025-12-21
+> **Document Version:** 2.2.0
+> **Last Updated:** 2025-12-22
 > **Status:** Draft
 > **TOGAF Phase:** Phase B-D (Architecture Development)
 
@@ -716,6 +716,7 @@ services:
 - [Development Roadmap](./ROADMAP.md)
 - [Architecture Decision Records](./adr/)
 - [Azure Infrastructure](./AZURE-INFRASTRUCTURE.md)
+- [CI/CD Pipeline](./CI-CD.md)
 - [CLAUDE.md (Development Guidelines)](../CLAUDE.md)
 
 ---
@@ -727,3 +728,4 @@ services:
 | 1.0.0 | 2025-12-21 | Luminous Team | Initial architecture document |
 | 2.0.0 | 2025-12-21 | Luminous Team | Updated for Azure/.NET/Angular stack, multi-tenancy |
 | 2.1.0 | 2025-12-21 | Luminous Team | Migrate from Guid to NanoId for unique identifiers |
+| 2.2.0 | 2025-12-22 | Luminous Team | Added CI/CD documentation reference |

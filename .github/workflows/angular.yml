@@ -1,0 +1,173 @@
+# =============================================================================
+# Luminous - Angular Build and Test Workflow
+# =============================================================================
+# Builds and tests the Angular web application on every push and pull request.
+#
+# Phase 0.5.2: GitHub Actions for Angular build and test
+# TOGAF Principle: TP-4 - Infrastructure as Code
+# =============================================================================
+
+name: Angular Build and Test
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'clients/web/**'
+      - '.github/workflows/angular.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'clients/web/**'
+      - '.github/workflows/angular.yml'
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20.x'
+  WORKING_DIRECTORY: ./clients/web
+
+defaults:
+  run:
+    working-directory: ./clients/web
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting
+        run: npm run lint --if-present
+        continue-on-error: true
+
+      - name: Run type checking
+        run: npm run typecheck
+
+      - name: Run unit tests
+        run: npm run test:ci
+
+      - name: Build for production
+        run: npm run build:prod
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: angular-build-production
+          path: ${{ env.WORKING_DIRECTORY }}/dist/web
+          retention-days: 7
+
+  build-staging:
+    name: Build (Staging)
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' || github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build for staging
+        run: npm run build:staging
+
+      - name: Upload staging build artifacts
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: angular-build-staging
+          path: ${{ env.WORKING_DIRECTORY }}/dist/web
+          retention-days: 7
+
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+
+      - name: Run npm audit
+        run: |
+          npm audit --audit-level=high 2>&1 | tee npm-audit.txt || true
+          if grep -q "high\|critical" npm-audit.txt; then
+            echo "::warning::Security vulnerabilities detected. Review npm-audit.txt for details."
+          fi
+        continue-on-error: true
+
+      - name: Upload audit results
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-results
+          path: ${{ env.WORKING_DIRECTORY }}/npm-audit.txt
+          retention-days: 30
+
+  bundle-analysis:
+    name: Bundle Analysis
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build with stats
+        run: npm run build:prod -- --stats-json
+
+      - name: Analyze bundle size
+        run: |
+          if [ -f "dist/web/browser/stats.json" ]; then
+            echo "## Bundle Size Analysis" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Production build completed successfully." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            du -sh dist/web/browser/ | awk '{print "Total bundle size: " $1}' >> $GITHUB_STEP_SUMMARY
+          fi
