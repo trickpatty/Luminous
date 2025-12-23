@@ -126,6 +126,67 @@ public sealed class Device : AggregateRoot
     }
 
     /// <summary>
+    /// Unlinks this device from its family.
+    /// </summary>
+    /// <param name="unlinkedBy">The user ID who unlinked the device.</param>
+    public void Unlink(string unlinkedBy)
+    {
+        if (!IsLinked)
+            throw new InvalidOperationException("Device is not linked.");
+
+        FamilyId = string.Empty;
+        Name = string.Empty;
+        LinkedAt = null;
+        LinkedBy = null;
+        IsActive = false;
+        ModifiedAt = DateTime.UtcNow;
+        ModifiedBy = unlinkedBy;
+    }
+
+    /// <summary>
+    /// Updates the device settings.
+    /// </summary>
+    public void UpdateSettings(DeviceSettings settings, string modifiedBy)
+    {
+        Settings = settings ?? throw new ArgumentNullException(nameof(settings));
+        ModifiedAt = DateTime.UtcNow;
+        ModifiedBy = modifiedBy;
+    }
+
+    /// <summary>
+    /// Updates the device name.
+    /// </summary>
+    public void Rename(string name, string modifiedBy)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Device name is required.", nameof(name));
+
+        Name = name.Trim();
+        ModifiedAt = DateTime.UtcNow;
+        ModifiedBy = modifiedBy;
+    }
+
+    /// <summary>
+    /// Deactivates the device.
+    /// </summary>
+    public void Deactivate(string modifiedBy)
+    {
+        IsActive = false;
+        ModifiedAt = DateTime.UtcNow;
+        ModifiedBy = modifiedBy;
+    }
+
+    /// <summary>
+    /// Activates the device.
+    /// </summary>
+    public void Activate(string modifiedBy)
+    {
+        IsActive = true;
+        ModifiedAt = DateTime.UtcNow;
+        ModifiedBy = modifiedBy;
+    }
+
+    /// <summary>
     /// Generates a new 6-digit link code.
     /// </summary>
     private static string GenerateLinkCode()
