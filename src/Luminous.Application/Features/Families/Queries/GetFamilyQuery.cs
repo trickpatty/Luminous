@@ -1,5 +1,6 @@
 using FluentValidation;
 using Luminous.Application.Common.Exceptions;
+using Luminous.Application.Common.Interfaces;
 using Luminous.Application.DTOs;
 using Luminous.Domain.Interfaces;
 using MediatR;
@@ -32,14 +33,19 @@ public sealed class GetFamilyQueryValidator : AbstractValidator<GetFamilyQuery>
 public sealed class GetFamilyQueryHandler : IRequestHandler<GetFamilyQuery, FamilyDto>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ITenantContext _tenantContext;
 
-    public GetFamilyQueryHandler(IUnitOfWork unitOfWork)
+    public GetFamilyQueryHandler(IUnitOfWork unitOfWork, ITenantContext tenantContext)
     {
         _unitOfWork = unitOfWork;
+        _tenantContext = tenantContext;
     }
 
     public async Task<FamilyDto> Handle(GetFamilyQuery request, CancellationToken cancellationToken)
     {
+        // Validate tenant access
+        _tenantContext.EnsureAccessToFamily(request.FamilyId);
+
         var family = await _unitOfWork.Families.GetByIdAsync(request.FamilyId, cancellationToken)
             ?? throw new NotFoundException("Family", request.FamilyId);
 

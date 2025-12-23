@@ -1,4 +1,5 @@
 using FluentValidation;
+using Luminous.Application.Common.Exceptions;
 using Luminous.Application.Common.Interfaces;
 using Luminous.Application.DTOs;
 using Luminous.Domain.Interfaces;
@@ -7,47 +8,64 @@ using MediatR;
 namespace Luminous.Application.Features.Users.Queries;
 
 /// <summary>
-/// Query to get all members of a family.
+/// Query to get a specific user by ID.
 /// </summary>
-public sealed record GetFamilyMembersQuery : IRequest<IReadOnlyList<UserDto>>
+public sealed record GetUserQuery : IRequest<UserDto>
 {
+    /// <summary>
+    /// The user ID to retrieve.
+    /// </summary>
+    public string UserId { get; init; } = string.Empty;
+
+    /// <summary>
+    /// The family ID the user belongs to.
+    /// </summary>
     public string FamilyId { get; init; } = string.Empty;
 }
 
 /// <summary>
-/// Validator for GetFamilyMembersQuery.
+/// Validator for GetUserQuery.
 /// </summary>
-public sealed class GetFamilyMembersQueryValidator : AbstractValidator<GetFamilyMembersQuery>
+public sealed class GetUserQueryValidator : AbstractValidator<GetUserQuery>
 {
-    public GetFamilyMembersQueryValidator()
+    public GetUserQueryValidator()
     {
+        RuleFor(x => x.UserId)
+            .NotEmpty().WithMessage("User ID is required.");
+
         RuleFor(x => x.FamilyId)
             .NotEmpty().WithMessage("Family ID is required.");
     }
 }
 
 /// <summary>
-/// Handler for GetFamilyMembersQuery.
+/// Handler for GetUserQuery.
 /// </summary>
-public sealed class GetFamilyMembersQueryHandler : IRequestHandler<GetFamilyMembersQuery, IReadOnlyList<UserDto>>
+public sealed class GetUserQueryHandler : IRequestHandler<GetUserQuery, UserDto>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ITenantContext _tenantContext;
 
-    public GetFamilyMembersQueryHandler(IUnitOfWork unitOfWork, ITenantContext tenantContext)
+    public GetUserQueryHandler(
+        IUnitOfWork unitOfWork,
+        ITenantContext tenantContext)
     {
         _unitOfWork = unitOfWork;
         _tenantContext = tenantContext;
     }
 
-    public async Task<IReadOnlyList<UserDto>> Handle(GetFamilyMembersQuery request, CancellationToken cancellationToken)
+    public async Task<UserDto> Handle(GetUserQuery request, CancellationToken cancellationToken)
     {
         // Validate tenant access
         _tenantContext.EnsureAccessToFamily(request.FamilyId);
 
-        var members = await _unitOfWork.Users.GetByFamilyIdAsync(request.FamilyId, cancellationToken);
+        var user = await _unitOfWork.Users.GetByIdAsync(request.UserId, request.FamilyId, cancellationToken);
+        if (user == null)
+        {
+            throw new NotFoundException("User", request.UserId);
+        }
 
-        return members.Select(user => new UserDto
+        return new UserDto
         {
             Id = user.Id,
             FamilyId = user.FamilyId,
@@ -78,6 +96,6 @@ public sealed class GetFamilyMembersQueryHandler : IRequestHandler<GetFamilyMemb
             LastLoginAt = user.LastLoginAt,
             IsActive = user.IsActive,
             CreatedAt = user.CreatedAt
-        }).ToList();
+        };
     }
 }

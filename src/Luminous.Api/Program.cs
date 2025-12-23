@@ -23,6 +23,8 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 // Add API services
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<ITenantContext, TenantContext>();
+builder.Services.AddScoped<ITokenService, TokenService>();
 
 // Configure JWT settings
 builder.Services.Configure<JwtSettings>(
@@ -180,6 +182,7 @@ app.UseAuthorization();
 
 // Add custom middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseTenantValidation();
 
 app.MapControllers();
 app.MapHealthChecks("/health");
