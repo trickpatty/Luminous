@@ -65,7 +65,7 @@ public sealed class LinkDeviceCommandHandler : IRequestHandler<LinkDeviceCommand
         // Verify link code is still valid
         if (!device.IsLinkCodeValid)
         {
-            throw new ValidationException([new FluentValidation.Results.ValidationFailure(
+            throw new FluentValidation.ValidationException([new FluentValidation.Results.ValidationFailure(
                 "LinkCode", "Link code has expired. Please generate a new code.")]);
         }
 

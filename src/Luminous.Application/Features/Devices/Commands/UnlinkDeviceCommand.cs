@@ -51,7 +51,7 @@ public sealed class UnlinkDeviceCommandHandler : IRequestHandler<UnlinkDeviceCom
 
         if (!device.IsLinked)
         {
-            throw new ValidationException([new FluentValidation.Results.ValidationFailure(
+            throw new FluentValidation.ValidationException([new FluentValidation.Results.ValidationFailure(
                 "DeviceId", "Device is not linked to any family.")]);
         }
 
