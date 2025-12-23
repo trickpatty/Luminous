@@ -1,8 +1,8 @@
 # Luminous Project Overview
 
-> **Document Version:** 2.0.0
-> **Last Updated:** 2025-12-21
-> **Status:** Draft
+> **Document Version:** 2.1.0
+> **Last Updated:** 2025-12-23
+> **Status:** Active
 > **TOGAF Phase:** Architecture Vision (Phase A)
 
 ---
@@ -109,14 +109,14 @@ Luminous is deployed as a cloud-hosted platform on Microsoft Azure, supporting m
 | **Real-time Sync** | WebSocket-based synchronization | Azure SignalR Service |
 | **Data Storage** | Document database per family | Azure Cosmos DB |
 | **File Storage** | Media and file uploads | Azure Blob Storage |
-| **Identity** | User authentication and authorization | Azure AD B2C |
+| **Identity** | User authentication and authorization | In-House Passwordless (WebAuthn/Passkeys) |
 | **Background Jobs** | Calendar sync, import processing | Azure Functions |
 
 #### Multi-Tenancy Model
 
 Each family represents a **tenant** with complete data isolation:
 
-1. **Sign-Up Flow**: Users register via Azure AD B2C (email/password or social login)
+1. **Sign-Up Flow**: Users register via passkey (WebAuthn), email OTP, or social login
 2. **Family Creation**: First user creates a family (tenant) and becomes the Owner
 3. **Member Invitation**: Owner invites family members via email or link
 4. **Device Linking**: Wall displays are linked to families via 6-digit codes
@@ -175,7 +175,7 @@ Developers can run the full stack locally using:
 | Blob Storage | Azurite |
 | Redis Cache | Docker Redis |
 | Azure Functions | Azure Functions Core Tools |
-| Azure AD B2C | Dev B2C tenant or local JWT issuer |
+| Identity Service | Local JWT issuer (DevAuth endpoint) |
 
 See [Local Development Guide](./DEVELOPMENT.md) for setup instructions.
 
@@ -672,13 +672,16 @@ Detailed Architecture Decision Records (ADRs) are maintained in `/docs/adr/`. Ke
 
 | ADR | Title | Status |
 |-----|-------|--------|
-| ADR-001 | Use TypeScript for all application code | Accepted |
-| ADR-002 | React for display and mobile applications | Accepted |
-| ADR-003 | Local-first data architecture with sync | Accepted |
-| ADR-004 | Two-way sync initially limited to Google Calendar | Accepted |
-| ADR-005 | Magic Import requires explicit approval | Accepted |
-| ADR-006 | Zero-distraction principle (no entertainment) | Accepted |
-| ADR-007 | Self-hosting as primary deployment model | Accepted |
+| ADR-001 | .NET 10 as Backend Platform | Accepted |
+| ADR-002 | Angular as Web Framework | Accepted |
+| ADR-003 | Azure as Cloud Platform | Accepted |
+| ADR-004 | Native iOS and Android Apps | Accepted |
+| ADR-005 | CosmosDB as Primary Data Store | Accepted |
+| ADR-006 | Multi-Tenant Architecture | Accepted |
+| ADR-007 | Bicep with AVMs for Infrastructure as Code | Accepted |
+| ADR-008 | Magic Import Requires Approval | Accepted |
+| ADR-009 | Zero-Distraction Design Principle | Accepted |
+| ADR-010 | In-House Passwordless Authentication | Accepted |
 
 ---
 
@@ -731,6 +734,8 @@ Detailed Architecture Decision Records (ADRs) are maintained in `/docs/adr/`. Ke
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0.0 | 2025-12-21 | Luminous Team | Initial draft |
+| 2.0.0 | 2025-12-21 | Luminous Team | Updated for Azure/.NET/Angular stack |
+| 2.1.0 | 2025-12-23 | Luminous Team | Updated ADR references to match implemented architecture |
 
 ---
 
