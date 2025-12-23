@@ -71,7 +71,7 @@ jobs:
         run: dotnet restore Luminous.sln
 
       - name: Build solution
-        run: dotnet build Luminous.sln --configuration Release --no-restore
+        run: dotnet build Luminous.sln --configuration Release
 
       - name: Run tests
         run: |
