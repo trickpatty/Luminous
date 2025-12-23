@@ -2,6 +2,7 @@ using FluentAssertions;
 using Luminous.Domain.Entities;
 using Luminous.Domain.Enums;
 using NanoidDotNet;
+using Xunit;
 
 namespace Luminous.Domain.Tests.Entities;
 

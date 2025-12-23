@@ -8,6 +8,7 @@ using Luminous.Domain.Interfaces;
 using MediatR;
 using Moq;
 using NanoidDotNet;
+using Xunit;
 
 namespace Luminous.Application.Tests.Devices.Commands;
 

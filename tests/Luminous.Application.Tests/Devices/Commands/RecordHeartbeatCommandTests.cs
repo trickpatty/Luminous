@@ -6,6 +6,7 @@ using Luminous.Domain.Enums;
 using Luminous.Domain.Interfaces;
 using Moq;
 using NanoidDotNet;
+using Xunit;
 
 namespace Luminous.Application.Tests.Devices.Commands;
 
