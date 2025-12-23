@@ -1,6 +1,6 @@
 # Luminous Development Roadmap
 
-> **Document Version:** 2.6.0
+> **Document Version:** 2.7.0
 > **Last Updated:** 2025-12-23
 > **Status:** Active
 > **TOGAF Phase:** Phase E/F (Opportunities, Solutions & Migration Planning)
@@ -103,7 +103,7 @@ Phase 6: Intelligence & Ecosystem
 | Phase | Name | Focus | Key Deliverables | Status |
 |-------|------|-------|------------------|--------|
 | **0** | Foundation | Infrastructure | Azure IaC, .NET solution, Angular shell, Passwordless Auth, Local Dev, CI/CD, Docs | ✅ Complete |
-| **1** | Core Platform | Multi-tenancy | Family sign-up, device linking, CosmosDB, web MVP | ⬜ Not Started |
+| **1** | Core Platform | Multi-tenancy | Family sign-up, device linking, CosmosDB, web MVP | 🔄 In Progress (1.1 Complete) |
 | **2** | Display & Calendar | Calendar visibility | Display app, calendar integration, SignalR sync | ⬜ Not Started |
 | **3** | Native Mobile | Mobile apps | iOS (Swift), Android (Kotlin), push notifications | ⬜ Not Started |
 | **4** | Task Management | Chores and routines | Task creation, completion tracking, rewards | ⬜ Not Started |
@@ -268,13 +268,23 @@ Deliver the multi-tenant platform with user registration, family creation, devic
 
 ### Scope
 
-#### 1.1 Multi-Tenant API
+#### 1.1 Multi-Tenant API ✅ COMPLETED
 
-- [ ] **1.1.1** Implement family (tenant) creation endpoint
-- [ ] **1.1.2** Implement user registration and profile creation
-- [ ] **1.1.3** Implement JWT claims with family context
-- [ ] **1.1.4** Add family-scoped authorization policies
-- [ ] **1.1.5** Implement tenant data isolation in repositories
+- [x] **1.1.1** Implement family (tenant) creation endpoint
+  - *Implemented: RegisterFamilyCommand creates family and owner atomically, returns auth token*
+  - *API: POST /api/auth/register*
+- [x] **1.1.2** Implement user registration and profile creation
+  - *Implemented: UpdateUserProfileCommand, GetCurrentUserQuery, GetUserQuery*
+  - *API: GET /api/auth/me, PUT /api/users/family/{familyId}/{userId}/profile*
+- [x] **1.1.3** Implement JWT claims with family context
+  - *Implemented: TokenService generates JWT with family_id, role, email_verified claims*
+  - *Claims: sub, family_id, role, display_name, email_verified*
+- [x] **1.1.4** Add family-scoped authorization policies
+  - *Implemented: TenantValidationMiddleware validates family access on routes*
+  - *Policies: FamilyMember, FamilyAdmin, FamilyOwner*
+- [x] **1.1.5** Implement tenant data isolation in repositories
+  - *Implemented: ITenantContext and TenantContext services*
+  - *All queries use familyId partition key; tenant access validated in handlers*
 
 #### 1.2 Device Linking
 
@@ -695,3 +705,4 @@ These can be developed in parallel after Phase 0:
 | 2.4.0 | 2025-12-22 | Luminous Team | Phase 0.4 Local Development Environment completed |
 | 2.5.0 | 2025-12-22 | Luminous Team | Phase 0.5 CI/CD Pipeline completed |
 | 2.6.0 | 2025-12-23 | Luminous Team | Phase 0.6 Documentation completed; Phase 0 complete |
+| 2.7.0 | 2025-12-23 | Luminous Team | Phase 1.1 Multi-Tenant API completed |
