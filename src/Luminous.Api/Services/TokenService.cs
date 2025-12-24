@@ -170,4 +170,59 @@ public class TokenService : ITokenService
         _logger.LogWarning("RefreshTokenAsync not yet implemented - requires persistent storage");
         return Task.FromResult<AuthResultDto?>(null);
     }
+
+    /// <inheritdoc />
+    public CaregiverAccessTokenDto GenerateCaregiverToken(string familyId, string targetUserId, TimeSpan expiration)
+    {
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.SecretKey));
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var claims = new List<Claim>
+        {
+            // Standard JWT claims
+            new(JwtRegisteredClaimNames.Sub, $"caregiver:{targetUserId}"),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
+
+            // .NET identity claims for caregiver
+            new(ClaimTypes.NameIdentifier, $"caregiver:{targetUserId}"),
+            new(ClaimTypes.Role, "Caregiver"),
+
+            // Custom claims for caregiver access
+            new("family_id", familyId),
+            new("target_user_id", targetUserId),
+            new("access_type", "caregiver"),
+            new("is_read_only", "true")
+        };
+
+        var now = DateTime.UtcNow;
+        var expires = now.Add(expiration);
+
+        var token = new JwtSecurityToken(
+            issuer: _settings.Issuer,
+            audience: _settings.Audience,
+            claims: claims,
+            notBefore: now,
+            expires: expires,
+            signingCredentials: credentials);
+
+        var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
+
+        _logger.LogInformation(
+            "Generated caregiver access token for user {TargetUserId} in family {FamilyId}, expires at {ExpiresAt}",
+            targetUserId, familyId, expires);
+
+        // Generate the access URL (this would be configurable in production)
+        var baseUrl = _settings.Issuer.TrimEnd('/');
+        var accessUrl = $"{baseUrl}/caregiver?token={Uri.EscapeDataString(accessToken)}";
+
+        return new CaregiverAccessTokenDto
+        {
+            Token = accessToken,
+            TokenType = "Bearer",
+            ExpiresIn = (int)expiration.TotalSeconds,
+            ExpiresAt = expires,
+            AccessUrl = accessUrl
+        };
+    }
 }

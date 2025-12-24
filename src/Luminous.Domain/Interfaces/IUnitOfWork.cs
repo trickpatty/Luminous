@@ -36,6 +36,11 @@ public interface IUnitOfWork : IDisposable
     ICredentialRepository Credentials { get; }
 
     /// <summary>
+    /// Gets the invitation repository.
+    /// </summary>
+    IInvitationRepository Invitations { get; }
+
+    /// <summary>
     /// Saves all pending changes.
     /// </summary>
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

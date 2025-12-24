@@ -18,6 +18,7 @@ public sealed class UnitOfWork : IUnitOfWork
     private IEventRepository? _events;
     private IChoreRepository? _chores;
     private ICredentialRepository? _credentials;
+    private IInvitationRepository? _invitations;
 
     public UnitOfWork(
         CosmosDbContext context,
@@ -44,6 +45,9 @@ public sealed class UnitOfWork : IUnitOfWork
 
     public ICredentialRepository Credentials => _credentials ??=
         new CredentialRepository(_context, _logger as ILogger<CredentialRepository> ?? throw new InvalidOperationException());
+
+    public IInvitationRepository Invitations => _invitations ??=
+        new InvitationRepository(_context, _logger as ILogger<InvitationRepository> ?? throw new InvalidOperationException());
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

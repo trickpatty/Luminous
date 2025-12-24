@@ -44,4 +44,13 @@ public interface ITokenService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A new authentication result if valid, null otherwise.</returns>
     Task<AuthResultDto?> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Generates a time-limited caregiver access token.
+    /// </summary>
+    /// <param name="familyId">The family ID for the caregiver access.</param>
+    /// <param name="targetUserId">The user ID being viewed by the caregiver.</param>
+    /// <param name="expiration">The token expiration time.</param>
+    /// <returns>A caregiver access token DTO.</returns>
+    CaregiverAccessTokenDto GenerateCaregiverToken(string familyId, string targetUserId, TimeSpan expiration);
 }

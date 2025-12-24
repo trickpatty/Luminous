@@ -1,6 +1,7 @@
 using Luminous.Application.DTOs;
 using Luminous.Application.Features.Users.Commands;
 using Luminous.Application.Features.Users.Queries;
+using Luminous.Domain.Enums;
 using Luminous.Shared.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -65,6 +66,119 @@ public class UsersController : ApiControllerBase
             FamilyId = familyId,
             UserId = userId,
             Profile = profile
+        };
+        var result = await Mediator.Send(command);
+        return OkResponse(result);
+    }
+
+    /// <summary>
+    /// Updates a user's role within the family.
+    /// </summary>
+    /// <param name="familyId">The family ID.</param>
+    /// <param name="userId">The user ID.</param>
+    /// <param name="request">The role update request.</param>
+    /// <returns>The updated user.</returns>
+    [HttpPut("family/{familyId}/{userId}/role")]
+    [Authorize(Policy = "FamilyAdmin")]
+    [ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<UserDto>>> UpdateRole(
+        string familyId,
+        string userId,
+        [FromBody] UpdateUserRoleRequestDto request)
+    {
+        var command = new UpdateUserRoleCommand
+        {
+            FamilyId = familyId,
+            UserId = userId,
+            NewRole = request.NewRole
+        };
+        var result = await Mediator.Send(command);
+        return OkResponse(result);
+    }
+
+    /// <summary>
+    /// Updates a user's caregiver information.
+    /// </summary>
+    /// <param name="familyId">The family ID.</param>
+    /// <param name="userId">The user ID.</param>
+    /// <param name="request">The caregiver info update request.</param>
+    /// <returns>The updated user.</returns>
+    [HttpPut("family/{familyId}/{userId}/caregiver-info")]
+    [ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<UserDto>>> UpdateCaregiverInfo(
+        string familyId,
+        string userId,
+        [FromBody] UpdateCaregiverInfoRequestDto request)
+    {
+        var command = new UpdateCaregiverInfoCommand
+        {
+            FamilyId = familyId,
+            UserId = userId,
+            Allergies = request.Allergies,
+            MedicalNotes = request.MedicalNotes,
+            EmergencyContactName = request.EmergencyContactName,
+            EmergencyContactPhone = request.EmergencyContactPhone,
+            DoctorName = request.DoctorName,
+            DoctorPhone = request.DoctorPhone,
+            SchoolName = request.SchoolName,
+            Notes = request.Notes
+        };
+        var result = await Mediator.Send(command);
+        return OkResponse(result);
+    }
+
+    /// <summary>
+    /// Removes a user from the family.
+    /// </summary>
+    /// <param name="familyId">The family ID.</param>
+    /// <param name="userId">The user ID.</param>
+    /// <returns>No content on success.</returns>
+    [HttpDelete("family/{familyId}/{userId}")]
+    [Authorize(Policy = "FamilyAdmin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RemoveUser(string familyId, string userId)
+    {
+        var command = new RemoveUserFromFamilyCommand
+        {
+            FamilyId = familyId,
+            UserId = userId
+        };
+        await Mediator.Send(command);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Generates a time-limited caregiver access token for viewing a user's information.
+    /// </summary>
+    /// <param name="familyId">The family ID.</param>
+    /// <param name="userId">The user ID whose info will be shared.</param>
+    /// <param name="request">The token generation request.</param>
+    /// <returns>The caregiver access token with URL.</returns>
+    [HttpPost("family/{familyId}/{userId}/caregiver-token")]
+    [Authorize(Policy = "FamilyAdmin")]
+    [ProducesResponseType(typeof(ApiResponse<CaregiverAccessTokenDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<CaregiverAccessTokenDto>>> GenerateCaregiverToken(
+        string familyId,
+        string userId,
+        [FromBody] GenerateCaregiverTokenRequestDto request)
+    {
+        var command = new GenerateCaregiverAccessTokenCommand
+        {
+            FamilyId = familyId,
+            UserId = userId,
+            ExpirationHours = request.ExpirationHours
         };
         var result = await Mediator.Send(command);
         return OkResponse(result);
