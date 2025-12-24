@@ -113,7 +113,7 @@ jobs:
       - name: Run What-If (Dev)
         uses: azure/arm-deploy@v2
         with:
-          scope: resourceGroup
+          scope: resourcegroup
           resourceGroupName: ${{ env.RG_PREFIX }}-dev
           template: infra/bicep/main.bicep
           parameters: infra/bicep/parameters/dev.bicepparam
@@ -140,7 +140,7 @@ jobs:
       - name: Run What-If (Stg)
         uses: azure/arm-deploy@v2
         with:
-          scope: resourceGroup
+          scope: resourcegroup
           resourceGroupName: ${{ env.RG_PREFIX }}-stg
           template: infra/bicep/main.bicep
           parameters: infra/bicep/parameters/stg.bicepparam
@@ -167,7 +167,7 @@ jobs:
       - name: Run What-If (Prd)
         uses: azure/arm-deploy@v2
         with:
-          scope: resourceGroup
+          scope: resourcegroup
           resourceGroupName: ${{ env.RG_PREFIX }}-prd
           template: infra/bicep/main.bicep
           parameters: infra/bicep/parameters/prd.bicepparam
@@ -197,7 +197,7 @@ jobs:
         uses: azure/arm-deploy@v2
         id: deploy
         with:
-          scope: resourceGroup
+          scope: resourcegroup
           resourceGroupName: ${{ env.RG_PREFIX }}-dev
           template: infra/bicep/main.bicep
           parameters: infra/bicep/parameters/dev.bicepparam
@@ -237,7 +237,7 @@ jobs:
         uses: azure/arm-deploy@v2
         id: deploy
         with:
-          scope: resourceGroup
+          scope: resourcegroup
           resourceGroupName: ${{ env.RG_PREFIX }}-stg
           template: infra/bicep/main.bicep
           parameters: infra/bicep/parameters/stg.bicepparam
@@ -277,7 +277,7 @@ jobs:
         uses: azure/arm-deploy@v2
         id: deploy
         with:
-          scope: resourceGroup
+          scope: resourcegroup
           resourceGroupName: ${{ env.RG_PREFIX }}-prd
           template: infra/bicep/main.bicep
           parameters: infra/bicep/parameters/prd.bicepparam
