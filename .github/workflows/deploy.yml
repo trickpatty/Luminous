@@ -142,7 +142,16 @@ jobs:
         if: needs.build-api.result == 'success'
         id: get-app-name
         run: |
-          APP_NAME=$(az webapp list --resource-group ${{ env.RG_PREFIX }}-dev --query "[?starts_with(name, 'app-lum-dev-')].name" -o tsv)
+          echo "Listing web apps in resource group ${{ env.RG_PREFIX }}-dev..."
+          az webapp list --resource-group ${{ env.RG_PREFIX }}-dev --query "[].{name:name, kind:kind}" -o table
+
+          # Filter for App Service (kind=app,linux), not Function Apps (kind=functionapp,linux)
+          APP_NAME=$(az webapp list --resource-group ${{ env.RG_PREFIX }}-dev --query "[?contains(kind, 'app') && !contains(kind, 'functionapp')].name" -o tsv | head -1)
+
+          if [ -z "$APP_NAME" ]; then
+            echo "::error::No App Service found in resource group ${{ env.RG_PREFIX }}-dev. Ensure infrastructure is deployed first."
+            exit 1
+          fi
           echo "app_name=$APP_NAME" >> $GITHUB_OUTPUT
           echo "Found App Service: $APP_NAME"
 
@@ -205,7 +214,16 @@ jobs:
         if: needs.build-api.result == 'success'
         id: get-app-name
         run: |
-          APP_NAME=$(az webapp list --resource-group ${{ env.RG_PREFIX }}-stg --query "[?starts_with(name, 'app-lum-stg-')].name" -o tsv)
+          echo "Listing web apps in resource group ${{ env.RG_PREFIX }}-stg..."
+          az webapp list --resource-group ${{ env.RG_PREFIX }}-stg --query "[].{name:name, kind:kind}" -o table
+
+          # Filter for App Service (kind=app,linux), not Function Apps (kind=functionapp,linux)
+          APP_NAME=$(az webapp list --resource-group ${{ env.RG_PREFIX }}-stg --query "[?contains(kind, 'app') && !contains(kind, 'functionapp')].name" -o tsv | head -1)
+
+          if [ -z "$APP_NAME" ]; then
+            echo "::error::No App Service found in resource group ${{ env.RG_PREFIX }}-stg. Ensure infrastructure is deployed first."
+            exit 1
+          fi
           echo "app_name=$APP_NAME" >> $GITHUB_OUTPUT
           echo "Found App Service: $APP_NAME"
 
@@ -268,7 +286,16 @@ jobs:
         if: needs.build-api.result == 'success'
         id: get-app-name
         run: |
-          APP_NAME=$(az webapp list --resource-group ${{ env.RG_PREFIX }}-prd --query "[?starts_with(name, 'app-lum-prd-')].name" -o tsv)
+          echo "Listing web apps in resource group ${{ env.RG_PREFIX }}-prd..."
+          az webapp list --resource-group ${{ env.RG_PREFIX }}-prd --query "[].{name:name, kind:kind}" -o table
+
+          # Filter for App Service (kind=app,linux), not Function Apps (kind=functionapp,linux)
+          APP_NAME=$(az webapp list --resource-group ${{ env.RG_PREFIX }}-prd --query "[?contains(kind, 'app') && !contains(kind, 'functionapp')].name" -o tsv | head -1)
+
+          if [ -z "$APP_NAME" ]; then
+            echo "::error::No App Service found in resource group ${{ env.RG_PREFIX }}-prd. Ensure infrastructure is deployed first."
+            exit 1
+          fi
           echo "app_name=$APP_NAME" >> $GITHUB_OUTPUT
           echo "Found App Service: $APP_NAME"
 
