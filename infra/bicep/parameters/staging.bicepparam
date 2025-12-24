@@ -14,7 +14,7 @@
 using '../main.bicep'
 
 // Environment Configuration
-param environment = 'staging'
+param environment = 'stg'
 param location = 'eastus2'
 param projectName = 'luminous'
 param projectPrefix = 'lum'
