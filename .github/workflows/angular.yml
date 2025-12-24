@@ -75,8 +75,8 @@ jobs:
           path: ${{ env.WORKING_DIRECTORY }}/dist/web
           retention-days: 7
 
-  build-staging:
-    name: Build (Staging)
+  build-stg:
+    name: Build (Stg)
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop' || github.event_name == 'pull_request'
 
@@ -94,14 +94,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build for staging
-        run: npm run build:staging
+      - name: Build for stg
+        run: npm run build:stg
 
-      - name: Upload staging build artifacts
+      - name: Upload stg build artifacts
         uses: actions/upload-artifact@v4
         if: success()
         with:
-          name: angular-build-staging
+          name: angular-build-stg
           path: ${{ env.WORKING_DIRECTORY }}/dist/web
           retention-days: 7
 

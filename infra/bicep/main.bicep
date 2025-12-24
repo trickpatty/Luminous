@@ -20,8 +20,8 @@ targetScope = 'subscription'
 // Parameters
 // =============================================================================
 
-@description('Environment name (dev, staging, prod)')
-@allowed(['dev', 'staging', 'prod'])
+@description('Environment name (dev, stg, prd)')
+@allowed(['dev', 'stg', 'prd'])
 param environment string
 
 @description('Azure region for deployment')
@@ -52,24 +52,24 @@ param cosmosDbConsistencyLevel string = 'Session'
 
 // App Service Configuration
 @description('App Service Plan SKU')
-param appServiceSkuName string = environment == 'prod' ? 'P1v3' : 'B1'
+param appServiceSkuName string = environment == 'prd' ? 'P1v3' : 'B1'
 
 // Redis Configuration
 @description('Redis Cache SKU')
 @allowed(['Basic', 'Standard', 'Premium'])
-param redisSku string = environment == 'prod' ? 'Standard' : 'Basic'
+param redisSku string = environment == 'prd' ? 'Standard' : 'Basic'
 
 @description('Redis Cache Capacity')
-param redisCapacity int = environment == 'prod' ? 1 : 0
+param redisCapacity int = environment == 'prd' ? 1 : 0
 
 // SignalR Configuration
 @description('SignalR Service SKU')
-param signalRSku string = environment == 'prod' ? 'Standard_S1' : 'Free_F1'
+param signalRSku string = environment == 'prd' ? 'Standard_S1' : 'Free_F1'
 
 // Static Web App Configuration
 @description('Static Web App SKU')
 @allowed(['Free', 'Standard'])
-param staticWebAppSku string = environment == 'prod' ? 'Standard' : 'Free'
+param staticWebAppSku string = environment == 'prd' ? 'Standard' : 'Free'
 
 // =============================================================================
 // Variables
@@ -135,7 +135,7 @@ module logAnalytics 'br/public:avm/res/operational-insights/workspace:0.9.0' = {
     name: names.logAnalytics
     location: location
     tags: tags
-    dataRetention: environment == 'prod' ? 90 : 30
+    dataRetention: environment == 'prd' ? 90 : 30
     skuName: 'PerGB2018'
   }
   dependsOn: [rg]
@@ -167,9 +167,9 @@ module keyVault 'br/public:avm/res/key-vault/vault:0.9.0' = {
     tags: tags
     sku: 'standard'
     enableRbacAuthorization: true
-    enableSoftDelete: environment == 'prod'
+    enableSoftDelete: environment == 'prd'
     softDeleteRetentionInDays: 90
-    enablePurgeProtection: environment == 'prod'
+    enablePurgeProtection: environment == 'prd'
   }
   dependsOn: [rg]
 }
@@ -181,7 +181,7 @@ module appConfig 'br/public:avm/res/app-configuration/configuration-store:0.5.1'
     name: names.appConfig
     location: location
     tags: tags
-    sku: environment == 'prod' ? 'Standard' : 'Free'
+    sku: environment == 'prd' ? 'Standard' : 'Free'
   }
   dependsOn: [rg]
 }
@@ -226,7 +226,7 @@ module storageAccount 'br/public:avm/res/storage/storage-account:0.14.3' = {
     name: names.storageAccount
     location: location
     tags: tags
-    skuName: environment == 'prod' ? 'Standard_GRS' : 'Standard_LRS'
+    skuName: environment == 'prd' ? 'Standard_GRS' : 'Standard_LRS'
     kind: 'StorageV2'
     allowBlobPublicAccess: false
     blobServices: {
@@ -273,7 +273,7 @@ module serviceBus 'br/public:avm/res/service-bus/namespace:0.10.0' = {
     location: location
     tags: tags
     skuObject: {
-      name: environment == 'prod' ? 'Standard' : 'Basic'
+      name: environment == 'prd' ? 'Standard' : 'Basic'
     }
     queues: [
       { name: 'calendar-sync' }
@@ -343,7 +343,7 @@ module appService 'br/public:avm/res/web/site:0.11.1' = {
     httpsOnly: true
     clientAffinityEnabled: false
     appSettingsKeyValuePairs: {
-      ASPNETCORE_ENVIRONMENT: environment == 'prod' ? 'Production' : 'Development'
+      ASPNETCORE_ENVIRONMENT: environment == 'prd' ? 'Production' : 'Development'
       APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
       CosmosDb__Endpoint: cosmosDb.outputs.endpoint
       CosmosDb__DatabaseName: projectName

@@ -548,7 +548,7 @@ RESOURCE GROUP: rg-luminous-{env}
 targetScope = 'subscription'
 
 @description('Environment name')
-@allowed(['dev', 'staging', 'prod'])
+@allowed(['dev', 'stg', 'prd'])
 param environment string
 
 @description('Azure region')
@@ -605,8 +605,8 @@ module appService 'br/public:avm/res/web/site:0.3.0' = {
 | Environment | Purpose | Resources |
 |-------------|---------|-----------|
 | **dev** | Development | Minimal SKUs, single region |
-| **staging** | Pre-production testing | Production-like, single region |
-| **prod** | Production | Full SKUs, multi-region optional |
+| **stg** | Pre-production testing | Production-like, single region |
+| **prd** | Production | Full SKUs, multi-region optional |
 
 ---
 

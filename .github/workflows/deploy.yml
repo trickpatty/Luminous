@@ -25,8 +25,8 @@ on:
         type: choice
         options:
           - dev
-          - staging
-          - prod
+          - stg
+          - prd
       deploy_api:
         description: 'Deploy .NET API'
         required: true
@@ -169,11 +169,11 @@ jobs:
           skip_app_build: true
 
   # =============================================================================
-  # Deploy to Staging Environment
+  # Deploy to Stg Environment
   # =============================================================================
 
-  deploy-staging:
-    name: Deploy to Staging
+  deploy-stg:
+    name: Deploy to Stg
     runs-on: ubuntu-latest
     needs: [build-api, build-web]
     if: |
@@ -181,8 +181,8 @@ jobs:
       !contains(needs.*.result, 'failure') &&
       !contains(needs.*.result, 'cancelled') &&
       github.event_name == 'workflow_dispatch' &&
-      github.event.inputs.environment == 'staging'
-    environment: staging
+      github.event.inputs.environment == 'stg'
+    environment: stg
 
     steps:
       - name: Azure Login
@@ -203,7 +203,7 @@ jobs:
         if: needs.build-api.result == 'success'
         uses: azure/webapps-deploy@v3
         with:
-          app-name: app-lum-staging-api
+          app-name: app-lum-stg-api
           package: ./api-package
 
       - name: Download web artifact
@@ -217,18 +217,18 @@ jobs:
         if: needs.build-web.result == 'success'
         uses: azure/static-web-apps-deploy@v1
         with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APP_TOKEN_STAGING }}
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APP_TOKEN_STG }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: 'upload'
           app_location: './web-package'
           skip_app_build: true
 
   # =============================================================================
-  # Deploy to Production Environment
+  # Deploy to Prd Environment
   # =============================================================================
 
-  deploy-prod:
-    name: Deploy to Production
+  deploy-prd:
+    name: Deploy to Prd
     runs-on: ubuntu-latest
     needs: [build-api, build-web]
     if: |
@@ -236,8 +236,8 @@ jobs:
       !contains(needs.*.result, 'failure') &&
       !contains(needs.*.result, 'cancelled') &&
       github.event_name == 'workflow_dispatch' &&
-      github.event.inputs.environment == 'prod'
-    environment: prod
+      github.event.inputs.environment == 'prd'
+    environment: prd
 
     steps:
       - name: Azure Login
@@ -258,7 +258,7 @@ jobs:
         if: needs.build-api.result == 'success'
         uses: azure/webapps-deploy@v3
         with:
-          app-name: app-lum-prod-api
+          app-name: app-lum-prd-api
           package: ./api-package
 
       - name: Download web artifact
@@ -272,7 +272,7 @@ jobs:
         if: needs.build-web.result == 'success'
         uses: azure/static-web-apps-deploy@v1
         with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APP_TOKEN_PROD }}
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APP_TOKEN_PRD }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: 'upload'
           app_location: './web-package'

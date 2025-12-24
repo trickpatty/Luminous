@@ -244,8 +244,8 @@ npm install
 # Development server
 npm start
 
-# Or with staging configuration
-npm run start:staging
+# Or with stg configuration
+npm run start:stg
 ```
 
 ### Web App Endpoints
@@ -260,8 +260,8 @@ npm run start:staging
 # Development build
 npm run build
 
-# Staging build
-npm run build:staging
+# Stg build
+npm run build:stg
 
 # Production build
 npm run build:prod

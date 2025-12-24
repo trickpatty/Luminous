@@ -6,7 +6,7 @@
     Deploys Luminous Azure infrastructure using Bicep templates.
 
 .PARAMETER Environment
-    The target environment (dev, staging, prod)
+    The target environment (dev, stg, prd)
 
 .PARAMETER WhatIf
     Preview changes without deploying
@@ -18,16 +18,16 @@
     .\deploy.ps1 -Environment dev
 
 .EXAMPLE
-    .\deploy.ps1 -Environment staging -WhatIf
+    .\deploy.ps1 -Environment stg -WhatIf
 
 .EXAMPLE
-    .\deploy.ps1 -Environment prod -Location westus2
+    .\deploy.ps1 -Environment prd -Location westus2
 #>
 
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true, Position = 0)]
-    [ValidateSet('dev', 'staging', 'prod')]
+    [ValidateSet('dev', 'stg', 'prd')]
     [string]$Environment,
 
     [Parameter()]

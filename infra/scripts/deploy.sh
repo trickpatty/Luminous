@@ -9,8 +9,8 @@
 #
 # Examples:
 #   ./deploy.sh dev           # Deploy to development
-#   ./deploy.sh staging       # Deploy to staging
-#   ./deploy.sh prod          # Deploy to production
+#   ./deploy.sh stg           # Deploy to staging
+#   ./deploy.sh prd           # Deploy to production
 #   ./deploy.sh dev --what-if # Preview changes without deploying
 #
 # Prerequisites:
@@ -68,8 +68,8 @@ usage() {
     echo ""
     echo "Environments:"
     echo "  dev       Deploy to development environment"
-    echo "  staging   Deploy to staging environment"
-    echo "  prod      Deploy to production environment"
+    echo "  stg       Deploy to staging environment"
+    echo "  prd       Deploy to production environment"
     echo ""
     echo "Options:"
     echo "  --what-if     Preview changes without deploying"
@@ -78,8 +78,8 @@ usage() {
     echo ""
     echo "Examples:"
     echo "  $0 dev"
-    echo "  $0 staging --what-if"
-    echo "  $0 prod --location westus2"
+    echo "  $0 stg --what-if"
+    echo "  $0 prd --location westus2"
     exit 1
 }
 
@@ -115,7 +115,7 @@ check_prerequisites() {
 
 validate_environment() {
     case $1 in
-        dev|staging|prod)
+        dev|stg|prd)
             return 0
             ;;
         *)
@@ -204,7 +204,7 @@ WHAT_IF="false"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        dev|staging|prod)
+        dev|stg|prd)
             ENVIRONMENT=$1
             shift
             ;;

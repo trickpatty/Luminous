@@ -42,7 +42,7 @@ Following TOGAF TP-4 (Infrastructure as Code):
 
 - **Reproducible**: Same code deploys identical infrastructure
 - **Version controlled**: All changes tracked in Git
-- **Environment parity**: Dev/staging/prod use same templates
+- **Environment parity**: Dev/stg/prd use same templates
 - **Self-documenting**: Bicep templates serve as documentation
 
 ---
@@ -241,8 +241,8 @@ infra/
 │   ├── main.bicep              # Main orchestration (uses AVMs from registry)
 │   └── parameters/             # Environment configs
 │       ├── dev.bicepparam
-│       ├── staging.bicepparam
-│       └── prod.bicepparam
+│       ├── stg.bicepparam
+│       └── prd.bicepparam
 └── scripts/
     ├── deploy.sh               # Bash deployment script
     └── deploy.ps1              # PowerShell deployment script
@@ -286,12 +286,12 @@ az account set --subscription "<subscription-name-or-id>"
 cd infra/scripts
 ./deploy.sh dev
 
-# 4. Deploy to staging
-./deploy.sh staging
+# 4. Deploy to stg
+./deploy.sh stg
 
 # 5. Deploy to production (with what-if preview first)
-./deploy.sh prod --what-if
-./deploy.sh prod
+./deploy.sh prd --what-if
+./deploy.sh prd
 ```
 
 ### Detailed Deployment Steps
