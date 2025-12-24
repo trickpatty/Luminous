@@ -5,7 +5,6 @@ import { AuthService, FamilyService } from '../../../../core';
 import {
   CardComponent,
   ButtonComponent,
-  InputComponent,
   AlertComponent,
   SpinnerComponent,
 } from '../../../../shared';
@@ -19,7 +18,6 @@ import { FamilySettings, UpdateFamilySettingsRequest } from '../../../../models'
     FormsModule,
     CardComponent,
     ButtonComponent,
-    InputComponent,
     AlertComponent,
     SpinnerComponent,
   ],

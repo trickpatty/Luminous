@@ -40,10 +40,12 @@ export class DeviceService {
     this._loading.set(true);
     this._error.set(null);
 
-    const params = activeOnly ? { activeOnly: 'true' } : {};
+    const options = activeOnly
+      ? { params: { activeOnly: 'true' } }
+      : undefined;
 
     return this.api
-      .get<Device[]>(`devices/family/${familyId}`, { params })
+      .get<Device[]>(`devices/family/${familyId}`, options)
       .pipe(
         tap((devices) => {
           this._devices.set(devices);

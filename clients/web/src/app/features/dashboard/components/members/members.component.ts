@@ -9,7 +9,6 @@ import {
 import {
   CardComponent,
   ButtonComponent,
-  InputComponent,
   AlertComponent,
   AvatarComponent,
   SpinnerComponent,
@@ -24,7 +23,6 @@ import { User, UserRole, Invitation, InvitationStatus } from '../../../../models
     FormsModule,
     CardComponent,
     ButtonComponent,
-    InputComponent,
     AlertComponent,
     AvatarComponent,
     SpinnerComponent,
