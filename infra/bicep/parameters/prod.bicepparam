@@ -14,7 +14,7 @@
 using '../main.bicep'
 
 // Environment Configuration
-param environment = 'prod'
+param environment = 'prd'
 param location = 'eastus2'
 param projectName = 'luminous'
 param projectPrefix = 'lum'
