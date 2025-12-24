@@ -10,7 +10,7 @@ public interface IDeviceRepository : IRepository<Device>
     /// <summary>
     /// Gets a device by ID within a family.
     /// </summary>
-    Task<Device?> GetByIdAsync(string deviceId, string familyId, CancellationToken cancellationToken = default);
+    new Task<Device?> GetByIdAsync(string deviceId, string? familyId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a device by its link code (for linking flow).

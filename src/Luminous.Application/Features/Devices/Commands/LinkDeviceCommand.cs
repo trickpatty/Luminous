@@ -10,7 +10,7 @@ namespace Luminous.Application.Features.Devices.Commands;
 /// <summary>
 /// Command to link a device to a family.
 /// </summary>
-public sealed record LinkDeviceCommand : IRequest<DeviceDto>
+public sealed record LinkDeviceCommand : IRequest<LinkedDeviceDto>
 {
     public string LinkCode { get; init; } = string.Empty;
     public string FamilyId { get; init; } = string.Empty;
@@ -40,18 +40,23 @@ public sealed class LinkDeviceCommandValidator : AbstractValidator<LinkDeviceCom
 /// <summary>
 /// Handler for LinkDeviceCommand.
 /// </summary>
-public sealed class LinkDeviceCommandHandler : IRequestHandler<LinkDeviceCommand, DeviceDto>
+public sealed class LinkDeviceCommandHandler : IRequestHandler<LinkDeviceCommand, LinkedDeviceDto>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
+    private readonly ITokenService _tokenService;
 
-    public LinkDeviceCommandHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUserService)
+    public LinkDeviceCommandHandler(
+        IUnitOfWork unitOfWork,
+        ICurrentUserService currentUserService,
+        ITokenService tokenService)
     {
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
+        _tokenService = tokenService;
     }
 
-    public async Task<DeviceDto> Handle(LinkDeviceCommand request, CancellationToken cancellationToken)
+    public async Task<LinkedDeviceDto> Handle(LinkDeviceCommand request, CancellationToken cancellationToken)
     {
         // Find device by link code
         var device = await _unitOfWork.Devices.GetByLinkCodeAsync(request.LinkCode, cancellationToken)
@@ -60,7 +65,7 @@ public sealed class LinkDeviceCommandHandler : IRequestHandler<LinkDeviceCommand
         // Verify link code is still valid
         if (!device.IsLinkCodeValid)
         {
-            throw new ValidationException([new FluentValidation.Results.ValidationFailure(
+            throw new FluentValidation.ValidationException([new FluentValidation.Results.ValidationFailure(
                 "LinkCode", "Link code has expired. Please generate a new code.")]);
         }
 
@@ -77,7 +82,10 @@ public sealed class LinkDeviceCommandHandler : IRequestHandler<LinkDeviceCommand
         await _unitOfWork.Devices.UpdateAsync(device, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return new DeviceDto
+        // Generate device token
+        var authResult = _tokenService.GenerateDeviceToken(device, request.FamilyId);
+
+        var deviceDto = new DeviceDto
         {
             Id = device.Id,
             FamilyId = device.FamilyId,
@@ -99,6 +107,15 @@ public sealed class LinkDeviceCommandHandler : IRequestHandler<LinkDeviceCommand
             IsActive = device.IsActive,
             Platform = device.Platform,
             AppVersion = device.AppVersion
+        };
+
+        return new LinkedDeviceDto
+        {
+            Device = deviceDto,
+            AccessToken = authResult.AccessToken,
+            RefreshToken = authResult.RefreshToken,
+            TokenType = authResult.TokenType,
+            ExpiresIn = authResult.ExpiresIn
         };
     }
 }

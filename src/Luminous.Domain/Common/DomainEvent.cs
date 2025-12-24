@@ -1,4 +1,4 @@
-using Nanoid;
+using NanoidDotNet;
 
 namespace Luminous.Domain.Common;
 
