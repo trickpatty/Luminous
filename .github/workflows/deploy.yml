@@ -59,10 +59,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
@@ -77,7 +77,7 @@ jobs:
             --no-restore
 
       - name: Upload API artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: api-package
           path: ./publish/api
@@ -90,10 +90,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -108,7 +108,7 @@ jobs:
         run: npm run build:prod
 
       - name: Upload web artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: web-package
           path: ./clients/web/dist/web
@@ -139,7 +139,7 @@ jobs:
 
       - name: Download API artifact
         if: needs.build-api.result == 'success'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: api-package
           path: ./api-package
@@ -153,7 +153,7 @@ jobs:
 
       - name: Download web artifact
         if: needs.build-web.result == 'success'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: web-package
           path: ./web-package
@@ -194,7 +194,7 @@ jobs:
 
       - name: Download API artifact
         if: needs.build-api.result == 'success'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: api-package
           path: ./api-package
@@ -208,7 +208,7 @@ jobs:
 
       - name: Download web artifact
         if: needs.build-web.result == 'success'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: web-package
           path: ./web-package
@@ -249,7 +249,7 @@ jobs:
 
       - name: Download API artifact
         if: needs.build-api.result == 'success'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: api-package
           path: ./api-package
@@ -263,7 +263,7 @@ jobs:
 
       - name: Download web artifact
         if: needs.build-web.result == 'success'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: web-package
           path: ./web-package
