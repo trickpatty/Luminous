@@ -1,8 +1,8 @@
-using Luminous.Domain.Entities;
 using Luminous.Domain.Interfaces;
 using Luminous.Infrastructure.Persistence.Configuration;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
+using User = Luminous.Domain.Entities.User;
 
 namespace Luminous.Infrastructure.Persistence.Repositories;
 
@@ -20,9 +20,9 @@ public sealed class UserRepository : CosmosRepositoryBase<User>, IUserRepository
 
     protected override string GetPartitionKeyPath() => "/familyId";
 
-    public async Task<User?> GetByIdAsync(string userId, string familyId, CancellationToken cancellationToken = default)
+    public new async Task<User?> GetByIdAsync(string userId, string familyId, CancellationToken cancellationToken = default)
     {
-        return await GetByIdAsync(userId, familyId, cancellationToken);
+        return await base.GetByIdAsync(userId, familyId, cancellationToken);
     }
 
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
