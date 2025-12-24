@@ -347,16 +347,10 @@ module appService 'br/public:avm/res/web/site:0.11.1' = {
       APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
       CosmosDb__Endpoint: cosmosDb.outputs.endpoint
       CosmosDb__DatabaseName: projectName
-      SignalR__ConnectionString: signalR.outputs.hostName
+      SignalR__Endpoint: 'https://${signalR.outputs.name}.service.signalr.net'
       AppConfig__Endpoint: appConfig.outputs.endpoint
     }
   }
-  dependsOn: [
-    cosmosDb
-    signalR
-    appConfig
-    appInsights
-  ]
 }
 
 module functionAppSync 'br/public:avm/res/web/site:0.11.1' = {
@@ -387,11 +381,6 @@ module functionAppSync 'br/public:avm/res/web/site:0.11.1' = {
       CosmosDb__DatabaseName: projectName
     }
   }
-  dependsOn: [
-    cosmosDb
-    storageAccount
-    appInsights
-  ]
 }
 
 module functionAppImport 'br/public:avm/res/web/site:0.11.1' = {
@@ -422,11 +411,6 @@ module functionAppImport 'br/public:avm/res/web/site:0.11.1' = {
       CosmosDb__DatabaseName: projectName
     }
   }
-  dependsOn: [
-    cosmosDb
-    storageAccount
-    appInsights
-  ]
 }
 
 // =============================================================================
@@ -474,7 +458,7 @@ output keyVaultUri string = keyVault.outputs.uri
 output appConfigEndpoint string = appConfig.outputs.endpoint
 
 // Messaging
-output signalRHostName string = signalR.outputs.hostName
+output signalREndpoint string = 'https://${signalR.outputs.name}.service.signalr.net'
 output serviceBusNamespace string = serviceBus.outputs.name
 
 // Monitoring
