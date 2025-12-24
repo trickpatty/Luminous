@@ -115,7 +115,7 @@ public sealed class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvit
             AvatarUrl = request.AvatarUrl,
             Color = request.Color ?? "#3B82F6",
             Nickname = request.Nickname
-        });
+        }, user.Id);
 
         // Mark email as verified (they received the invitation email)
         user.EmailVerified = true;
