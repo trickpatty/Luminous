@@ -131,39 +131,45 @@ Following TOGAF TP-4 (Infrastructure as Code):
 
 ## Resource Inventory
 
+### Resource Naming Convention
+
+Resources use a naming pattern with a **6-character unique suffix** derived from `uniqueString(resourceGroup().id)` to ensure global uniqueness while remaining readable. The suffix is deterministic - the same resource group always produces the same suffix.
+
+**Pattern**: `{type}-lum-{env}-{suffix}` (e.g., `app-lum-dev-a1b2c3`)
+
 ### Compute Resources
 
 | Resource | Name Pattern | Purpose | SKU (Dev/Prod) |
 |----------|--------------|---------|----------------|
 | App Service Plan | `asp-lum-{env}` | Hosts API and Functions | B1 / P1v3 |
-| App Service | `app-lum-{env}-api` | .NET 10 REST API | - |
-| Function App | `func-lum-{env}-sync` | Calendar sync jobs | - |
-| Function App | `func-lum-{env}-import` | Import processing | - |
-| Static Web App | `stapp-lum-{env}` | Angular web app | Free / Standard |
+| App Service | `app-lum-{env}-{suffix}` | .NET 10 REST API | - |
+| Function App | `func-lum-{env}-{suffix}-sync` | Calendar sync jobs | - |
+| Function App | `func-lum-{env}-{suffix}-import` | Import processing | - |
+| Static Web App | `stapp-lum-{env}-{suffix}` | Angular web app | Free / Standard |
 
 ### Data Resources
 
 | Resource | Name Pattern | Purpose | SKU (Dev/Prod) |
 |----------|--------------|---------|----------------|
-| Cosmos DB | `cosmos-lum-{env}` | Document database | Serverless / Provisioned |
-| Storage Account | `stlum{env}` | Blob storage | Standard_LRS / Standard_GRS |
-| Redis Cache | `redis-lum-{env}` | Session cache | Basic C0 / Standard C1 |
+| Cosmos DB | `cosmos-lum-{env}-{suffix}` | Document database | Serverless / Provisioned |
+| Storage Account | `stlum{env}{suffix}` | Blob storage | Standard_LRS / Standard_GRS |
+| Redis Cache | `redis-lum-{env}-{suffix}` | Session cache | Basic C0 / Standard C1 |
 
 ### Messaging Resources
 
 | Resource | Name Pattern | Purpose | SKU (Dev/Prod) |
 |----------|--------------|---------|----------------|
-| Service Bus | `sb-lum-{env}` | Async messaging | Basic / Standard |
-| SignalR Service | `sigr-lum-{env}` | Real-time sync | Free / Standard |
+| Service Bus | `sb-lum-{env}-{suffix}` | Async messaging | Basic / Standard |
+| SignalR Service | `sigr-lum-{env}-{suffix}` | Real-time sync | Free / Standard |
 
 ### Security Resources
 
 | Resource | Name Pattern | Purpose |
 |----------|--------------|---------|
-| Key Vault | `kv-lum-{env}` | Secrets management |
-| App Configuration | `appcs-lum-{env}` | Centralized config |
+| Key Vault | `kv-lum-{env}-{suffix}` | Secrets management |
+| App Configuration | `appcs-lum-{env}-{suffix}` | Centralized config |
 
-### Monitoring Resources
+### Monitoring Resources (RG-scoped, no suffix needed)
 
 | Resource | Name Pattern | Purpose |
 |----------|--------------|---------|

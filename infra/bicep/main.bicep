@@ -81,20 +81,26 @@ param staticWebAppSku string = environment == 'prd' ? 'Standard' : 'Free'
 
 var namingPrefix = '${projectPrefix}-${environment}'
 
+// 6-character unique suffix based on resource group ID for globally unique names
+var uniqueSuffix = take(uniqueString(resourceGroup().id), 6)
+
 // Resource naming following Azure naming conventions
+// Resources requiring global uniqueness include the unique suffix
 var names = {
-  cosmosDb: 'cosmos-${namingPrefix}'
-  storageAccount: 'st${projectPrefix}${environment}'
-  keyVault: 'kv-${namingPrefix}'
-  appConfig: 'appcs-${namingPrefix}'
+  // Globally unique names (include suffix)
+  cosmosDb: 'cosmos-${namingPrefix}-${uniqueSuffix}'
+  storageAccount: 'st${projectPrefix}${environment}${uniqueSuffix}'
+  keyVault: 'kv-${namingPrefix}-${uniqueSuffix}'
+  appConfig: 'appcs-${namingPrefix}-${uniqueSuffix}'
+  appService: 'app-${namingPrefix}-${uniqueSuffix}'
+  functionAppSync: 'func-${namingPrefix}-${uniqueSuffix}-sync'
+  functionAppImport: 'func-${namingPrefix}-${uniqueSuffix}-import'
+  signalR: 'sigr-${namingPrefix}-${uniqueSuffix}'
+  serviceBus: 'sb-${namingPrefix}-${uniqueSuffix}'
+  redis: 'redis-${namingPrefix}-${uniqueSuffix}'
+  staticWebApp: 'stapp-${namingPrefix}-${uniqueSuffix}'
+  // Resource group scoped (no suffix needed)
   appServicePlan: 'asp-${namingPrefix}'
-  appService: 'app-${namingPrefix}-api'
-  functionAppSync: 'func-${namingPrefix}-sync'
-  functionAppImport: 'func-${namingPrefix}-import'
-  signalR: 'sigr-${namingPrefix}'
-  serviceBus: 'sb-${namingPrefix}'
-  redis: 'redis-${namingPrefix}'
-  staticWebApp: 'stapp-${namingPrefix}'
   logAnalytics: 'log-${namingPrefix}'
   appInsights: 'appi-${namingPrefix}'
 }
