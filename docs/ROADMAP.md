@@ -310,12 +310,34 @@ Deliver the multi-tenant platform with user registration, family creation, devic
 - [x] Unit tests for Device entity and command handlers
 - [x] Authorization: FamilyMember for read, FamilyAdmin for write operations
 
-#### 1.3 Family Member Management
+#### 1.3 Family Member Management ✅ COMPLETED
 
-- [ ] **1.3.1** Implement member invitation flow
-- [ ] **1.3.2** Implement role assignment (Owner, Admin, Adult, Teen, Child)
-- [ ] **1.3.3** Create profile management endpoints
-- [ ] **1.3.4** Implement caregiver access tokens
+- [x] **1.3.1** Implement member invitation flow
+  - *Implemented: CreateInvitationCommand with NanoId-based invitation codes (7-day expiry)*
+  - *Implemented: AcceptInvitationCommand creates user and returns auth token*
+  - *Implemented: DeclineInvitationCommand, RevokeInvitationCommand*
+  - *APIs: POST /api/invitations/family/{familyId}, POST /api/invitations/{code}/accept, POST /api/invitations/{code}/decline, DELETE /api/invitations/family/{familyId}/{id}*
+- [x] **1.3.2** Implement role assignment (Owner, Admin, Adult, Teen, Child)
+  - *Implemented: UpdateUserRoleCommand with authorization checks*
+  - *Role hierarchy: Owner > Admin > Adult > Teen > Child > Caregiver*
+  - *Safeguards: Cannot demote Owner, Admin can't promote to Admin*
+  - *API: PUT /api/users/family/{familyId}/{userId}/role*
+- [x] **1.3.3** Create profile management endpoints
+  - *Implemented: UpdateCaregiverInfoCommand for medical/emergency info*
+  - *Implemented: RemoveUserFromFamilyCommand with soft delete*
+  - *API: PUT /api/users/family/{familyId}/{userId}/caregiver-info, DELETE /api/users/family/{familyId}/{userId}*
+- [x] **1.3.4** Implement caregiver access tokens
+  - *Implemented: GenerateCaregiverAccessTokenCommand (1-168 hour expiry)*
+  - *Token includes: target_user_id, access_type=caregiver, is_read_only=true*
+  - *API: POST /api/users/family/{familyId}/{userId}/caregiver-token*
+
+**Additional deliverables:**
+- [x] IInvitationRepository interface and InvitationRepository implementation
+- [x] InvitationDto, SendInvitationRequestDto, AcceptedInvitationResultDto DTOs
+- [x] GetInvitationByCodeQuery, GetFamilyInvitationsQuery, GetPendingInvitationsQuery
+- [x] InvitationsController with full CRUD operations
+- [x] Unit tests for Invitation entity
+- [x] Authorization: FamilyAdmin required for invitation/role management
 
 #### 1.4 Web Dashboard MVP
 
