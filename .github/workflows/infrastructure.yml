@@ -4,6 +4,12 @@
 # Validates and deploys Azure infrastructure using Bicep and Azure Verified
 # Modules (AVMs). Supports environment-specific deployments (dev, stg, prd).
 #
+# Prerequisites:
+#   Resource groups must be pre-created before deployment:
+#   - rg-lum-dev
+#   - rg-lum-stg
+#   - rg-lum-prd
+#
 # Phase 0.5.3: GitHub Actions for Bicep deployment
 # Phase 0.5.4: Configure environment-specific deployments
 # TOGAF Principle: TP-4 - Infrastructure as Code
@@ -42,6 +48,7 @@ on:
 
 env:
   AZURE_LOCATION: 'eastus2'
+  RG_PREFIX: 'rg-lum'
 
 permissions:
   id-token: write
@@ -106,12 +113,10 @@ jobs:
       - name: Run What-If (Dev)
         uses: azure/arm-deploy@v2
         with:
-          scope: subscription
-          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          region: ${{ env.AZURE_LOCATION }}
+          scope: resourceGroup
+          resourceGroupName: ${{ env.RG_PREFIX }}-dev
           template: infra/bicep/main.bicep
           parameters: infra/bicep/parameters/dev.bicepparam
-          deploymentMode: Incremental
           additionalArguments: --what-if
 
   what-if-stg:
@@ -135,12 +140,10 @@ jobs:
       - name: Run What-If (Stg)
         uses: azure/arm-deploy@v2
         with:
-          scope: subscription
-          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          region: ${{ env.AZURE_LOCATION }}
+          scope: resourceGroup
+          resourceGroupName: ${{ env.RG_PREFIX }}-stg
           template: infra/bicep/main.bicep
           parameters: infra/bicep/parameters/stg.bicepparam
-          deploymentMode: Incremental
           additionalArguments: --what-if
 
   what-if-prd:
@@ -164,12 +167,10 @@ jobs:
       - name: Run What-If (Prd)
         uses: azure/arm-deploy@v2
         with:
-          scope: subscription
-          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          region: ${{ env.AZURE_LOCATION }}
+          scope: resourceGroup
+          resourceGroupName: ${{ env.RG_PREFIX }}-prd
           template: infra/bicep/main.bicep
           parameters: infra/bicep/parameters/prd.bicepparam
-          deploymentMode: Incremental
           additionalArguments: --what-if
 
   deploy-dev:
@@ -196,9 +197,8 @@ jobs:
         uses: azure/arm-deploy@v2
         id: deploy
         with:
-          scope: subscription
-          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          region: ${{ env.AZURE_LOCATION }}
+          scope: resourceGroup
+          resourceGroupName: ${{ env.RG_PREFIX }}-dev
           template: infra/bicep/main.bicep
           parameters: infra/bicep/parameters/dev.bicepparam
           deploymentName: luminous-dev-${{ github.run_number }}
@@ -237,9 +237,8 @@ jobs:
         uses: azure/arm-deploy@v2
         id: deploy
         with:
-          scope: subscription
-          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          region: ${{ env.AZURE_LOCATION }}
+          scope: resourceGroup
+          resourceGroupName: ${{ env.RG_PREFIX }}-stg
           template: infra/bicep/main.bicep
           parameters: infra/bicep/parameters/stg.bicepparam
           deploymentName: luminous-stg-${{ github.run_number }}
@@ -278,9 +277,8 @@ jobs:
         uses: azure/arm-deploy@v2
         id: deploy
         with:
-          scope: subscription
-          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          region: ${{ env.AZURE_LOCATION }}
+          scope: resourceGroup
+          resourceGroupName: ${{ env.RG_PREFIX }}-prd
           template: infra/bicep/main.bicep
           parameters: infra/bicep/parameters/prd.bicepparam
           deploymentName: luminous-prd-${{ github.run_number }}

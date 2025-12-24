@@ -316,10 +316,14 @@ ignore:
 
 **Solution:**
 1. Run `bicep build` locally to validate syntax
-2. Check Azure resource quotas
-3. Verify parameter file matches template
+2. Ensure resource group exists before deployment
+3. Check Azure resource quotas
+4. Verify parameter file matches template
 
 ```bash
+# Create resource group (one-time setup)
+az group create --name rg-lum-dev --location eastus2
+
 # Validate locally
 bicep build infra/bicep/main.bicep
 bicep build-params infra/bicep/parameters/dev.bicepparam

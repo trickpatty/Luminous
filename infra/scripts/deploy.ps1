@@ -5,6 +5,12 @@
 .DESCRIPTION
     Deploys Luminous Azure infrastructure using Bicep templates.
 
+    Prerequisites:
+    - Azure CLI installed and logged in (az login)
+    - Correct subscription selected (az account set -s <subscription>)
+    - Resource group must exist before deployment. Create with:
+      az group create --name rg-lum-<env> --location eastus2
+
 .PARAMETER Environment
     The target environment (dev, stg, prd)
 
@@ -41,6 +47,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $BicepDir = Join-Path $ScriptDir '..\bicep'
+$RgPrefix = 'rg-lum'
 $DeploymentName = "luminous-infra-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
 
 # =============================================================================
@@ -141,6 +148,7 @@ function Deploy-Infrastructure {
 
     $paramFile = Join-Path $BicepDir "parameters\$Env.bicepparam"
     $mainBicep = Join-Path $BicepDir 'main.bicep'
+    $resourceGroup = "$RgPrefix-$Env"
 
     # Check parameter file exists
     if (-not (Test-Path $paramFile)) {
@@ -149,23 +157,32 @@ function Deploy-Infrastructure {
     }
     Write-Success "Using parameter file: $paramFile"
 
+    # Check resource group exists
+    $rgExists = az group show --name $resourceGroup 2>$null
+    if (-not $rgExists) {
+        Write-Error "Resource group '$resourceGroup' does not exist."
+        Write-Info "Create it with: az group create --name $resourceGroup --location $Location"
+        exit 1
+    }
+    Write-Success "Resource group exists: $resourceGroup"
+
     Write-Info "Starting deployment..."
     Write-Host ""
 
     try {
         if ($IsWhatIf) {
             Write-Info "Running what-if analysis..."
-            az deployment sub what-if `
-                --location $Location `
+            az deployment group what-if `
+                --resource-group $resourceGroup `
                 --template-file $mainBicep `
                 --parameters "@$paramFile"
 
             Write-Success "What-if analysis completed"
         }
         else {
-            az deployment sub create `
+            az deployment group create `
                 --name $DeploymentName `
-                --location $Location `
+                --resource-group $resourceGroup `
                 --template-file $mainBicep `
                 --parameters "@$paramFile"
 
@@ -180,11 +197,18 @@ function Deploy-Infrastructure {
 }
 
 function Show-Outputs {
+    param(
+        [string]$Env
+    )
+
     Write-Header "Deployment Outputs"
 
+    $resourceGroup = "$RgPrefix-$Env"
+
     try {
-        az deployment sub show `
+        az deployment group show `
             --name $DeploymentName `
+            --resource-group $resourceGroup `
             --query properties.outputs `
             -o table
     }
@@ -207,7 +231,7 @@ Test-BicepTemplates
 Deploy-Infrastructure -Env $Environment -IsWhatIf $WhatIf
 
 if (-not $WhatIf) {
-    Show-Outputs
+    Show-Outputs -Env $Environment
 }
 
 Write-Header "Deployment Complete"
