@@ -113,6 +113,12 @@ public sealed class CosmosDbContext : IAsyncDisposable
     public Task<Container> GetCredentialsContainerAsync(CancellationToken cancellationToken = default)
         => GetContainerAsync(ContainerNames.Credentials, cancellationToken);
 
+    /// <summary>
+    /// Gets the invitations container.
+    /// </summary>
+    public Task<Container> GetInvitationsContainerAsync(CancellationToken cancellationToken = default)
+        => GetContainerAsync(ContainerNames.Invitations, cancellationToken);
+
     public ValueTask DisposeAsync()
     {
         if (!_disposed)

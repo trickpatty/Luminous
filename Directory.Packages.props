@@ -6,7 +6,7 @@
   <ItemGroup>
     <!-- ASP.NET Core -->
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0" />
-    <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.1.0" />
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.2.0" />
 
     <!-- Azure SDK -->
     <PackageVersion Include="Azure.Identity" Version="1.13.1" />
