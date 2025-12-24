@@ -63,7 +63,7 @@ public partial class TenantValidationMiddleware
                     context.Response.StatusCode = StatusCodes.Status403Forbidden;
                     context.Response.ContentType = "application/json";
 
-                    var response = ApiResponse<object>.Failure(
+                    var response = ApiResponse<object>.Fail(
                         "TENANT_ACCESS_DENIED",
                         "You do not have access to this family's data.");
 

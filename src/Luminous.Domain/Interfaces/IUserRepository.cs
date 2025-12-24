@@ -10,7 +10,7 @@ public interface IUserRepository : IRepository<User>
     /// <summary>
     /// Gets a user by ID within a family.
     /// </summary>
-    Task<User?> GetByIdAsync(string userId, string familyId, CancellationToken cancellationToken = default);
+    new Task<User?> GetByIdAsync(string userId, string? familyId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a user by email address.

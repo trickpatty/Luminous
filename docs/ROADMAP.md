@@ -1,6 +1,6 @@
 # Luminous Development Roadmap
 
-> **Document Version:** 2.7.0
+> **Document Version:** 2.8.0
 > **Last Updated:** 2025-12-23
 > **Status:** Active
 > **TOGAF Phase:** Phase E/F (Opportunities, Solutions & Migration Planning)
@@ -103,7 +103,7 @@ Phase 6: Intelligence & Ecosystem
 | Phase | Name | Focus | Key Deliverables | Status |
 |-------|------|-------|------------------|--------|
 | **0** | Foundation | Infrastructure | Azure IaC, .NET solution, Angular shell, Passwordless Auth, Local Dev, CI/CD, Docs | ✅ Complete |
-| **1** | Core Platform | Multi-tenancy | Family sign-up, device linking, CosmosDB, web MVP | 🔄 In Progress (1.1 Complete) |
+| **1** | Core Platform | Multi-tenancy | Family sign-up, device linking, CosmosDB, web MVP | 🔄 In Progress (1.1, 1.2 Complete) |
 | **2** | Display & Calendar | Calendar visibility | Display app, calendar integration, SignalR sync | ⬜ Not Started |
 | **3** | Native Mobile | Mobile apps | iOS (Swift), Android (Kotlin), push notifications | ⬜ Not Started |
 | **4** | Task Management | Chores and routines | Task creation, completion tracking, rewards | ⬜ Not Started |
@@ -286,13 +286,29 @@ Deliver the multi-tenant platform with user registration, family creation, devic
   - *Implemented: ITenantContext and TenantContext services*
   - *All queries use familyId partition key; tenant access validated in handlers*
 
-#### 1.2 Device Linking
+#### 1.2 Device Linking ✅ COMPLETED
 
-- [ ] **1.2.1** Implement link code generation endpoint
-- [ ] **1.2.2** Implement link code validation and device registration
-- [ ] **1.2.3** Implement device token issuance
-- [ ] **1.2.4** Create device management endpoints
-- [ ] **1.2.5** Implement device heartbeat/status tracking
+- [x] **1.2.1** Implement link code generation endpoint
+  - *Implemented: GenerateLinkCodeCommand creates unlinked device with 6-digit code (15-min expiry)*
+  - *API: POST /api/devices/link-code*
+- [x] **1.2.2** Implement link code validation and device registration
+  - *Implemented: LinkDeviceCommand validates code, links device to family*
+  - *API: POST /api/devices/link*
+- [x] **1.2.3** Implement device token issuance
+  - *Implemented: LinkDeviceCommand returns LinkedDeviceDto with JWT device token (30-day expiry)*
+  - *Token includes: device_id, family_id, device_type, device_name claims*
+- [x] **1.2.4** Create device management endpoints
+  - *Implemented: GetDeviceQuery, GetFamilyDevicesQuery, UpdateDeviceCommand, UnlinkDeviceCommand, DeleteDeviceCommand*
+  - *APIs: GET/PUT/DELETE /api/devices/family/{familyId}/{id}, POST /api/devices/family/{familyId}/{id}/unlink*
+- [x] **1.2.5** Implement device heartbeat/status tracking
+  - *Implemented: RecordHeartbeatCommand updates LastSeenAt, AppVersion; returns DeviceHeartbeatDto*
+  - *API: POST /api/devices/family/{familyId}/{id}/heartbeat*
+
+**Additional deliverables:**
+- [x] Device entity methods: Unlink, Rename, UpdateSettings, Activate, Deactivate
+- [x] DeviceSettingsDto, DeviceHeartbeatDto, LinkedDeviceDto DTOs
+- [x] Unit tests for Device entity and command handlers
+- [x] Authorization: FamilyMember for read, FamilyAdmin for write operations
 
 #### 1.3 Family Member Management
 
@@ -706,3 +722,4 @@ These can be developed in parallel after Phase 0:
 | 2.5.0 | 2025-12-22 | Luminous Team | Phase 0.5 CI/CD Pipeline completed |
 | 2.6.0 | 2025-12-23 | Luminous Team | Phase 0.6 Documentation completed; Phase 0 complete |
 | 2.7.0 | 2025-12-23 | Luminous Team | Phase 1.1 Multi-Tenant API completed |
+| 2.8.0 | 2025-12-23 | Luminous Team | Phase 1.2 Device Linking completed |
