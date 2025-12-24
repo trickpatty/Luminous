@@ -20,7 +20,7 @@ public sealed class UserRepository : CosmosRepositoryBase<User>, IUserRepository
 
     protected override string GetPartitionKeyPath() => "/familyId";
 
-    public new async Task<User?> GetByIdAsync(string userId, string familyId, CancellationToken cancellationToken = default)
+    public new async Task<User?> GetByIdAsync(string userId, string? familyId, CancellationToken cancellationToken = default)
     {
         return await base.GetByIdAsync(userId, familyId, cancellationToken);
     }

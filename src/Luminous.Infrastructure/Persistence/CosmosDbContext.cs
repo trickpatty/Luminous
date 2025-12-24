@@ -57,7 +57,7 @@ public sealed class CosmosDbContext : IAsyncDisposable
     /// <summary>
     /// Gets the Cosmos DB database.
     /// </summary>
-    public async Task<Database> GetDatabaseAsync(CancellationToken cancellationToken = default)
+    public Task<Database> GetDatabaseAsync(CancellationToken cancellationToken = default)
     {
         if (_database == null)
         {
@@ -65,7 +65,7 @@ public sealed class CosmosDbContext : IAsyncDisposable
             _logger.LogDebug("Connected to database {DatabaseName}", _settings.DatabaseName);
         }
 
-        return _database;
+        return Task.FromResult(_database);
     }
 
     /// <summary>
@@ -113,12 +113,13 @@ public sealed class CosmosDbContext : IAsyncDisposable
     public Task<Container> GetCredentialsContainerAsync(CancellationToken cancellationToken = default)
         => GetContainerAsync(ContainerNames.Credentials, cancellationToken);
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
         if (!_disposed)
         {
             _client.Dispose();
             _disposed = true;
         }
+        return ValueTask.CompletedTask;
     }
 }

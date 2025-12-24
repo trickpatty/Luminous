@@ -26,7 +26,7 @@ public sealed class DeviceRepository : CosmosRepositoryBase<Device>, IDeviceRepo
 
     protected override string GetPartitionKeyPath() => "/familyId";
 
-    public new async Task<Device?> GetByIdAsync(string deviceId, string familyId, CancellationToken cancellationToken = default)
+    public new async Task<Device?> GetByIdAsync(string deviceId, string? familyId, CancellationToken cancellationToken = default)
     {
         return await base.GetByIdAsync(deviceId, familyId, cancellationToken);
     }
