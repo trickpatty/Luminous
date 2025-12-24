@@ -363,8 +363,8 @@ az deployment group show \
   --resource-group rg-lum-dev \
   --query properties.outputs
 
-# Test API endpoint
-curl https://app-lum-dev-api.azurewebsites.net/health
+# Test API endpoint (replace {suffix} with actual unique suffix)
+curl https://app-lum-dev-{suffix}.azurewebsites.net/health
 ```
 
 ---

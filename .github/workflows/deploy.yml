@@ -42,6 +42,7 @@ env:
   DOTNET_VERSION: '9.0.x'
   NODE_VERSION: '20.x'
   AZURE_LOCATION: 'eastus2'
+  RG_PREFIX: 'rg-lum'
 
 permissions:
   id-token: write
@@ -137,6 +138,14 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Get App Service name
+        if: needs.build-api.result == 'success'
+        id: get-app-name
+        run: |
+          APP_NAME=$(az webapp list --resource-group ${{ env.RG_PREFIX }}-dev --query "[?starts_with(name, 'app-lum-dev-')].name" -o tsv)
+          echo "app_name=$APP_NAME" >> $GITHUB_OUTPUT
+          echo "Found App Service: $APP_NAME"
+
       - name: Download API artifact
         if: needs.build-api.result == 'success'
         uses: actions/download-artifact@v4
@@ -148,7 +157,7 @@ jobs:
         if: needs.build-api.result == 'success'
         uses: azure/webapps-deploy@v3
         with:
-          app-name: app-lum-dev-api
+          app-name: ${{ steps.get-app-name.outputs.app_name }}
           package: ./api-package
 
       - name: Download web artifact
@@ -192,6 +201,14 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Get App Service name
+        if: needs.build-api.result == 'success'
+        id: get-app-name
+        run: |
+          APP_NAME=$(az webapp list --resource-group ${{ env.RG_PREFIX }}-stg --query "[?starts_with(name, 'app-lum-stg-')].name" -o tsv)
+          echo "app_name=$APP_NAME" >> $GITHUB_OUTPUT
+          echo "Found App Service: $APP_NAME"
+
       - name: Download API artifact
         if: needs.build-api.result == 'success'
         uses: actions/download-artifact@v4
@@ -203,7 +220,7 @@ jobs:
         if: needs.build-api.result == 'success'
         uses: azure/webapps-deploy@v3
         with:
-          app-name: app-lum-stg-api
+          app-name: ${{ steps.get-app-name.outputs.app_name }}
           package: ./api-package
 
       - name: Download web artifact
@@ -247,6 +264,14 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Get App Service name
+        if: needs.build-api.result == 'success'
+        id: get-app-name
+        run: |
+          APP_NAME=$(az webapp list --resource-group ${{ env.RG_PREFIX }}-prd --query "[?starts_with(name, 'app-lum-prd-')].name" -o tsv)
+          echo "app_name=$APP_NAME" >> $GITHUB_OUTPUT
+          echo "Found App Service: $APP_NAME"
+
       - name: Download API artifact
         if: needs.build-api.result == 'success'
         uses: actions/download-artifact@v4
@@ -258,7 +283,7 @@ jobs:
         if: needs.build-api.result == 'success'
         uses: azure/webapps-deploy@v3
         with:
-          app-name: app-lum-prd-api
+          app-name: ${{ steps.get-app-name.outputs.app_name }}
           package: ./api-package
 
       - name: Download web artifact
