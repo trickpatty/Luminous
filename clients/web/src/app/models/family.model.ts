@@ -57,4 +57,15 @@ export interface Family {
   subscription?: SubscriptionInfo;
   createdAt: string;
   createdBy: string;
+  memberCount?: number;
+  deviceCount?: number;
+}
+
+/**
+ * Request to update family settings
+ */
+export interface UpdateFamilySettingsRequest {
+  name?: string;
+  timezone?: string;
+  settings?: Partial<FamilySettings>;
 }

@@ -1,7 +1,7 @@
 # Luminous Development Roadmap
 
-> **Document Version:** 2.8.0
-> **Last Updated:** 2025-12-23
+> **Document Version:** 3.0.0
+> **Last Updated:** 2025-12-24
 > **Status:** Active
 > **TOGAF Phase:** Phase E/F (Opportunities, Solutions & Migration Planning)
 
@@ -12,12 +12,12 @@
 1. [Roadmap Overview](#roadmap-overview)
 2. [Implementation Phases](#implementation-phases)
 3. [Phase 0: Foundation](#phase-0-foundation)
-4. [Phase 1: Core Display](#phase-1-core-display)
-5. [Phase 2: Task Management](#phase-2-task-management)
-6. [Phase 3: Mobile Companion](#phase-3-mobile-companion)
-7. [Phase 4: Household Management](#phase-4-household-management)
-8. [Phase 5: Intelligence Layer](#phase-5-intelligence-layer)
-9. [Phase 6: Ecosystem Expansion](#phase-6-ecosystem-expansion)
+4. [Phase 1: Core Platform](#phase-1-core-platform)
+5. [Phase 2: Display & Calendar](#phase-2-display--calendar)
+6. [Phase 3: Native Mobile Apps](#phase-3-native-mobile-apps)
+7. [Phase 4: Task Management](#phase-4-task-management)
+8. [Phase 5: Household Features](#phase-5-household-features)
+9. [Phase 6: Intelligence & Ecosystem](#phase-6-intelligence--ecosystem)
 10. [Future Vision](#future-vision)
 11. [Dependency Map](#dependency-map)
 12. [Risk Register](#risk-register)
@@ -103,7 +103,7 @@ Phase 6: Intelligence & Ecosystem
 | Phase | Name | Focus | Key Deliverables | Status |
 |-------|------|-------|------------------|--------|
 | **0** | Foundation | Infrastructure | Azure IaC, .NET solution, Angular shell, Passwordless Auth, Local Dev, CI/CD, Docs | ✅ Complete |
-| **1** | Core Platform | Multi-tenancy | Family sign-up, device linking, CosmosDB, web MVP | 🔄 In Progress (1.1, 1.2 Complete) |
+| **1** | Core Platform | Multi-tenancy | Family sign-up, device linking, CosmosDB, web MVP | ✅ Complete |
 | **2** | Display & Calendar | Calendar visibility | Display app, calendar integration, SignalR sync | ⬜ Not Started |
 | **3** | Native Mobile | Mobile apps | iOS (Swift), Android (Kotlin), push notifications | ⬜ Not Started |
 | **4** | Task Management | Chores and routines | Task creation, completion tracking, rewards | ⬜ Not Started |
@@ -339,13 +339,38 @@ Deliver the multi-tenant platform with user registration, family creation, devic
 - [x] Unit tests for Invitation entity
 - [x] Authorization: FamilyAdmin required for invitation/role management
 
-#### 1.4 Web Dashboard MVP
+#### 1.4 Web Dashboard MVP ✅ COMPLETED
 
-- [ ] **1.4.1** Create family dashboard layout
-- [ ] **1.4.2** Implement family settings page
-- [ ] **1.4.3** Create member management UI
-- [ ] **1.4.4** Implement device management UI
-- [ ] **1.4.5** Create responsive design for mobile web
+- [x] **1.4.1** Create family dashboard layout
+  - *Implemented: DashboardShellComponent with responsive sidebar navigation*
+  - *Features: Mobile-friendly hamburger menu, user profile display, family name display*
+  - *Routes: /dashboard, /dashboard/members, /dashboard/devices, /dashboard/settings*
+- [x] **1.4.2** Implement family settings page
+  - *Implemented: SettingsComponent with form-based configuration*
+  - *Features: Family name, timezone, default view, privacy mode, sleep mode settings*
+  - *API: PUT /api/families/{id}/settings*
+- [x] **1.4.3** Create member management UI
+  - *Implemented: MembersComponent with full CRUD operations*
+  - *Features: Member list, role badges, invite modal, role change modal, remove confirmation*
+  - *Features: Pending invitations display with revoke capability*
+  - *APIs: GET/PUT/DELETE /api/users/family/{familyId}/*, POST /api/invitations/*
+- [x] **1.4.4** Implement device management UI
+  - *Implemented: DevicesComponent with device cards and management*
+  - *Features: Device list with status indicators, link code generation, edit/unlink modals*
+  - *Features: Device type icons, last seen timestamps, platform/version display*
+  - *APIs: GET/PUT/DELETE /api/devices/family/{familyId}/*, POST /api/devices/link-code*
+- [x] **1.4.5** Create responsive design for mobile web
+  - *Implemented: Tailwind CSS responsive breakpoints throughout all components*
+  - *Features: Collapsible sidebar on mobile, touch-friendly tap targets (44px minimum)*
+  - *Features: Responsive grids, mobile-first layouts, proper spacing on small screens*
+
+**Additional deliverables:**
+- [x] FamilyService, UserService, DeviceService, InvitationService in Angular
+- [x] Device and Invitation TypeScript models
+- [x] DashboardHomeComponent with stats cards and quick actions
+- [x] Signal-based reactive state management in all services
+- [x] Consistent error handling and success messaging
+- [x] Modal dialogs for all CRUD operations
 
 ### Exit Criteria
 
@@ -745,3 +770,5 @@ These can be developed in parallel after Phase 0:
 | 2.6.0 | 2025-12-23 | Luminous Team | Phase 0.6 Documentation completed; Phase 0 complete |
 | 2.7.0 | 2025-12-23 | Luminous Team | Phase 1.1 Multi-Tenant API completed |
 | 2.8.0 | 2025-12-23 | Luminous Team | Phase 1.2 Device Linking completed |
+| 2.9.0 | 2025-12-24 | Luminous Team | Phase 1.3 Family Member Management completed |
+| 3.0.0 | 2025-12-24 | Luminous Team | Phase 1.4 Web Dashboard MVP completed; Phase 1 complete |
