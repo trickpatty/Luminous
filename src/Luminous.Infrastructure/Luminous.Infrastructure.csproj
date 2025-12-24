@@ -20,6 +20,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentValidation" VersionOverride="12.1.1" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" VersionOverride="12.1.1" />
     <ProjectReference Include="..\Luminous.Application\Luminous.Application.csproj" />
   </ItemGroup>
 
