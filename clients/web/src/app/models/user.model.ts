@@ -17,7 +17,9 @@ export interface UserProfile {
   color: string;
   avatarUrl?: string;
   birthDate?: string;
-  caregiverInfo?: CaregiverInfo;
+  nickname?: string;
+  showAge?: boolean;
+  age?: number;
 }
 
 /**
@@ -50,8 +52,50 @@ export interface User {
   displayName: string;
   role: UserRole;
   profile: UserProfile;
+  caregiverInfo?: CaregiverInfo;
+  emailVerified?: boolean;
+  lastLoginAt?: string;
+  isActive?: boolean;
   createdAt: string;
   updatedAt?: string;
+}
+
+/**
+ * Request to update user profile
+ */
+export interface UpdateUserProfileRequest {
+  displayName?: string;
+  profile?: Partial<UserProfile>;
+}
+
+/**
+ * Request to update user role
+ */
+export interface UpdateUserRoleRequest {
+  newRole: UserRole;
+}
+
+/**
+ * Request to update caregiver info
+ */
+export interface UpdateCaregiverInfoRequest {
+  allergies?: string[];
+  medicalNotes?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  doctorName?: string;
+  doctorPhone?: string;
+  schoolName?: string;
+  notes?: string;
+}
+
+/**
+ * Caregiver access token
+ */
+export interface CaregiverAccessToken {
+  token: string;
+  accessUrl: string;
+  expiresAt: string;
 }
 
 /**
