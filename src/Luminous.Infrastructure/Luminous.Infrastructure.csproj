@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="MediatR" VersionOverride="14.0.0" />
     <ProjectReference Include="..\Luminous.Application\Luminous.Application.csproj" />
   </ItemGroup>
 
