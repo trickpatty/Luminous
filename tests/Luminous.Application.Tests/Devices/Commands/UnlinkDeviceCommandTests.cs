@@ -98,7 +98,7 @@ public class UnlinkDeviceCommandTests
         var act = async () => await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<ValidationException>()
+        await act.Should().ThrowAsync<FluentValidation.ValidationException>()
             .WithMessage("*not linked*");
     }
 }
