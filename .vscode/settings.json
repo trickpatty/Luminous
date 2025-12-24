@@ -192,8 +192,8 @@
       "baseUrl": "http://localhost:5000",
       "token": ""
     },
-    "staging": {
-      "baseUrl": "https://staging-api.luminous.app",
+    "stg": {
+      "baseUrl": "https://stg-api.luminous.app",
       "token": ""
     }
   },

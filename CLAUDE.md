@@ -454,8 +454,8 @@ az bicep build --file infra/main.bicep
 # Deploy to Azure (dev environment)
 ./infra/scripts/deploy.sh dev
 
-# Deploy to Azure (prod environment)
-./infra/scripts/deploy.sh prod
+# Deploy to Azure (prd environment)
+./infra/scripts/deploy.sh prd
 ```
 
 ### Mobile Development

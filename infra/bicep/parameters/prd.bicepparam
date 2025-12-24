@@ -8,7 +8,7 @@
 //   az deployment sub create \
 //     --location eastus2 \
 //     --template-file main.bicep \
-//     --parameters @parameters/prod.bicepparam
+//     --parameters @parameters/prd.bicepparam
 // =============================================================================
 
 using '../main.bicep'

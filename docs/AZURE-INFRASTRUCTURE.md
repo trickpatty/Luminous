@@ -42,7 +42,7 @@ Following TOGAF TP-4 (Infrastructure as Code):
 
 - **Reproducible**: Same code deploys identical infrastructure
 - **Version controlled**: All changes tracked in Git
-- **Environment parity**: Dev/staging/prod use same templates
+- **Environment parity**: Dev/stg/prd use same templates
 - **Self-documenting**: Bicep templates serve as documentation
 
 ---
@@ -131,39 +131,45 @@ Following TOGAF TP-4 (Infrastructure as Code):
 
 ## Resource Inventory
 
+### Resource Naming Convention
+
+Resources use a naming pattern with a **6-character unique suffix** derived from `uniqueString(resourceGroup().id)` to ensure global uniqueness while remaining readable. The suffix is deterministic - the same resource group always produces the same suffix.
+
+**Pattern**: `{type}-lum-{env}-{suffix}` (e.g., `app-lum-dev-a1b2c3`)
+
 ### Compute Resources
 
 | Resource | Name Pattern | Purpose | SKU (Dev/Prod) |
 |----------|--------------|---------|----------------|
 | App Service Plan | `asp-lum-{env}` | Hosts API and Functions | B1 / P1v3 |
-| App Service | `app-lum-{env}-api` | .NET 10 REST API | - |
-| Function App | `func-lum-{env}-sync` | Calendar sync jobs | - |
-| Function App | `func-lum-{env}-import` | Import processing | - |
-| Static Web App | `stapp-lum-{env}` | Angular web app | Free / Standard |
+| App Service | `app-lum-{env}-{suffix}` | .NET 10 REST API | - |
+| Function App | `func-lum-{env}-{suffix}-sync` | Calendar sync jobs | - |
+| Function App | `func-lum-{env}-{suffix}-import` | Import processing | - |
+| Static Web App | `stapp-lum-{env}-{suffix}` | Angular web app | Free / Standard |
 
 ### Data Resources
 
 | Resource | Name Pattern | Purpose | SKU (Dev/Prod) |
 |----------|--------------|---------|----------------|
-| Cosmos DB | `cosmos-lum-{env}` | Document database | Serverless / Provisioned |
-| Storage Account | `stlum{env}` | Blob storage | Standard_LRS / Standard_GRS |
-| Redis Cache | `redis-lum-{env}` | Session cache | Basic C0 / Standard C1 |
+| Cosmos DB | `cosmos-lum-{env}-{suffix}` | Document database | Serverless / Provisioned |
+| Storage Account | `stlum{env}{suffix}` | Blob storage | Standard_LRS / Standard_GRS |
+| Redis Cache | `redis-lum-{env}-{suffix}` | Session cache | Basic C0 / Standard C1 |
 
 ### Messaging Resources
 
 | Resource | Name Pattern | Purpose | SKU (Dev/Prod) |
 |----------|--------------|---------|----------------|
-| Service Bus | `sb-lum-{env}` | Async messaging | Basic / Standard |
-| SignalR Service | `sigr-lum-{env}` | Real-time sync | Free / Standard |
+| Service Bus | `sb-lum-{env}-{suffix}` | Async messaging | Basic / Standard |
+| SignalR Service | `sigr-lum-{env}-{suffix}` | Real-time sync | Free / Standard |
 
 ### Security Resources
 
 | Resource | Name Pattern | Purpose |
 |----------|--------------|---------|
-| Key Vault | `kv-lum-{env}` | Secrets management |
-| App Configuration | `appcs-lum-{env}` | Centralized config |
+| Key Vault | `kv-lum-{env}-{suffix}` | Secrets management |
+| App Configuration | `appcs-lum-{env}-{suffix}` | Centralized config |
 
-### Monitoring Resources
+### Monitoring Resources (RG-scoped, no suffix needed)
 
 | Resource | Name Pattern | Purpose |
 |----------|--------------|---------|
@@ -202,8 +208,12 @@ az bicep version
 ### Azure Access Requirements
 
 1. **Azure Subscription** with Owner or Contributor role
-2. **Service Principal** for CI/CD (optional)
-3. **Registered Resource Providers**:
+2. **Resource Groups** must be pre-created before deployment:
+   - `rg-lum-dev` - Development environment
+   - `rg-lum-stg` - Staging environment
+   - `rg-lum-prd` - Production environment
+3. **Service Principal** for CI/CD with Contributor role on the resource groups (not subscription-wide)
+4. **Registered Resource Providers**:
    - Microsoft.DocumentDB
    - Microsoft.Web
    - Microsoft.Storage
@@ -241,8 +251,8 @@ infra/
 │   ├── main.bicep              # Main orchestration (uses AVMs from registry)
 │   └── parameters/             # Environment configs
 │       ├── dev.bicepparam
-│       ├── staging.bicepparam
-│       └── prod.bicepparam
+│       ├── stg.bicepparam
+│       └── prd.bicepparam
 └── scripts/
     ├── deploy.sh               # Bash deployment script
     └── deploy.ps1              # PowerShell deployment script
@@ -259,7 +269,6 @@ All resources are deployed using AVMs directly from the public Bicep registry (`
 
 | Resource | AVM Reference |
 |----------|---------------|
-| Resource Group | `br/public:avm/res/resources/resource-group:0.4.0` |
 | Log Analytics | `br/public:avm/res/operational-insights/workspace:0.9.0` |
 | App Insights | `br/public:avm/res/insights/component:0.4.1` |
 | Key Vault | `br/public:avm/res/key-vault/vault:0.9.0` |
@@ -282,16 +291,21 @@ az login
 # 2. Select subscription
 az account set --subscription "<subscription-name-or-id>"
 
-# 3. Deploy to development
+# 3. Create resource groups (one-time setup)
+az group create --name rg-lum-dev --location eastus2
+az group create --name rg-lum-stg --location eastus2
+az group create --name rg-lum-prd --location eastus2
+
+# 4. Deploy to development
 cd infra/scripts
 ./deploy.sh dev
 
-# 4. Deploy to staging
-./deploy.sh staging
+# 5. Deploy to stg
+./deploy.sh stg
 
-# 5. Deploy to production (with what-if preview first)
-./deploy.sh prod --what-if
-./deploy.sh prod
+# 6. Deploy to production (with what-if preview first)
+./deploy.sh prd --what-if
+./deploy.sh prd
 ```
 
 ### Detailed Deployment Steps
@@ -309,36 +323,44 @@ az login --service-principal \
   --tenant $ARM_TENANT_ID
 ```
 
-#### Step 2: Validate Templates
+#### Step 2: Create Resource Group (if not exists)
+
+```bash
+# Create resource group for target environment
+az group create --name rg-lum-dev --location eastus2
+```
+
+#### Step 3: Validate Templates
 
 ```bash
 # Build and validate Bicep
 az bicep build --file infra/bicep/main.bicep
 
-# What-if analysis
-az deployment sub what-if \
-  --location eastus2 \
+# What-if analysis (resource group scope)
+az deployment group what-if \
+  --resource-group rg-lum-dev \
   --template-file infra/bicep/main.bicep \
   --parameters @infra/bicep/parameters/dev.bicepparam
 ```
 
-#### Step 3: Deploy
+#### Step 4: Deploy
 
 ```bash
-# Deploy infrastructure
-az deployment sub create \
+# Deploy infrastructure (resource group scope)
+az deployment group create \
   --name "luminous-$(date +%Y%m%d)" \
-  --location eastus2 \
+  --resource-group rg-lum-dev \
   --template-file infra/bicep/main.bicep \
   --parameters @infra/bicep/parameters/dev.bicepparam
 ```
 
-#### Step 4: Verify
+#### Step 5: Verify
 
 ```bash
 # List deployment outputs
-az deployment sub show \
+az deployment group show \
   --name "luminous-$(date +%Y%m%d)" \
+  --resource-group rg-lum-dev \
   --query properties.outputs
 
 # Test API endpoint

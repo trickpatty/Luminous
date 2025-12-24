@@ -142,8 +142,8 @@ infra/
 │   └── ...
 ├── environments/
 │   ├── dev.bicepparam      # Development parameters
-│   ├── staging.bicepparam  # Staging parameters
-│   └── prod.bicepparam     # Production parameters
+│   ├── stg.bicepparam      # Stg parameters
+│   └── prd.bicepparam      # Production parameters
 └── scripts/
     ├── deploy.sh           # Deployment script
     └── validate.sh         # Validation script
@@ -241,9 +241,9 @@ jobs:
       - name: Deploy Bicep
         uses: azure/arm-deploy@v2
         with:
-          resourceGroupName: luminous-prod-rg
+          resourceGroupName: luminous-prd-rg
           template: ./infra/main.bicep
-          parameters: ./infra/environments/prod.bicepparam
+          parameters: ./infra/environments/prd.bicepparam
 ```
 
 ## Related Decisions

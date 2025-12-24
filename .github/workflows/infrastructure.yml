@@ -2,7 +2,13 @@
 # Luminous - Infrastructure Deployment Workflow
 # =============================================================================
 # Validates and deploys Azure infrastructure using Bicep and Azure Verified
-# Modules (AVMs). Supports environment-specific deployments (dev, staging, prod).
+# Modules (AVMs). Supports environment-specific deployments (dev, stg, prd).
+#
+# Prerequisites:
+#   Resource groups must be pre-created before deployment:
+#   - rg-lum-dev
+#   - rg-lum-stg
+#   - rg-lum-prd
 #
 # Phase 0.5.3: GitHub Actions for Bicep deployment
 # Phase 0.5.4: Configure environment-specific deployments
@@ -32,8 +38,8 @@ on:
         type: choice
         options:
           - dev
-          - staging
-          - prod
+          - stg
+          - prd
       deploy:
         description: 'Deploy infrastructure (not just validate)'
         required: true
@@ -42,6 +48,7 @@ on:
 
 env:
   AZURE_LOCATION: 'eastus2'
+  RG_PREFIX: 'rg-lum'
 
 permissions:
   id-token: write
@@ -106,20 +113,18 @@ jobs:
       - name: Run What-If (Dev)
         uses: azure/arm-deploy@v2
         with:
-          scope: subscription
-          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          region: ${{ env.AZURE_LOCATION }}
+          scope: resourcegroup
+          resourceGroupName: ${{ env.RG_PREFIX }}-dev
           template: infra/bicep/main.bicep
           parameters: infra/bicep/parameters/dev.bicepparam
-          deploymentMode: Incremental
           additionalArguments: --what-if
 
-  what-if-staging:
-    name: What-If (Staging)
+  what-if-stg:
+    name: What-If (Stg)
     runs-on: ubuntu-latest
     needs: validate
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging'
-    environment: staging
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'stg'
+    environment: stg
 
     steps:
       - name: Checkout code
@@ -132,23 +137,21 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Run What-If (Staging)
+      - name: Run What-If (Stg)
         uses: azure/arm-deploy@v2
         with:
-          scope: subscription
-          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          region: ${{ env.AZURE_LOCATION }}
+          scope: resourcegroup
+          resourceGroupName: ${{ env.RG_PREFIX }}-stg
           template: infra/bicep/main.bicep
-          parameters: infra/bicep/parameters/staging.bicepparam
-          deploymentMode: Incremental
+          parameters: infra/bicep/parameters/stg.bicepparam
           additionalArguments: --what-if
 
-  what-if-prod:
-    name: What-If (Prod)
+  what-if-prd:
+    name: What-If (Prd)
     runs-on: ubuntu-latest
     needs: validate
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'prod'
-    environment: prod
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'prd'
+    environment: prd
 
     steps:
       - name: Checkout code
@@ -161,15 +164,13 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Run What-If (Prod)
+      - name: Run What-If (Prd)
         uses: azure/arm-deploy@v2
         with:
-          scope: subscription
-          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          region: ${{ env.AZURE_LOCATION }}
+          scope: resourcegroup
+          resourceGroupName: ${{ env.RG_PREFIX }}-prd
           template: infra/bicep/main.bicep
-          parameters: infra/bicep/parameters/prod.bicepparam
-          deploymentMode: Incremental
+          parameters: infra/bicep/parameters/prd.bicepparam
           additionalArguments: --what-if
 
   deploy-dev:
@@ -196,9 +197,8 @@ jobs:
         uses: azure/arm-deploy@v2
         id: deploy
         with:
-          scope: subscription
-          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          region: ${{ env.AZURE_LOCATION }}
+          scope: resourcegroup
+          resourceGroupName: ${{ env.RG_PREFIX }}-dev
           template: infra/bicep/main.bicep
           parameters: infra/bicep/parameters/dev.bicepparam
           deploymentName: luminous-dev-${{ github.run_number }}
@@ -215,12 +215,12 @@ jobs:
           echo "| Static Web App | ${{ steps.deploy.outputs.staticWebAppUrl }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Cosmos DB | ${{ steps.deploy.outputs.cosmosDbAccountName }} |" >> $GITHUB_STEP_SUMMARY
 
-  deploy-staging:
-    name: Deploy (Staging)
+  deploy-stg:
+    name: Deploy (Stg)
     runs-on: ubuntu-latest
-    needs: [validate, what-if-staging]
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging' && github.event.inputs.deploy == 'true'
-    environment: staging
+    needs: [validate, what-if-stg]
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'stg' && github.event.inputs.deploy == 'true'
+    environment: stg
 
     steps:
       - name: Checkout code
@@ -233,16 +233,15 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Deploy to Staging
+      - name: Deploy to Stg
         uses: azure/arm-deploy@v2
         id: deploy
         with:
-          scope: subscription
-          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          region: ${{ env.AZURE_LOCATION }}
+          scope: resourcegroup
+          resourceGroupName: ${{ env.RG_PREFIX }}-stg
           template: infra/bicep/main.bicep
-          parameters: infra/bicep/parameters/staging.bicepparam
-          deploymentName: luminous-staging-${{ github.run_number }}
+          parameters: infra/bicep/parameters/stg.bicepparam
+          deploymentName: luminous-stg-${{ github.run_number }}
           failOnStdErr: false
 
       - name: Output deployment results
@@ -256,12 +255,12 @@ jobs:
           echo "| Static Web App | ${{ steps.deploy.outputs.staticWebAppUrl }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Cosmos DB | ${{ steps.deploy.outputs.cosmosDbAccountName }} |" >> $GITHUB_STEP_SUMMARY
 
-  deploy-prod:
-    name: Deploy (Prod)
+  deploy-prd:
+    name: Deploy (Prd)
     runs-on: ubuntu-latest
-    needs: [validate, what-if-prod]
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'prod' && github.event.inputs.deploy == 'true'
-    environment: prod
+    needs: [validate, what-if-prd]
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'prd' && github.event.inputs.deploy == 'true'
+    environment: prd
 
     steps:
       - name: Checkout code
@@ -274,16 +273,15 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Deploy to Prod
+      - name: Deploy to Prd
         uses: azure/arm-deploy@v2
         id: deploy
         with:
-          scope: subscription
-          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          region: ${{ env.AZURE_LOCATION }}
+          scope: resourcegroup
+          resourceGroupName: ${{ env.RG_PREFIX }}-prd
           template: infra/bicep/main.bicep
-          parameters: infra/bicep/parameters/prod.bicepparam
-          deploymentName: luminous-prod-${{ github.run_number }}
+          parameters: infra/bicep/parameters/prd.bicepparam
+          deploymentName: luminous-prd-${{ github.run_number }}
           failOnStdErr: false
 
       - name: Output deployment results

@@ -135,8 +135,8 @@ Establish the Azure infrastructure, .NET backend, Angular frontend, and developm
   - *Implemented: Using br/public:avm/res/web/static-site with staging environment support*
 - [x] **0.1.6** Configure Key Vault for secrets
   - *Implemented: Using br/public:avm/res/key-vault/vault with RBAC authorization, soft delete*
-- [x] **0.1.7** Set up environment parameter files (dev, staging, prod)
-  - *Implemented: dev.bicepparam, staging.bicepparam, prod.bicepparam with environment-appropriate SKUs and settings*
+- [x] **0.1.7** Set up environment parameter files (dev, stg, prd)
+  - *Implemented: dev.bicepparam, stg.bicepparam, prd.bicepparam with environment-appropriate SKUs and settings*
 
 **Additional deliverables:**
 - [x] Deployment scripts (deploy.sh, deploy.ps1) for automated deployment
@@ -183,7 +183,7 @@ Establish the Azure infrastructure, .NET backend, Angular frontend, and developm
 - [x] **0.3.5** Create shared component library
   - *Implemented: Reusable components (ButtonComponent, CardComponent, AlertComponent, AvatarComponent, InputComponent, SpinnerComponent) with TypeScript types*
 - [x] **0.3.6** Configure environment-based API URLs
-  - *Implemented: Environment files (development, staging, production) with API URLs and WebAuthn configuration*
+  - *Implemented: Environment files (development, stg, production) with API URLs and WebAuthn configuration*
 
 **Additional deliverables:**
 - [x] Login and Register pages with passkey/OTP authentication flows
@@ -220,7 +220,7 @@ Establish the Azure infrastructure, .NET backend, Angular frontend, and developm
 - [x] **0.5.3** GitHub Actions for Bicep deployment
   - *Implemented: .github/workflows/infrastructure.yml with validate, what-if, and deploy stages*
 - [x] **0.5.4** Configure environment-specific deployments
-  - *Implemented: .github/workflows/deploy.yml with dev/staging/prod environments, Azure OIDC auth*
+  - *Implemented: .github/workflows/deploy.yml with dev/stg/prd environments, Azure OIDC auth*
 - [x] **0.5.5** Set up Dependabot for dependency updates
   - *Implemented: .github/dependabot.yml for NuGet, npm, GitHub Actions, and Docker ecosystems*
 

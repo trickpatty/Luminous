@@ -87,13 +87,13 @@ gh workflow run dotnet.yml
 | Job | Description | Runs On |
 |-----|-------------|---------|
 | `build` | Lint, typecheck, test, and build production | Every trigger |
-| `build-staging` | Build staging configuration | Develop branch and PRs |
+| `build-stg` | Build stg configuration | Develop branch and PRs |
 | `security-audit` | Run npm audit for vulnerabilities | Pull requests only |
 | `bundle-analysis` | Analyze bundle size | Pull requests only |
 
 **Artifacts:**
 - `angular-build-production`: Production build (7-day retention)
-- `angular-build-staging`: Staging build (7-day retention)
+- `angular-build-stg`: Stg build (7-day retention)
 - `npm-audit-results`: Security audit report (30-day retention)
 
 ### 3. Infrastructure Deployment (`infrastructure.yml`)
@@ -120,7 +120,7 @@ gh workflow run infrastructure.yml \
 
 # Deploy to production (requires approval)
 gh workflow run infrastructure.yml \
-  -f environment=prod \
+  -f environment=prd \
   -f deploy=true
 ```
 
@@ -140,15 +140,15 @@ gh workflow run infrastructure.yml \
 
 **Manual Deployment:**
 ```bash
-# Deploy everything to staging
+# Deploy everything to stg
 gh workflow run deploy.yml \
-  -f environment=staging \
+  -f environment=stg \
   -f deploy_api=true \
   -f deploy_web=true
 
 # Deploy only API to production
 gh workflow run deploy.yml \
-  -f environment=prod \
+  -f environment=prd \
   -f deploy_api=true \
   -f deploy_web=false
 ```
@@ -164,15 +164,15 @@ Three environments are configured in the GitHub repository:
 | Environment | Protection Rules | Deployment |
 |-------------|------------------|------------|
 | `dev` | None | Automatic on main push |
-| `staging` | None | Manual trigger |
-| `prod` | Required reviewers | Manual trigger with approval |
+| `stg` | None | Manual trigger |
+| `prd` | Required reviewers | Manual trigger with approval |
 
 ### Azure Resources by Environment
 
-| Resource | Dev | Staging | Prod |
-|----------|-----|---------|------|
-| **App Service** | `app-lum-dev-api` | `app-lum-staging-api` | `app-lum-prod-api` |
-| **Static Web App** | `stapp-lum-dev` | `stapp-lum-staging` | `stapp-lum-prod` |
+| Resource | Dev | Stg | Prd |
+|----------|-----|-----|-----|
+| **App Service** | `app-lum-dev-api` | `app-lum-stg-api` | `app-lum-prd-api` |
+| **Static Web App** | `stapp-lum-dev` | `stapp-lum-stg` | `stapp-lum-prd` |
 | **Cosmos DB** | Serverless | Provisioned | Provisioned |
 | **Redis** | Basic C0 | Basic C0 | Standard C1 |
 | **App Service Plan** | B1 | B1 | P1v3 |
@@ -198,8 +198,8 @@ Configure these secrets in your GitHub repository settings:
 | Secret | Description |
 |--------|-------------|
 | `AZURE_STATIC_WEB_APP_TOKEN_DEV` | Deployment token for dev SWA |
-| `AZURE_STATIC_WEB_APP_TOKEN_STAGING` | Deployment token for staging SWA |
-| `AZURE_STATIC_WEB_APP_TOKEN_PROD` | Deployment token for prod SWA |
+| `AZURE_STATIC_WEB_APP_TOKEN_STG` | Deployment token for stg SWA |
+| `AZURE_STATIC_WEB_APP_TOKEN_PRD` | Deployment token for prd SWA |
 
 ### Setting Up Azure OIDC Authentication
 
@@ -316,10 +316,14 @@ ignore:
 
 **Solution:**
 1. Run `bicep build` locally to validate syntax
-2. Check Azure resource quotas
-3. Verify parameter file matches template
+2. Ensure resource group exists before deployment
+3. Check Azure resource quotas
+4. Verify parameter file matches template
 
 ```bash
+# Create resource group (one-time setup)
+az group create --name rg-lum-dev --location eastus2
+
 # Validate locally
 bicep build infra/bicep/main.bicep
 bicep build-params infra/bicep/parameters/dev.bicepparam

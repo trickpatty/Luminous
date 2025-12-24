@@ -1,12 +1,12 @@
 /**
- * Staging environment configuration
+ * Stg environment configuration
  */
 export const environment = {
   production: false,
-  apiUrl: 'https://api-staging.luminous.app/api',
+  apiUrl: 'https://api-stg.luminous.app/api',
   webAuthn: {
-    rpId: 'staging.luminous.app',
-    rpName: 'Luminous Family Hub (Staging)',
+    rpId: 'stg.luminous.app',
+    rpName: 'Luminous Family Hub (Stg)',
   },
   auth: {
     tokenStorageKey: 'luminous_tokens',

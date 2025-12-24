@@ -4,9 +4,13 @@
 // Deploys Luminous Azure infrastructure using Azure Verified Modules (AVMs)
 // directly from the public Bicep registry.
 //
+// Prerequisites:
+//   Resource group must exist before deployment. Create with:
+//   az group create --name rg-lum-<env> --location eastus2
+//
 // Usage:
-//   az deployment sub create \
-//     --location <region> \
+//   az deployment group create \
+//     --resource-group rg-lum-<env> \
 //     --template-file main.bicep \
 //     --parameters @parameters/dev.bicepparam
 //
@@ -14,14 +18,14 @@
 // ADR-007: Bicep with AVMs for IaC
 // =============================================================================
 
-targetScope = 'subscription'
+// Default scope is resourceGroup - no targetScope needed
 
 // =============================================================================
 // Parameters
 // =============================================================================
 
-@description('Environment name (dev, staging, prod)')
-@allowed(['dev', 'staging', 'prod'])
+@description('Environment name (dev, stg, prd)')
+@allowed(['dev', 'stg', 'prd'])
 param environment string
 
 @description('Azure region for deployment')
@@ -52,46 +56,51 @@ param cosmosDbConsistencyLevel string = 'Session'
 
 // App Service Configuration
 @description('App Service Plan SKU')
-param appServiceSkuName string = environment == 'prod' ? 'P1v3' : 'B1'
+param appServiceSkuName string = environment == 'prd' ? 'P1v3' : 'B1'
 
 // Redis Configuration
 @description('Redis Cache SKU')
 @allowed(['Basic', 'Standard', 'Premium'])
-param redisSku string = environment == 'prod' ? 'Standard' : 'Basic'
+param redisSku string = environment == 'prd' ? 'Standard' : 'Basic'
 
 @description('Redis Cache Capacity')
-param redisCapacity int = environment == 'prod' ? 1 : 0
+param redisCapacity int = environment == 'prd' ? 1 : 0
 
 // SignalR Configuration
 @description('SignalR Service SKU')
-param signalRSku string = environment == 'prod' ? 'Standard_S1' : 'Free_F1'
+param signalRSku string = environment == 'prd' ? 'Standard_S1' : 'Free_F1'
 
 // Static Web App Configuration
 @description('Static Web App SKU')
 @allowed(['Free', 'Standard'])
-param staticWebAppSku string = environment == 'prod' ? 'Standard' : 'Free'
+param staticWebAppSku string = environment == 'prd' ? 'Standard' : 'Free'
 
 // =============================================================================
 // Variables
 // =============================================================================
 
-var resourceGroupName = 'rg-${projectPrefix}-${environment}'
 var namingPrefix = '${projectPrefix}-${environment}'
 
+// 6-character unique suffix based on resource group ID for globally unique names
+var uniqueSuffix = take(uniqueString(resourceGroup().id), 6)
+
 // Resource naming following Azure naming conventions
+// Resources requiring global uniqueness include the unique suffix
 var names = {
-  cosmosDb: 'cosmos-${namingPrefix}'
-  storageAccount: 'st${projectPrefix}${environment}'
-  keyVault: 'kv-${namingPrefix}'
-  appConfig: 'appcs-${namingPrefix}'
+  // Globally unique names (include suffix)
+  cosmosDb: 'cosmos-${namingPrefix}-${uniqueSuffix}'
+  storageAccount: 'st${projectPrefix}${environment}${uniqueSuffix}'
+  keyVault: 'kv-${namingPrefix}-${uniqueSuffix}'
+  appConfig: 'appcs-${namingPrefix}-${uniqueSuffix}'
+  appService: 'app-${namingPrefix}-${uniqueSuffix}'
+  functionAppSync: 'func-${namingPrefix}-${uniqueSuffix}-sync'
+  functionAppImport: 'func-${namingPrefix}-${uniqueSuffix}-import'
+  signalR: 'sigr-${namingPrefix}-${uniqueSuffix}'
+  serviceBus: 'sb-${namingPrefix}-${uniqueSuffix}'
+  redis: 'redis-${namingPrefix}-${uniqueSuffix}'
+  staticWebApp: 'stapp-${namingPrefix}-${uniqueSuffix}'
+  // Resource group scoped (no suffix needed)
   appServicePlan: 'asp-${namingPrefix}'
-  appService: 'app-${namingPrefix}-api'
-  functionAppSync: 'func-${namingPrefix}-sync'
-  functionAppImport: 'func-${namingPrefix}-import'
-  signalR: 'sigr-${namingPrefix}'
-  serviceBus: 'sb-${namingPrefix}'
-  redis: 'redis-${namingPrefix}'
-  staticWebApp: 'stapp-${namingPrefix}'
   logAnalytics: 'log-${namingPrefix}'
   appInsights: 'appi-${namingPrefix}'
 }
@@ -112,38 +121,22 @@ var cosmosContainers = [
 ]
 
 // =============================================================================
-// Resource Group (using AVM)
-// =============================================================================
-
-module rg 'br/public:avm/res/resources/resource-group:0.4.0' = {
-  name: 'deploy-resource-group'
-  params: {
-    name: resourceGroupName
-    location: location
-    tags: tags
-  }
-}
-
-// =============================================================================
 // Monitoring (Deploy first - other resources depend on these)
 // =============================================================================
 
 module logAnalytics 'br/public:avm/res/operational-insights/workspace:0.9.0' = {
   name: 'deploy-log-analytics'
-  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.logAnalytics
     location: location
     tags: tags
-    dataRetention: environment == 'prod' ? 90 : 30
+    dataRetention: environment == 'prd' ? 90 : 30
     skuName: 'PerGB2018'
   }
-  dependsOn: [rg]
 }
 
 module appInsights 'br/public:avm/res/insights/component:0.4.1' = {
   name: 'deploy-app-insights'
-  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.appInsights
     location: location
@@ -151,7 +144,6 @@ module appInsights 'br/public:avm/res/insights/component:0.4.1' = {
     workspaceResourceId: logAnalytics.outputs.resourceId
     applicationType: 'web'
   }
-  dependsOn: [rg]
 }
 
 // =============================================================================
@@ -160,30 +152,26 @@ module appInsights 'br/public:avm/res/insights/component:0.4.1' = {
 
 module keyVault 'br/public:avm/res/key-vault/vault:0.9.0' = {
   name: 'deploy-key-vault'
-  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.keyVault
     location: location
     tags: tags
     sku: 'standard'
     enableRbacAuthorization: true
-    enableSoftDelete: environment == 'prod'
+    enableSoftDelete: environment == 'prd'
     softDeleteRetentionInDays: 90
-    enablePurgeProtection: environment == 'prod'
+    enablePurgeProtection: environment == 'prd'
   }
-  dependsOn: [rg]
 }
 
 module appConfig 'br/public:avm/res/app-configuration/configuration-store:0.5.1' = {
   name: 'deploy-app-config'
-  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.appConfig
     location: location
     tags: tags
-    sku: environment == 'prod' ? 'Standard' : 'Free'
+    sku: environment == 'prd' ? 'Standard' : 'Free'
   }
-  dependsOn: [rg]
 }
 
 // =============================================================================
@@ -192,7 +180,6 @@ module appConfig 'br/public:avm/res/app-configuration/configuration-store:0.5.1'
 
 module cosmosDb 'br/public:avm/res/document-db/database-account:0.8.1' = {
   name: 'deploy-cosmos-db'
-  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.cosmosDb
     location: location
@@ -216,17 +203,15 @@ module cosmosDb 'br/public:avm/res/document-db/database-account:0.8.1' = {
       }
     ]
   }
-  dependsOn: [rg]
 }
 
 module storageAccount 'br/public:avm/res/storage/storage-account:0.14.3' = {
   name: 'deploy-storage-account'
-  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.storageAccount
     location: location
     tags: tags
-    skuName: environment == 'prod' ? 'Standard_GRS' : 'Standard_LRS'
+    skuName: environment == 'prd' ? 'Standard_GRS' : 'Standard_LRS'
     kind: 'StorageV2'
     allowBlobPublicAccess: false
     blobServices: {
@@ -242,12 +227,10 @@ module storageAccount 'br/public:avm/res/storage/storage-account:0.14.3' = {
       }
     }
   }
-  dependsOn: [rg]
 }
 
 module redis 'br/public:avm/res/cache/redis:0.8.0' = {
   name: 'deploy-redis-cache'
-  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.redis
     location: location
@@ -258,7 +241,6 @@ module redis 'br/public:avm/res/cache/redis:0.8.0' = {
     minimumTlsVersion: '1.2'
     publicNetworkAccess: 'Enabled'
   }
-  dependsOn: [rg]
 }
 
 // =============================================================================
@@ -267,13 +249,12 @@ module redis 'br/public:avm/res/cache/redis:0.8.0' = {
 
 module serviceBus 'br/public:avm/res/service-bus/namespace:0.10.0' = {
   name: 'deploy-service-bus'
-  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.serviceBus
     location: location
     tags: tags
     skuObject: {
-      name: environment == 'prod' ? 'Standard' : 'Basic'
+      name: environment == 'prd' ? 'Standard' : 'Basic'
     }
     queues: [
       { name: 'calendar-sync' }
@@ -281,12 +262,10 @@ module serviceBus 'br/public:avm/res/service-bus/namespace:0.10.0' = {
       { name: 'notifications' }
     ]
   }
-  dependsOn: [rg]
 }
 
 module signalR 'br/public:avm/res/signal-r-service/signal-r:0.5.0' = {
   name: 'deploy-signalr'
-  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.signalR
     location: location
@@ -298,7 +277,6 @@ module signalR 'br/public:avm/res/signal-r-service/signal-r:0.5.0' = {
       { flag: 'EnableConnectivityLogs', value: 'True' }
     ]
   }
-  dependsOn: [rg]
 }
 
 // =============================================================================
@@ -307,7 +285,6 @@ module signalR 'br/public:avm/res/signal-r-service/signal-r:0.5.0' = {
 
 module appServicePlan 'br/public:avm/res/web/serverfarm:0.3.0' = {
   name: 'deploy-app-service-plan'
-  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.appServicePlan
     location: location
@@ -317,12 +294,10 @@ module appServicePlan 'br/public:avm/res/web/serverfarm:0.3.0' = {
     kind: 'Linux'
     reserved: true
   }
-  dependsOn: [rg]
 }
 
 module appService 'br/public:avm/res/web/site:0.11.1' = {
   name: 'deploy-app-service'
-  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.appService
     location: location
@@ -343,25 +318,18 @@ module appService 'br/public:avm/res/web/site:0.11.1' = {
     httpsOnly: true
     clientAffinityEnabled: false
     appSettingsKeyValuePairs: {
-      ASPNETCORE_ENVIRONMENT: environment == 'prod' ? 'Production' : 'Development'
+      ASPNETCORE_ENVIRONMENT: environment == 'prd' ? 'Production' : 'Development'
       APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
       CosmosDb__Endpoint: cosmosDb.outputs.endpoint
       CosmosDb__DatabaseName: projectName
-      SignalR__ConnectionString: signalR.outputs.hostName
+      SignalR__Endpoint: 'https://${signalR.outputs.name}.service.signalr.net'
       AppConfig__Endpoint: appConfig.outputs.endpoint
     }
   }
-  dependsOn: [
-    cosmosDb
-    signalR
-    appConfig
-    appInsights
-  ]
 }
 
 module functionAppSync 'br/public:avm/res/web/site:0.11.1' = {
   name: 'deploy-function-app-sync'
-  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.functionAppSync
     location: location
@@ -387,16 +355,10 @@ module functionAppSync 'br/public:avm/res/web/site:0.11.1' = {
       CosmosDb__DatabaseName: projectName
     }
   }
-  dependsOn: [
-    cosmosDb
-    storageAccount
-    appInsights
-  ]
 }
 
 module functionAppImport 'br/public:avm/res/web/site:0.11.1' = {
   name: 'deploy-function-app-import'
-  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.functionAppImport
     location: location
@@ -422,11 +384,6 @@ module functionAppImport 'br/public:avm/res/web/site:0.11.1' = {
       CosmosDb__DatabaseName: projectName
     }
   }
-  dependsOn: [
-    cosmosDb
-    storageAccount
-    appInsights
-  ]
 }
 
 // =============================================================================
@@ -435,7 +392,6 @@ module functionAppImport 'br/public:avm/res/web/site:0.11.1' = {
 
 module staticWebApp 'br/public:avm/res/web/static-site:0.6.0' = {
   name: 'deploy-static-web-app'
-  scope: resourceGroup(resourceGroupName)
   params: {
     name: names.staticWebApp
     location: location
@@ -444,15 +400,13 @@ module staticWebApp 'br/public:avm/res/web/static-site:0.6.0' = {
     stagingEnvironmentPolicy: 'Enabled'
     allowConfigFileUpdates: true
   }
-  dependsOn: [rg]
 }
 
 // =============================================================================
 // Outputs
 // =============================================================================
 
-output resourceGroupName string = resourceGroupName
-output resourceGroupId string = rg.outputs.resourceId
+output resourceGroupName string = resourceGroup().name
 
 // Data Services
 output cosmosDbEndpoint string = cosmosDb.outputs.endpoint
@@ -474,7 +428,7 @@ output keyVaultUri string = keyVault.outputs.uri
 output appConfigEndpoint string = appConfig.outputs.endpoint
 
 // Messaging
-output signalRHostName string = signalR.outputs.hostName
+output signalREndpoint string = 'https://${signalR.outputs.name}.service.signalr.net'
 output serviceBusNamespace string = serviceBus.outputs.name
 
 // Monitoring
