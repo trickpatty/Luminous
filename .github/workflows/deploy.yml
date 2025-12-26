@@ -92,7 +92,7 @@ jobs:
       matrix:
         include:
           - environment: dev
-            build_config: production
+            build_config: dev
           - environment: stg
             build_config: stg
           - environment: prd
