@@ -15,8 +15,5 @@
       "statusCode": 302,
       "redirect": "/"
     }
-  },
-  "platform": {
-    "apiRuntime": "dotnet-isolated:9.0"
   }
 }
