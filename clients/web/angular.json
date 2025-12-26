@@ -32,7 +32,8 @@
               {
                 "glob": "**/*",
                 "input": "public"
-              }
+              },
+              "src/staticwebapp.config.json"
             ],
             "styles": [
               "src/styles.scss"
@@ -78,6 +79,27 @@
                 {
                   "replace": "src/environments/environment.ts",
                   "with": "src/environments/environment.stg.ts"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "dev": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.dev.ts"
                 }
               ],
               "outputHashing": "all"

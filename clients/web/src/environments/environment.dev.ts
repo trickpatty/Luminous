@@ -1,12 +1,12 @@
 /**
- * Production environment configuration
+ * Dev environment configuration (deployed dev, not local)
  */
 export const environment = {
-  production: true,
+  production: false,
   apiUrl: '/api',
   webAuthn: {
-    rpId: 'luminous.app',
-    rpName: 'Luminous Family Hub',
+    rpId: 'dev.luminous.app',
+    rpName: 'Luminous Family Hub (Dev)',
   },
   auth: {
     tokenStorageKey: 'luminous_tokens',

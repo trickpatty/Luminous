@@ -85,9 +85,18 @@ jobs:
           retention-days: 1
 
   build-web:
-    name: Build Angular Web App
+    name: Build Angular Web App (${{ matrix.environment }})
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || github.event.inputs.deploy_web == 'true'
+    strategy:
+      matrix:
+        include:
+          - environment: dev
+            build_config: dev
+          - environment: stg
+            build_config: stg
+          - environment: prd
+            build_config: production
 
     steps:
       - name: Checkout code
@@ -104,14 +113,14 @@ jobs:
         working-directory: ./clients/web
         run: npm ci
 
-      - name: Build for production
+      - name: Build for ${{ matrix.environment }}
         working-directory: ./clients/web
-        run: npm run build:prod
+        run: npm run build -- --configuration ${{ matrix.build_config }}
 
       - name: Upload web artifact
         uses: actions/upload-artifact@v4
         with:
-          name: web-package
+          name: web-package-${{ matrix.environment }}
           path: ./clients/web/dist/web/browser
           retention-days: 1
 
@@ -173,7 +182,7 @@ jobs:
         if: needs.build-web.result == 'success'
         uses: actions/download-artifact@v4
         with:
-          name: web-package
+          name: web-package-dev
           path: ./web-package
 
       - name: Deploy Web to Static Web App
@@ -245,7 +254,7 @@ jobs:
         if: needs.build-web.result == 'success'
         uses: actions/download-artifact@v4
         with:
-          name: web-package
+          name: web-package-stg
           path: ./web-package
 
       - name: Deploy Web to Static Web App
@@ -317,7 +326,7 @@ jobs:
         if: needs.build-web.result == 'success'
         uses: actions/download-artifact@v4
         with:
-          name: web-package
+          name: web-package-prd
           path: ./web-package
 
       - name: Deploy Web to Static Web App
