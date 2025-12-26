@@ -42,5 +42,5 @@ param redisCapacity = 0
 // SignalR - Free tier for dev
 param signalRSku = 'Free_F1'
 
-// Static Web App - Free tier for dev
-param staticWebAppSku = 'Free'
+// Static Web App - Standard tier for dev (required for linked backend)
+param staticWebAppSku = 'Standard'
