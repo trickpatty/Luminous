@@ -3,7 +3,7 @@
  */
 export const environment = {
   production: false,
-  apiUrl: 'https://api-stg.luminous.app/api',
+  apiUrl: '/api',
   webAuthn: {
     rpId: 'stg.luminous.app',
     rpName: 'Luminous Family Hub (Stg)',

@@ -402,6 +402,19 @@ module staticWebApp 'br/public:avm/res/web/static-site:0.6.0' = {
   }
 }
 
+// Link the App Service API as a backend for the Static Web App
+// This enables the SWA to proxy /api/* requests to the App Service
+resource staticWebAppBackend 'Microsoft.Web/staticSites/linkedBackends@2023-12-01' = {
+  name: '${names.staticWebApp}/backend'
+  properties: {
+    backendResourceId: appService.outputs.resourceId
+    region: location
+  }
+  dependsOn: [
+    staticWebApp
+  ]
+}
+
 // =============================================================================
 // Outputs
 // =============================================================================
