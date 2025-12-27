@@ -315,7 +315,7 @@ module signalR 'br/public:avm/res/signal-r-service/signal-r:0.10.1' = {
 // =============================================================================
 
 // Email Communication Service with Azure-managed domain for sending emails
-module emailService 'br/public:avm/res/communication/email-service:0.3.2' = {
+module emailService 'br/public:avm/res/communication/email-service:0.4.2' = {
   name: 'deploy-email-service'
   params: {
     name: names.emailService

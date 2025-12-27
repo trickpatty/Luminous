@@ -288,7 +288,7 @@ All resources are deployed using AVMs directly from the public Bicep registry (`
 | App Service Plan | `br/public:avm/res/web/serverfarm:0.5.0` |
 | App Service/Functions | `br/public:avm/res/web/site:0.19.4` |
 | Static Web App | `br/public:avm/res/web/static-site:0.9.3` |
-| Email Service | `br/public:avm/res/communication/email-service:0.3.2` |
+| Email Service | `br/public:avm/res/communication/email-service:0.4.2` |
 | Communication Service | `br/public:avm/res/communication/communication-service:0.4.2` |
 
 ### Quick Start
