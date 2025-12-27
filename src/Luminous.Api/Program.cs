@@ -54,8 +54,32 @@ else
     builder.Services.AddScoped<IEmailService, AzureEmailService>();
 }
 
+// Register distributed cache
+// - UseDevelopmentMode=true (local dev): Uses in-memory cache
+// - UseDevelopmentMode=false (Azure): Uses Redis for distributed caching across instances
+if (emailSettings?.UseDevelopmentMode == true)
+{
+    builder.Services.AddDistributedMemoryCache();
+}
+else
+{
+    var redisConnectionString = builder.Configuration.GetValue<string>("Redis:ConnectionString");
+    if (!string.IsNullOrEmpty(redisConnectionString))
+    {
+        builder.Services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = redisConnectionString;
+            options.InstanceName = builder.Configuration.GetValue<string>("Redis:InstanceName") ?? "luminous:";
+        });
+    }
+    else
+    {
+        // Fallback to memory cache if Redis not configured
+        builder.Services.AddDistributedMemoryCache();
+    }
+}
+
 // Register WebAuthn/FIDO2 service
-builder.Services.AddDistributedMemoryCache(); // Use Redis in production
 builder.Services.AddScoped<IWebAuthnService, WebAuthnService>();
 
 // Configure FIDO2

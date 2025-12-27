@@ -36,12 +36,13 @@ public sealed class AzureEmailService : IEmailService
     public async Task SendOtpAsync(string email, string code, CancellationToken cancellationToken = default)
     {
         var htmlContent = _templateService.RenderOtpEmail(email, code, 10);
+        var plainTextContent = _templateService.RenderOtpEmailPlainText(email, code, 10);
 
         await SendEmailAsync(
             email,
             "Your Luminous Login Code",
             htmlContent,
-            $"Your Luminous login code is: {code}. This code expires in 10 minutes.",
+            plainTextContent,
             cancellationToken);
 
         _logger.LogInformation("OTP email sent to {Email}", MaskEmail(email));
@@ -54,29 +55,29 @@ public sealed class AzureEmailService : IEmailService
         string invitationCode,
         CancellationToken cancellationToken = default)
     {
+        var expiresAt = DateTime.UtcNow.AddDays(7);
+
         var htmlContent = _templateService.RenderInvitationEmail(
             email,
             inviterName,
             familyName,
             invitationCode,
             null,
-            DateTime.UtcNow.AddDays(7));
+            expiresAt);
 
-        var plainText = $@"You're Invited!
-
-{inviterName} has invited you to join their family {familyName} on Luminous.
-
-Use this invitation code to join: {invitationCode}
-
-Or visit: {_settings.BaseUrl}/invite/{invitationCode}
-
-This invitation expires in 7 days.";
+        var plainTextContent = _templateService.RenderInvitationEmailPlainText(
+            email,
+            inviterName,
+            familyName,
+            invitationCode,
+            null,
+            expiresAt);
 
         await SendEmailAsync(
             email,
             $"You're invited to join {familyName} on Luminous",
             htmlContent,
-            plainText,
+            plainTextContent,
             cancellationToken);
 
         _logger.LogInformation("Invitation email sent to {Email} for family {FamilyName}", MaskEmail(email), familyName);
@@ -89,22 +90,13 @@ This invitation expires in 7 days.";
         CancellationToken cancellationToken = default)
     {
         var htmlContent = _templateService.RenderWelcomeEmail(email, displayName, familyName);
-
-        var plainText = $@"Welcome to {familyName}!
-
-Hi {displayName}!
-
-Welcome to Luminous! You've successfully joined {familyName}.
-
-Get started by visiting: {_settings.BaseUrl}/dashboard
-
-Happy organizing!";
+        var plainTextContent = _templateService.RenderWelcomeEmailPlainText(email, displayName, familyName);
 
         await SendEmailAsync(
             email,
             $"Welcome to {familyName} on Luminous!",
             htmlContent,
-            plainText,
+            plainTextContent,
             cancellationToken);
 
         _logger.LogInformation("Welcome email sent to {Email}", MaskEmail(email));

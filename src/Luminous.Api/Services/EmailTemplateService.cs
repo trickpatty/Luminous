@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.RegularExpressions;
 using HandlebarsDotNet;
 using Luminous.Api.Configuration;
 using Microsoft.Extensions.Options;
@@ -38,6 +39,32 @@ public interface IEmailTemplateService
     /// Renders the welcome email template.
     /// </summary>
     string RenderWelcomeEmail(string email, string displayName, string familyName);
+
+    /// <summary>
+    /// Converts HTML content to plain text by stripping tags.
+    /// </summary>
+    string ConvertToPlainText(string htmlContent);
+
+    /// <summary>
+    /// Renders the OTP email as plain text.
+    /// </summary>
+    string RenderOtpEmailPlainText(string email, string code, int expiresInMinutes);
+
+    /// <summary>
+    /// Renders the invitation email as plain text.
+    /// </summary>
+    string RenderInvitationEmailPlainText(
+        string email,
+        string inviterName,
+        string familyName,
+        string invitationCode,
+        string? message,
+        DateTime expiresAt);
+
+    /// <summary>
+    /// Renders the welcome email as plain text.
+    /// </summary>
+    string RenderWelcomeEmailPlainText(string email, string displayName, string familyName);
 }
 
 /// <summary>
@@ -172,5 +199,111 @@ public sealed class EmailTemplateService : IEmailTemplateService
         var type = data.GetType();
         var emailProperty = type.GetProperty("email") ?? type.GetProperty("Email");
         return emailProperty?.GetValue(data)?.ToString() ?? string.Empty;
+    }
+
+    public string ConvertToPlainText(string htmlContent)
+    {
+        if (string.IsNullOrEmpty(htmlContent))
+            return string.Empty;
+
+        // Remove script and style blocks entirely
+        var text = Regex.Replace(htmlContent, @"<script[^>]*>[\s\S]*?</script>", "", RegexOptions.IgnoreCase);
+        text = Regex.Replace(text, @"<style[^>]*>[\s\S]*?</style>", "", RegexOptions.IgnoreCase);
+
+        // Replace common block elements with newlines
+        text = Regex.Replace(text, @"<br\s*/?>", "\n", RegexOptions.IgnoreCase);
+        text = Regex.Replace(text, @"</p>", "\n\n", RegexOptions.IgnoreCase);
+        text = Regex.Replace(text, @"</div>", "\n", RegexOptions.IgnoreCase);
+        text = Regex.Replace(text, @"</tr>", "\n", RegexOptions.IgnoreCase);
+        text = Regex.Replace(text, @"</li>", "\n", RegexOptions.IgnoreCase);
+        text = Regex.Replace(text, @"<h[1-6][^>]*>", "\n", RegexOptions.IgnoreCase);
+        text = Regex.Replace(text, @"</h[1-6]>", "\n\n", RegexOptions.IgnoreCase);
+
+        // Extract href from links and append
+        text = Regex.Replace(text, @"<a[^>]*href\s*=\s*[""']([^""']+)[""'][^>]*>([^<]+)</a>",
+            "$2 ($1)", RegexOptions.IgnoreCase);
+
+        // Remove all remaining HTML tags
+        text = Regex.Replace(text, @"<[^>]+>", "");
+
+        // Decode HTML entities
+        text = System.Net.WebUtility.HtmlDecode(text);
+
+        // Normalize whitespace
+        text = Regex.Replace(text, @"[ \t]+", " ");
+        text = Regex.Replace(text, @"\n{3,}", "\n\n");
+        text = text.Trim();
+
+        return text;
+    }
+
+    public string RenderOtpEmailPlainText(string email, string code, int expiresInMinutes)
+    {
+        return $"""
+            Your Luminous Login Code
+
+            Your one-time password is: {code}
+
+            This code expires in {expiresInMinutes} minutes.
+
+            If you didn't request this code, you can safely ignore this email.
+
+            ---
+            Luminous - Your Family Command Center
+            """;
+    }
+
+    public string RenderInvitationEmailPlainText(
+        string email,
+        string inviterName,
+        string familyName,
+        string invitationCode,
+        string? message,
+        DateTime expiresAt)
+    {
+        var acceptUrl = $"{_settings.BaseUrl}/invite/{invitationCode}";
+        var messageSection = !string.IsNullOrEmpty(message) ? $"\n\nMessage from {inviterName}:\n\"{message}\"\n" : "";
+
+        return $"""
+            You're Invited!
+
+            {inviterName} has invited you to join their family "{familyName}" on Luminous.
+            {messageSection}
+            Use this invitation code to join: {invitationCode}
+
+            Or visit: {acceptUrl}
+
+            This invitation expires on {expiresAt:MMMM d, yyyy 'at' h:mm tt 'UTC'}.
+
+            ---
+            Luminous - Your Family Command Center
+            """;
+    }
+
+    public string RenderWelcomeEmailPlainText(string email, string displayName, string familyName)
+    {
+        var dashboardUrl = $"{_settings.BaseUrl}/dashboard";
+
+        return $"""
+            Welcome to {familyName}!
+
+            Hi {displayName}!
+
+            Welcome to Luminous! You've successfully joined {familyName}.
+
+            Get started by visiting your dashboard: {dashboardUrl}
+
+            Here's what you can do:
+            - View your family calendar
+            - Manage chores and routines
+            - Connect with family members
+
+            Need help? Visit: {_settings.HelpUrl}
+
+            Happy organizing!
+
+            ---
+            Luminous - Your Family Command Center
+            """;
     }
 }

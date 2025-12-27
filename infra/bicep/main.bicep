@@ -329,7 +329,8 @@ module emailService 'br/public:avm/res/communication/email-service:0.4.2' = {
         userEngagementTracking: 'Disabled'
         senderUsernames: [
           {
-            username: 'noreply'
+            name: 'donotreply'
+            username: 'donotreply'
             displayName: 'Luminous'
           }
         ]
@@ -421,6 +422,9 @@ module appService 'br/public:avm/res/web/site:0.19.4' = {
           Cors__AllowedOrigins__0: 'https://${staticWebApp.outputs.defaultHostname}'
           Cors__AllowedOrigins__1: 'http://localhost:4200'
           Cors__AllowedOrigins__2: 'https://localhost:4200'
+          // Redis cache for distributed session/cache (WebAuthn sessions, etc.)
+          Redis__ConnectionString: '${redis.outputs.name}.redis.cache.windows.net:6380,password=${redis.outputs.primaryAccessKey},ssl=True,abortConnect=False'
+          Redis__InstanceName: 'luminous-${environment}:'
           // Email settings - Azure deployments use ACS, local dev uses console logging
           Email__UseDevelopmentMode: 'false'
           Email__SenderName: 'Luminous'
