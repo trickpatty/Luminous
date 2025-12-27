@@ -280,6 +280,22 @@ module signalR 'br/public:avm/res/signal-r-service/signal-r:0.5.0' = {
 }
 
 // =============================================================================
+// Web Hosting (Static Web App deployed first for CORS configuration)
+// =============================================================================
+
+module staticWebApp 'br/public:avm/res/web/static-site:0.6.0' = {
+  name: 'deploy-static-web-app'
+  params: {
+    name: names.staticWebApp
+    location: location
+    tags: tags
+    sku: staticWebAppSku
+    stagingEnvironmentPolicy: 'Enabled'
+    allowConfigFileUpdates: true
+  }
+}
+
+// =============================================================================
 // Compute Services
 // =============================================================================
 
@@ -324,6 +340,10 @@ module appService 'br/public:avm/res/web/site:0.11.1' = {
       CosmosDb__DatabaseName: projectName
       SignalR__Endpoint: 'https://${signalR.outputs.name}.service.signalr.net'
       AppConfig__Endpoint: appConfig.outputs.endpoint
+      // CORS: Allow Static Web App origin for direct API calls
+      Cors__AllowedOrigins__0: 'https://${staticWebApp.outputs.defaultHostname}'
+      Cors__AllowedOrigins__1: 'http://localhost:4200'
+      Cors__AllowedOrigins__2: 'https://localhost:4200'
     }
   }
 }
@@ -383,22 +403,6 @@ module functionAppImport 'br/public:avm/res/web/site:0.11.1' = {
       CosmosDb__Endpoint: cosmosDb.outputs.endpoint
       CosmosDb__DatabaseName: projectName
     }
-  }
-}
-
-// =============================================================================
-// Web Hosting
-// =============================================================================
-
-module staticWebApp 'br/public:avm/res/web/static-site:0.6.0' = {
-  name: 'deploy-static-web-app'
-  params: {
-    name: names.staticWebApp
-    location: location
-    tags: tags
-    sku: staticWebAppSku
-    stagingEnvironmentPolicy: 'Enabled'
-    allowConfigFileUpdates: true
   }
 }
 
