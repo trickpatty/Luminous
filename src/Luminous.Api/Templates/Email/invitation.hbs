@@ -1,0 +1,40 @@
+<h2>You're Invited!</h2>
+
+<p>Hi there!</p>
+
+<p><strong class="highlight">{{inviterName}}</strong> has invited you to join their family <strong class="highlight">{{familyName}}</strong> on Luminous - the family command center.</p>
+
+{{#if message}}
+<div class="code-box">
+    <p style="margin: 0; font-style: italic;">"{{message}}"</p>
+</div>
+{{/if}}
+
+<p>Use the invitation code below to join:</p>
+
+<div class="code-box">
+    <span class="code" style="letter-spacing: 4px;">{{invitationCode}}</span>
+</div>
+
+<p style="text-align: center;">
+    <a href="{{acceptUrl}}" class="button">Accept Invitation</a>
+</p>
+
+<p class="muted">This invitation expires on <strong>{{expiresAt}}</strong>.</p>
+
+<hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+
+<h3>What is Luminous?</h3>
+
+<p>Luminous is a digital family command center designed for busy households. With Luminous, you can:</p>
+
+<ul>
+    <li>View everyone's schedules at a glance</li>
+    <li>Manage chores and routines</li>
+    <li>Plan meals for the week</li>
+    <li>Keep track of grocery lists and more</li>
+</ul>
+
+<p class="muted">
+    If you don't know {{inviterName}} or didn't expect this invitation, you can safely ignore this email.
+</p>

@@ -16,4 +16,6 @@ public static class ContainerNames
     public const string Completions = "completions";
     public const string Invitations = "invitations";
     public const string Credentials = "credentials";
+    public const string OtpTokens = "otptokens";
+    public const string RefreshTokens = "refreshtokens";
 }

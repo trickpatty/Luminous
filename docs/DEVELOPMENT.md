@@ -354,6 +354,91 @@ Token settings in `appsettings.Development.json`:
 
 ---
 
+## Email Service (Local Development)
+
+### Overview
+
+In local development, emails are **logged to the console** instead of being sent. This allows you to test authentication flows (OTP, invitations) without configuring a real email service.
+
+### Configuration
+
+The email service is controlled by `Email__UseDevelopmentMode` in `appsettings.Development.json`:
+
+```json
+{
+  "Email": {
+    "UseDevelopmentMode": true,
+    "ConnectionString": "",
+    "SenderAddress": "noreply@luminous.local",
+    "SenderName": "Luminous",
+    "BaseUrl": "http://localhost:4200",
+    "HelpUrl": "http://localhost:4200/help"
+  }
+}
+```
+
+### Viewing Email Output
+
+When `UseDevelopmentMode` is `true`, all emails are logged to the console:
+
+```
+📧 [DEV EMAIL] OTP Code for user@example.com: 123456
+```
+
+Look for log entries with the `📧 [DEV EMAIL]` prefix when testing:
+- OTP authentication
+- Family invitations
+- Welcome emails
+
+### Testing OTP Authentication
+
+```bash
+# Request an OTP code
+curl -X POST http://localhost:5000/api/auth/otp/request \
+  -H "Content-Type: application/json" \
+  -d '{"email": "test@example.com"}'
+
+# Watch the console output for the OTP code, then verify it:
+curl -X POST http://localhost:5000/api/auth/otp/verify \
+  -H "Content-Type: application/json" \
+  -d '{"email": "test@example.com", "code": "123456"}'
+```
+
+### Email Templates
+
+Email templates are located in `src/Luminous.Api/Templates/Email/`:
+
+| Template | Purpose |
+|----------|---------|
+| `base.hbs` | Base HTML layout (header, footer, styling) |
+| `otp.hbs` | One-time password email content |
+| `invitation.hbs` | Family invitation email content |
+| `welcome.hbs` | Welcome email for new members |
+
+Templates use [Handlebars](https://handlebarsjs.com/) syntax for dynamic content.
+
+### Switching to Real Email (Optional)
+
+If you need to test with real email delivery locally:
+
+1. Set up an Azure Communication Services resource
+2. Update `appsettings.Development.json`:
+
+```json
+{
+  "Email": {
+    "UseDevelopmentMode": false,
+    "ConnectionString": "endpoint=https://your-acs.communication.azure.com/;accesskey=...",
+    "SenderAddress": "DoNotReply@your-domain.azurecomm.net",
+    "SenderName": "Luminous",
+    "BaseUrl": "http://localhost:4200",
+    "HelpUrl": "http://localhost:4200/help"
+  }
+}
+```
+
+---
+
 ## Cosmos DB Emulator
 
 ### Overview
@@ -649,3 +734,4 @@ The settings hide build artifacts (`bin/`, `obj/`, `node_modules/`) for cleaner 
 | 1.0.0 | 2025-12-22 | Luminous Team | Initial development guide |
 | 1.1.0 | 2025-12-22 | Luminous Team | Added comprehensive VS Code configuration |
 | 1.2.0 | 2025-12-22 | Luminous Team | Added ARM64/Apple Silicon support and Mailpit |
+| 1.3.0 | 2025-12-27 | Luminous Team | Added Email Service documentation (local development) |

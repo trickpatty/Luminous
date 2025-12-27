@@ -41,6 +41,16 @@ public interface IUnitOfWork : IDisposable
     IInvitationRepository Invitations { get; }
 
     /// <summary>
+    /// Gets the OTP token repository.
+    /// </summary>
+    IOtpTokenRepository OtpTokens { get; }
+
+    /// <summary>
+    /// Gets the refresh token repository.
+    /// </summary>
+    IRefreshTokenRepository RefreshTokens { get; }
+
+    /// <summary>
     /// Saves all pending changes.
     /// </summary>
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

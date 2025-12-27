@@ -51,13 +51,16 @@ public sealed class CreateInvitationCommandHandler : IRequestHandler<CreateInvit
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IEmailService _emailService;
 
     public CreateInvitationCommandHandler(
         IUnitOfWork unitOfWork,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IEmailService emailService)
     {
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
+        _emailService = emailService;
     }
 
     public async Task<InvitationDto> Handle(CreateInvitationCommand request, CancellationToken cancellationToken)
@@ -101,7 +104,20 @@ public sealed class CreateInvitationCommandHandler : IRequestHandler<CreateInvit
         await _unitOfWork.Invitations.AddAsync(invitation, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // TODO: Send invitation email (will be implemented with email service)
+        // Get inviter's display name
+        var inviter = await _unitOfWork.Users.GetByIdAsync(
+            _currentUserService.UserId ?? "system",
+            request.FamilyId,
+            cancellationToken);
+        var inviterName = inviter?.DisplayName ?? "A family member";
+
+        // Send invitation email
+        await _emailService.SendInvitationAsync(
+            invitation.Email,
+            family.Name,
+            inviterName,
+            invitation.Code,
+            cancellationToken);
 
         return new InvitationDto
         {

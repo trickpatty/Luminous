@@ -13,11 +13,20 @@
     <PackageReference Include="Serilog.AspNetCore" />
     <PackageReference Include="AspNetCore.HealthChecks.CosmosDb" />
     <PackageReference Include="AspNetCore.HealthChecks.Redis" />
+    <PackageReference Include="Fido2" />
+    <PackageReference Include="Fido2.AspNet" />
+    <PackageReference Include="Azure.Communication.Email" />
+    <PackageReference Include="Handlebars.Net" />
+    <PackageReference Include="Nanoid" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Luminous.Infrastructure\Luminous.Infrastructure.csproj" />
     <ProjectReference Include="..\Luminous.Shared\Luminous.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Templates\Email\*.hbs" />
   </ItemGroup>
 
 </Project>

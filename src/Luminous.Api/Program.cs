@@ -1,4 +1,5 @@
 using System.Text;
+using Fido2NetLib;
 using Luminous.Api.Configuration;
 using Luminous.Api.Middleware;
 using Luminous.Api.Services;
@@ -30,8 +31,67 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.Configure<JwtSettings>(
     builder.Configuration.GetSection(JwtSettings.SectionName));
 
+// Configure Email settings
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection(EmailSettings.SectionName));
+
 // Register local JWT token service (for development)
 builder.Services.AddScoped<ILocalJwtTokenService, LocalJwtTokenService>();
+
+// Register email template service
+builder.Services.AddSingleton<IEmailTemplateService, EmailTemplateService>();
+
+// Register email service based on configuration
+// - UseDevelopmentMode=true (local dev): Logs emails to console
+// - UseDevelopmentMode=false (Azure): Sends emails via Azure Communication Services
+var emailSettings = builder.Configuration.GetSection(EmailSettings.SectionName).Get<EmailSettings>();
+if (emailSettings?.UseDevelopmentMode == true)
+{
+    builder.Services.AddScoped<IEmailService, DevelopmentEmailService>();
+}
+else
+{
+    builder.Services.AddScoped<IEmailService, AzureEmailService>();
+}
+
+// Register distributed cache
+// - UseDevelopmentMode=true (local dev): Uses in-memory cache
+// - UseDevelopmentMode=false (Azure): Uses Redis for distributed caching across instances
+if (emailSettings?.UseDevelopmentMode == true)
+{
+    builder.Services.AddDistributedMemoryCache();
+}
+else
+{
+    var redisConnectionString = builder.Configuration.GetValue<string>("Redis:ConnectionString");
+    if (!string.IsNullOrEmpty(redisConnectionString))
+    {
+        builder.Services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = redisConnectionString;
+            options.InstanceName = builder.Configuration.GetValue<string>("Redis:InstanceName") ?? "luminous:";
+        });
+    }
+    else
+    {
+        // Fallback to memory cache if Redis not configured
+        builder.Services.AddDistributedMemoryCache();
+    }
+}
+
+// Register WebAuthn/FIDO2 service
+builder.Services.AddScoped<IWebAuthnService, WebAuthnService>();
+
+// Configure FIDO2
+var fido2Config = new Fido2Configuration
+{
+    ServerDomain = builder.Configuration["Fido2:ServerDomain"] ?? "localhost",
+    ServerName = builder.Configuration["Fido2:ServerName"] ?? "Luminous",
+    Origins = builder.Configuration.GetSection("Fido2:Origins").Get<HashSet<string>>()
+        ?? ["http://localhost:4200", "http://localhost:5000", "https://localhost:5001"]
+};
+builder.Services.AddSingleton(fido2Config);
+builder.Services.AddSingleton<IFido2>(new Fido2(fido2Config));
 
 // Configure authentication
 var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()

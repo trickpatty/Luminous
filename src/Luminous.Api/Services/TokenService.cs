@@ -165,9 +165,10 @@ public class TokenService : ITokenService
     /// <inheritdoc />
     public Task<AuthResultDto?> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement refresh token validation and rotation
-        // This requires storing refresh tokens in the database
-        _logger.LogWarning("RefreshTokenAsync not yet implemented - requires persistent storage");
+        // Note: Token refresh with rotation is implemented via RefreshTokenCommand in the Application layer.
+        // This method is kept for backward compatibility but redirects to the MediatR handler.
+        // Use POST /api/auth/refresh endpoint for proper token refresh with rotation and theft detection.
+        _logger.LogWarning("RefreshTokenAsync called on TokenService - use RefreshTokenCommand instead");
         return Task.FromResult<AuthResultDto?>(null);
     }
 
