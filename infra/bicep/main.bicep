@@ -423,11 +423,15 @@ module appService 'br/public:avm/res/web/site:0.19.4' = {
           Cors__AllowedOrigins__1: 'http://localhost:4200'
           Cors__AllowedOrigins__2: 'https://localhost:4200'
           // Redis cache for distributed session/cache (WebAuthn sessions, etc.)
-          // Note: Redis connection string must be configured post-deployment via Key Vault:
+          // For production: Configure Redis connection string via Key Vault:
           // 1. Get Redis primary access key from Azure Portal (Redis Cache > Access keys)
           // 2. Store in Key Vault as 'redis-connection-string' with value:
           //    <hostname>:6380,password=<primary-key>,ssl=True,abortConnect=False
-          // 3. Add app setting: Redis__ConnectionString=@Microsoft.KeyVault(VaultName=kv-name;SecretName=redis-connection-string)
+          // 3. Update Redis__ConnectionString below to: @Microsoft.KeyVault(VaultName=kv-name;SecretName=redis-connection-string)
+          //
+          // For dev/staging: Empty connection string triggers in-memory cache fallback
+          // This is acceptable for single-instance deployments
+          Redis__ConnectionString: '' // Empty = use in-memory cache; override with Key Vault ref for production scaling
           Redis__HostName: redis.outputs.hostName
           Redis__SslPort: string(redis.outputs.sslPort)
           Redis__InstanceName: 'luminous-${environment}:'
