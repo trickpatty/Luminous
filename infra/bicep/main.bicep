@@ -193,6 +193,12 @@ module cosmosDb 'br/public:avm/res/document-db/database-account:0.18.0' = {
     disableLocalAuthentication: true
     capabilitiesToAdd: cosmosDbServerless ? ['EnableServerless'] : []
     defaultConsistencyLevel: cosmosDbConsistencyLevel
+    // Network configuration: Allow Azure services and Portal access
+    // https://github.com/Azure/bicep-registry-modules/tree/main/avm/res/document-db/database-account
+    networkRestrictions: {
+      publicNetworkAccess: 'Enabled'
+      networkAclBypass: 'AzureServices' // Allows Azure services (App Service, Functions) and Azure Portal
+    }
     failoverLocations: [
       {
         locationName: location
