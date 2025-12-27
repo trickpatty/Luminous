@@ -1,7 +1,7 @@
 # Azure Infrastructure Guide
 
 > **Document Version:** 1.0.0
-> **Last Updated:** 2025-12-21
+> **Last Updated:** 2025-12-27
 > **Status:** Active
 > **TOGAF Phase:** Phase D (Technology Architecture)
 
@@ -269,18 +269,18 @@ All resources are deployed using AVMs directly from the public Bicep registry (`
 
 | Resource | AVM Reference |
 |----------|---------------|
-| Log Analytics | `br/public:avm/res/operational-insights/workspace:0.9.0` |
-| App Insights | `br/public:avm/res/insights/component:0.4.1` |
-| Key Vault | `br/public:avm/res/key-vault/vault:0.9.0` |
-| App Configuration | `br/public:avm/res/app-configuration/configuration-store:0.5.1` |
-| Cosmos DB | `br/public:avm/res/document-db/database-account:0.8.1` |
-| Storage Account | `br/public:avm/res/storage/storage-account:0.14.3` |
-| Redis Cache | `br/public:avm/res/cache/redis:0.8.0` |
-| Service Bus | `br/public:avm/res/service-bus/namespace:0.10.0` |
-| SignalR | `br/public:avm/res/signal-r-service/signal-r:0.5.0` |
-| App Service Plan | `br/public:avm/res/web/serverfarm:0.3.0` |
-| App Service/Functions | `br/public:avm/res/web/site:0.11.1` |
-| Static Web App | `br/public:avm/res/web/static-site:0.6.0` |
+| Log Analytics | `br/public:avm/res/operational-insights/workspace:0.14.2` |
+| App Insights | `br/public:avm/res/insights/component:0.7.1` |
+| Key Vault | `br/public:avm/res/key-vault/vault:0.13.3` |
+| App Configuration | `br/public:avm/res/app-configuration/configuration-store:0.9.2` |
+| Cosmos DB | `br/public:avm/res/document-db/database-account:0.18.0` |
+| Storage Account | `br/public:avm/res/storage/storage-account:0.31.0` |
+| Redis Cache | `br/public:avm/res/cache/redis:0.16.4` |
+| Service Bus | `br/public:avm/res/service-bus/namespace:0.16.0` |
+| SignalR | `br/public:avm/res/signal-r-service/signal-r:0.10.1` |
+| App Service Plan | `br/public:avm/res/web/serverfarm:0.5.0` |
+| App Service/Functions | `br/public:avm/res/web/site:0.19.4` |
+| Static Web App | `br/public:avm/res/web/static-site:0.9.3` |
 
 ### Quick Start
 
@@ -613,3 +613,4 @@ az monitor app-insights query \
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0.0 | 2025-12-21 | Luminous Team | Initial infrastructure documentation |
+| 1.1.0 | 2025-12-27 | Luminous Team | Updated AVM module versions to latest |
