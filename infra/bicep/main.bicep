@@ -407,24 +407,10 @@ resource acsConnectionStringSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01
   dependsOn: [keyVault, communicationServices]
 }
 
-// Reference the Email Service domain to get the mail-from domain
+// Reference the Email Service domain to get the mail-from domain for sender address
 resource emailDomainRef 'Microsoft.Communication/emailServices/domains@2023-04-01' existing = {
   name: '${names.emailService}/AzureManagedDomain'
-}
-
-// Store Email sender address in Key Vault
-// Azure-managed domain sender format: DoNotReply@<mail-from-domain>
-resource emailSenderAddressSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-  parent: keyVaultRef
-  name: 'email-sender-address'
-  properties: {
-    value: 'DoNotReply@${emailDomainRef.properties.mailFromSenderDomain}'
-    contentType: 'text/plain'
-    attributes: {
-      enabled: true
-    }
-  }
-  dependsOn: [keyVault, emailService]
+  dependsOn: [emailService]
 }
 
 // Generate and store JWT secret key in Key Vault
@@ -523,10 +509,10 @@ resource appServiceSettings 'Microsoft.Web/sites/config@2023-12-01' = {
     Redis__ConnectionString: '@Microsoft.KeyVault(VaultName=${names.keyVault};SecretName=redis-connection-string)'
     Redis__InstanceName: 'luminous-${environment}:'
     // Email settings - Azure deployments use ACS, local dev uses console logging
-    // Connection string and sender address are securely stored in Key Vault
     Email__UseDevelopmentMode: 'false'
     Email__ConnectionString: '@Microsoft.KeyVault(VaultName=${names.keyVault};SecretName=acs-connection-string)'
-    Email__SenderAddress: '@Microsoft.KeyVault(VaultName=${names.keyVault};SecretName=email-sender-address)'
+    // Sender address format: DoNotReply@<azure-managed-domain>.azurecomm.net
+    Email__SenderAddress: 'DoNotReply@${emailDomainRef.properties.mailFromSenderDomain}'
     Email__SenderName: 'Luminous'
     Email__BaseUrl: 'https://${staticWebApp.outputs.defaultHostname}'
     Email__HelpUrl: 'https://${staticWebApp.outputs.defaultHostname}/help'
@@ -546,8 +532,8 @@ resource appServiceSettings 'Microsoft.Web/sites/config@2023-12-01' = {
     keyVault
     redis // Ensures Redis secret is exported to Key Vault
     acsConnectionStringSecret
-    emailSenderAddressSecret
     jwtSecretKeySecret
+    emailDomainRef
   ]
 }
 
