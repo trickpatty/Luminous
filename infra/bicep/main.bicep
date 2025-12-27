@@ -471,6 +471,7 @@ module appService 'br/public:avm/res/web/site:0.19.4' = {
     tags: tags
     kind: 'app,linux'
     serverFarmResourceId: appServicePlan.outputs.resourceId
+    appInsightsResourceId: appInsights.outputs.resourceId
     managedIdentities: {
       systemAssigned: true
     }
@@ -545,6 +546,7 @@ module functionAppSync 'br/public:avm/res/web/site:0.19.4' = {
     tags: tags
     kind: 'functionapp,linux'
     serverFarmResourceId: appServicePlan.outputs.resourceId
+    appInsightsResourceId: appInsights.outputs.resourceId
     managedIdentities: {
       systemAssigned: true
     }
@@ -580,6 +582,7 @@ module functionAppImport 'br/public:avm/res/web/site:0.19.4' = {
     tags: tags
     kind: 'functionapp,linux'
     serverFarmResourceId: appServicePlan.outputs.resourceId
+    appInsightsResourceId: appInsights.outputs.resourceId
     managedIdentities: {
       systemAssigned: true
     }
