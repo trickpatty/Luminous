@@ -322,7 +322,7 @@ module appService 'br/public:avm/res/web/site:0.19.4' = {
       systemAssigned: true
     }
     siteConfig: {
-      linuxFxVersion: 'DOTNETCORE|9.0'
+      linuxFxVersion: 'DOTNETCORE|10.0'
       alwaysOn: appServiceSkuName != 'F1' && appServiceSkuName != 'D1'
       http20Enabled: true
       minTlsVersion: '1.2'
@@ -363,7 +363,7 @@ module functionAppSync 'br/public:avm/res/web/site:0.19.4' = {
       systemAssigned: true
     }
     siteConfig: {
-      linuxFxVersion: 'DOTNET-ISOLATED|9.0'
+      linuxFxVersion: 'DOTNET-ISOLATED|10.0'
       use32BitWorkerProcess: false
       ftpsState: 'Disabled'
       minTlsVersion: '1.2'
@@ -397,7 +397,7 @@ module functionAppImport 'br/public:avm/res/web/site:0.19.4' = {
       systemAssigned: true
     }
     siteConfig: {
-      linuxFxVersion: 'DOTNET-ISOLATED|9.0'
+      linuxFxVersion: 'DOTNET-ISOLATED|10.0'
       use32BitWorkerProcess: false
       ftpsState: 'Disabled'
       minTlsVersion: '1.2'
