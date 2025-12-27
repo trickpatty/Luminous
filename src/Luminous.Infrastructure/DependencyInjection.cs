@@ -34,6 +34,8 @@ public static class DependencyInjection
         services.AddScoped<IEventRepository, EventRepository>();
         services.AddScoped<IChoreRepository, ChoreRepository>();
         services.AddScoped<ICredentialRepository, CredentialRepository>();
+        services.AddScoped<IOtpTokenRepository, OtpTokenRepository>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
         // Register Unit of Work
         services.AddScoped<IUnitOfWork, UnitOfWork>();

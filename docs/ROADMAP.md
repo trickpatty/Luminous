@@ -1,7 +1,7 @@
 # Luminous Development Roadmap
 
-> **Document Version:** 3.0.0
-> **Last Updated:** 2025-12-24
+> **Document Version:** 3.1.0
+> **Last Updated:** 2025-12-27
 > **Status:** Active
 > **TOGAF Phase:** Phase E/F (Opportunities, Solutions & Migration Planning)
 
@@ -126,7 +126,7 @@ Establish the Azure infrastructure, .NET backend, Angular frontend, and developm
   - *Implemented: main.bicep using 13 AVMs directly from the public Bicep registry (br/public:avm/res/...)*
   - *Resources: resource-group, log-analytics, app-insights, key-vault, app-configuration, cosmos-db, storage-account, redis-cache, service-bus, signalr, app-service-plan, web-site, static-web-app*
 - [x] **0.1.2** Configure Cosmos DB with required containers
-  - *Implemented: 11 containers via AVM (families, users, events, chores, devices, routines, lists, meals, completions, invitations, credentials)*
+  - *Implemented: 13 containers via AVM (families, users, events, chores, devices, routines, lists, meals, completions, invitations, credentials, otptokens, refreshtokens)*
 - [x] **0.1.3** Set up in-house identity service with WebAuthn/passkey support
   - *Implemented: credentials container in Cosmos DB for WebAuthn credential storage; App Service configured for passwordless auth integration*
 - [x] **0.1.4** Configure App Service for .NET API
@@ -338,6 +338,38 @@ Deliver the multi-tenant platform with user registration, family creation, devic
 - [x] InvitationsController with full CRUD operations
 - [x] Unit tests for Invitation entity
 - [x] Authorization: FamilyAdmin required for invitation/role management
+
+#### 1.3.5 Authentication Endpoints ✅ COMPLETED
+
+- [x] **OTP Authentication**
+  - *Implemented: RequestOtpCommand, VerifyOtpCommand with rate limiting*
+  - *OtpToken entity and repository with email partitioning*
+  - *DevelopmentEmailService for local testing*
+  - *APIs: POST /api/auth/otp/request, POST /api/auth/otp/verify*
+- [x] **Passkey/WebAuthn Authentication**
+  - *Implemented: PasskeyRegisterStartCommand, PasskeyRegisterCompleteCommand*
+  - *Implemented: PasskeyAuthenticateStartCommand, PasskeyAuthenticateCompleteCommand*
+  - *WebAuthnService with FIDO2 library integration*
+  - *Session management via distributed cache*
+  - *APIs: POST /api/auth/passkey/register/start, POST /api/auth/passkey/register/complete*
+  - *APIs: POST /api/auth/passkey/authenticate/start, POST /api/auth/passkey/authenticate/complete*
+- [x] **Passkey Management**
+  - *Implemented: ListPasskeysQuery, DeletePasskeyCommand*
+  - *APIs: GET /api/auth/passkey/list, DELETE /api/auth/passkey/{id}*
+- [x] **Token Refresh**
+  - *Implemented: RefreshTokenCommand with token rotation*
+  - *RefreshToken entity and repository with theft detection*
+  - *API: POST /api/auth/refresh*
+
+**Auth deliverables:**
+- [x] OtpToken and RefreshToken domain entities
+- [x] IOtpTokenRepository and IRefreshTokenRepository interfaces
+- [x] OtpTokenRepository and RefreshTokenRepository CosmosDB implementations
+- [x] IEmailService and IWebAuthnService application interfaces
+- [x] WebAuthnService with FIDO2 v4.0 integration
+- [x] DevelopmentEmailService for local testing (logs OTPs to console)
+- [x] Updated AuthController with all auth endpoints
+- [x] CosmosDB containers: otptokens, refreshtokens
 
 #### 1.4 Web Dashboard MVP ✅ COMPLETED
 
@@ -772,3 +804,4 @@ These can be developed in parallel after Phase 0:
 | 2.8.0 | 2025-12-23 | Luminous Team | Phase 1.2 Device Linking completed |
 | 2.9.0 | 2025-12-24 | Luminous Team | Phase 1.3 Family Member Management completed |
 | 3.0.0 | 2025-12-24 | Luminous Team | Phase 1.4 Web Dashboard MVP completed; Phase 1 complete |
+| 3.1.0 | 2025-12-27 | Luminous Team | Phase 1.3.5 Authentication Endpoints completed (OTP, Passkey, Token Refresh) |

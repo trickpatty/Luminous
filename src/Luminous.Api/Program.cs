@@ -1,4 +1,5 @@
 using System.Text;
+using Fido2NetLib;
 using Luminous.Api.Configuration;
 using Luminous.Api.Middleware;
 using Luminous.Api.Services;
@@ -32,6 +33,24 @@ builder.Services.Configure<JwtSettings>(
 
 // Register local JWT token service (for development)
 builder.Services.AddScoped<ILocalJwtTokenService, LocalJwtTokenService>();
+
+// Register email service (development version logs to console)
+builder.Services.AddScoped<IEmailService, DevelopmentEmailService>();
+
+// Register WebAuthn/FIDO2 service
+builder.Services.AddDistributedMemoryCache(); // Use Redis in production
+builder.Services.AddScoped<IWebAuthnService, WebAuthnService>();
+
+// Configure FIDO2
+var fido2Config = new Fido2Configuration
+{
+    ServerDomain = builder.Configuration["Fido2:ServerDomain"] ?? "localhost",
+    ServerName = builder.Configuration["Fido2:ServerName"] ?? "Luminous",
+    Origins = builder.Configuration.GetSection("Fido2:Origins").Get<HashSet<string>>()
+        ?? ["http://localhost:4200", "http://localhost:5000", "https://localhost:5001"]
+};
+builder.Services.AddSingleton(fido2Config);
+builder.Services.AddSingleton<IFido2>(new Fido2(fido2Config));
 
 // Configure authentication
 var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()

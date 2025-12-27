@@ -122,6 +122,8 @@ var cosmosContainers = [
   { name: 'completions', partitionKeyPath: '/familyId' }
   { name: 'invitations', partitionKeyPath: '/familyId' }
   { name: 'credentials', partitionKeyPath: '/userId' }
+  { name: 'otptokens', partitionKeyPath: '/email' }
+  { name: 'refreshtokens', partitionKeyPath: '/userId' }
 ]
 
 // =============================================================================

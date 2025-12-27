@@ -20,6 +20,8 @@ public sealed class UnitOfWork : IUnitOfWork
     private IChoreRepository? _chores;
     private ICredentialRepository? _credentials;
     private IInvitationRepository? _invitations;
+    private IOtpTokenRepository? _otpTokens;
+    private IRefreshTokenRepository? _refreshTokens;
 
     public UnitOfWork(
         CosmosDbContext context,
@@ -50,6 +52,12 @@ public sealed class UnitOfWork : IUnitOfWork
 
     public IInvitationRepository Invitations => _invitations ??=
         new InvitationRepository(_context, _loggerFactory.CreateLogger<InvitationRepository>());
+
+    public IOtpTokenRepository OtpTokens => _otpTokens ??=
+        new OtpTokenRepository(_context, _loggerFactory.CreateLogger<OtpTokenRepository>());
+
+    public IRefreshTokenRepository RefreshTokens => _refreshTokens ??=
+        new RefreshTokenRepository(_context, _loggerFactory.CreateLogger<RefreshTokenRepository>());
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
