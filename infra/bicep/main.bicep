@@ -190,7 +190,7 @@ module cosmosDb 'br/public:avm/res/document-db/database-account:0.18.0' = {
     tags: tags
     // Disable key-based authentication - enforce AAD/RBAC auth only
     // TOGAF Principle: DP-4 (Data Minimization), Security best practice
-    disableLocalAuth: true
+    disableLocalAuthentication: true
     capabilitiesToAdd: cosmosDbServerless ? ['EnableServerless'] : []
     defaultConsistencyLevel: cosmosDbConsistencyLevel
     failoverLocations: [
@@ -210,19 +210,19 @@ module cosmosDb 'br/public:avm/res/document-db/database-account:0.18.0' = {
       }
     ]
     // Grant managed identities data plane access using AAD authentication
-    // Uses Cosmos DB Built-in Data Contributor role (ID: 00000000-0000-0000-0000-000000000002)
+    // Cosmos DB Built-in Data Contributor role: 00000000-0000-0000-0000-000000000002
     sqlRoleAssignments: [
       {
         principalId: appService.outputs.systemAssignedMIPrincipalId
-        roleDefinitionIdOrName: 'Cosmos DB Built-in Data Contributor'
+        roleDefinitionId: '00000000-0000-0000-0000-000000000002'
       }
       {
         principalId: functionAppSync.outputs.systemAssignedMIPrincipalId
-        roleDefinitionIdOrName: 'Cosmos DB Built-in Data Contributor'
+        roleDefinitionId: '00000000-0000-0000-0000-000000000002'
       }
       {
         principalId: functionAppImport.outputs.systemAssignedMIPrincipalId
-        roleDefinitionIdOrName: 'Cosmos DB Built-in Data Contributor'
+        roleDefinitionId: '00000000-0000-0000-0000-000000000002'
       }
     ]
   }
