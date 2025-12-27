@@ -186,7 +186,7 @@ module cosmosDb 'br/public:avm/res/document-db/database-account:0.18.0' = {
     tags: tags
     capabilitiesToAdd: cosmosDbServerless ? ['EnableServerless'] : []
     defaultConsistencyLevel: cosmosDbConsistencyLevel
-    locations: [
+    failoverLocations: [
       {
         locationName: location
         failoverPriority: 0
@@ -305,7 +305,7 @@ module appServicePlan 'br/public:avm/res/web/serverfarm:0.5.0' = {
     tags: tags
     skuName: appServiceSkuName
     skuCapacity: 1
-    kind: 'Linux'
+    kind: 'linux'
     reserved: true
   }
 }
