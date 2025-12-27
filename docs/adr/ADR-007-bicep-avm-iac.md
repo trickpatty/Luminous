@@ -152,25 +152,34 @@ infra/
 ### AVM Usage Example
 
 ```bicep
-// Using Azure Verified Module for App Service
-module appService 'br/public:avm/res/web/site:0.3.0' = {
+// Using Azure Verified Module for App Service (v0.19.4+)
+module appService 'br/public:avm/res/web/site:0.19.4' = {
   name: 'appServiceDeployment'
   params: {
     name: 'luminous-api-${environment}'
     location: location
-    kind: 'app'
+    kind: 'app,linux'
     serverFarmResourceId: appServicePlan.outputs.resourceId
     managedIdentities: {
       systemAssigned: true
     }
-    appSettingsKeyValuePairs: {
-      AZURE_COSMOS_ENDPOINT: cosmosDb.outputs.endpoint
+    siteConfig: {
+      linuxFxVersion: 'DOTNETCORE|10.0'
     }
+    // App settings use the configs array (replaces appSettingsKeyValuePairs)
+    configs: [
+      {
+        name: 'appsettings'
+        properties: {
+          AZURE_COSMOS_ENDPOINT: cosmosDb.outputs.endpoint
+        }
+      }
+    ]
   }
 }
 
 // Using AVM for Cosmos DB
-module cosmosDb 'br/public:avm/res/document-db/database-account:0.6.0' = {
+module cosmosDb 'br/public:avm/res/document-db/database-account:0.18.0' = {
   name: 'cosmosDbDeployment'
   params: {
     name: 'luminous-cosmos-${environment}'
@@ -181,11 +190,11 @@ module cosmosDb 'br/public:avm/res/document-db/database-account:0.6.0' = {
         containers: [
           {
             name: 'families'
-            partitionKeyPath: '/id'
+            partitionKeyPaths: ['/id']
           }
           {
             name: 'users'
-            partitionKeyPath: '/familyId'
+            partitionKeyPaths: ['/familyId']
           }
         ]
       }

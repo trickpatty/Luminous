@@ -10,6 +10,7 @@ namespace Luminous.Infrastructure.Persistence;
 public sealed class UnitOfWork : IUnitOfWork
 {
     private readonly CosmosDbContext _context;
+    private readonly ILoggerFactory _loggerFactory;
     private readonly ILogger<UnitOfWork> _logger;
 
     private IFamilyRepository? _families;
@@ -25,29 +26,30 @@ public sealed class UnitOfWork : IUnitOfWork
         ILoggerFactory loggerFactory)
     {
         _context = context;
+        _loggerFactory = loggerFactory;
         _logger = loggerFactory.CreateLogger<UnitOfWork>();
     }
 
     public IFamilyRepository Families => _families ??=
-        new FamilyRepository(_context, _logger as ILogger<FamilyRepository> ?? throw new InvalidOperationException());
+        new FamilyRepository(_context, _loggerFactory.CreateLogger<FamilyRepository>());
 
     public IUserRepository Users => _users ??=
-        new UserRepository(_context, _logger as ILogger<UserRepository> ?? throw new InvalidOperationException());
+        new UserRepository(_context, _loggerFactory.CreateLogger<UserRepository>());
 
     public IDeviceRepository Devices => _devices ??=
-        new DeviceRepository(_context, _logger as ILogger<DeviceRepository> ?? throw new InvalidOperationException());
+        new DeviceRepository(_context, _loggerFactory.CreateLogger<DeviceRepository>());
 
     public IEventRepository Events => _events ??=
-        new EventRepository(_context, _logger as ILogger<EventRepository> ?? throw new InvalidOperationException());
+        new EventRepository(_context, _loggerFactory.CreateLogger<EventRepository>());
 
     public IChoreRepository Chores => _chores ??=
-        new ChoreRepository(_context, _logger as ILogger<ChoreRepository> ?? throw new InvalidOperationException());
+        new ChoreRepository(_context, _loggerFactory.CreateLogger<ChoreRepository>());
 
     public ICredentialRepository Credentials => _credentials ??=
-        new CredentialRepository(_context, _logger as ILogger<CredentialRepository> ?? throw new InvalidOperationException());
+        new CredentialRepository(_context, _loggerFactory.CreateLogger<CredentialRepository>());
 
     public IInvitationRepository Invitations => _invitations ??=
-        new InvitationRepository(_context, _logger as ILogger<InvitationRepository> ?? throw new InvalidOperationException());
+        new InvitationRepository(_context, _loggerFactory.CreateLogger<InvitationRepository>());
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

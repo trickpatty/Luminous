@@ -124,7 +124,7 @@ var cosmosContainers = [
 // Monitoring (Deploy first - other resources depend on these)
 // =============================================================================
 
-module logAnalytics 'br/public:avm/res/operational-insights/workspace:0.9.0' = {
+module logAnalytics 'br/public:avm/res/operational-insights/workspace:0.14.2' = {
   name: 'deploy-log-analytics'
   params: {
     name: names.logAnalytics
@@ -135,7 +135,7 @@ module logAnalytics 'br/public:avm/res/operational-insights/workspace:0.9.0' = {
   }
 }
 
-module appInsights 'br/public:avm/res/insights/component:0.4.1' = {
+module appInsights 'br/public:avm/res/insights/component:0.7.1' = {
   name: 'deploy-app-insights'
   params: {
     name: names.appInsights
@@ -150,7 +150,7 @@ module appInsights 'br/public:avm/res/insights/component:0.4.1' = {
 // Security
 // =============================================================================
 
-module keyVault 'br/public:avm/res/key-vault/vault:0.9.0' = {
+module keyVault 'br/public:avm/res/key-vault/vault:0.13.3' = {
   name: 'deploy-key-vault'
   params: {
     name: names.keyVault
@@ -164,7 +164,7 @@ module keyVault 'br/public:avm/res/key-vault/vault:0.9.0' = {
   }
 }
 
-module appConfig 'br/public:avm/res/app-configuration/configuration-store:0.5.1' = {
+module appConfig 'br/public:avm/res/app-configuration/configuration-store:0.9.2' = {
   name: 'deploy-app-config'
   params: {
     name: names.appConfig
@@ -178,7 +178,7 @@ module appConfig 'br/public:avm/res/app-configuration/configuration-store:0.5.1'
 // Data Services
 // =============================================================================
 
-module cosmosDb 'br/public:avm/res/document-db/database-account:0.8.1' = {
+module cosmosDb 'br/public:avm/res/document-db/database-account:0.18.0' = {
   name: 'deploy-cosmos-db'
   params: {
     name: names.cosmosDb
@@ -186,7 +186,7 @@ module cosmosDb 'br/public:avm/res/document-db/database-account:0.8.1' = {
     tags: tags
     capabilitiesToAdd: cosmosDbServerless ? ['EnableServerless'] : []
     defaultConsistencyLevel: cosmosDbConsistencyLevel
-    locations: [
+    failoverLocations: [
       {
         locationName: location
         failoverPriority: 0
@@ -205,7 +205,7 @@ module cosmosDb 'br/public:avm/res/document-db/database-account:0.8.1' = {
   }
 }
 
-module storageAccount 'br/public:avm/res/storage/storage-account:0.14.3' = {
+module storageAccount 'br/public:avm/res/storage/storage-account:0.31.0' = {
   name: 'deploy-storage-account'
   params: {
     name: names.storageAccount
@@ -221,15 +221,13 @@ module storageAccount 'br/public:avm/res/storage/storage-account:0.14.3' = {
         { name: 'imports', publicAccess: 'None' }
         { name: 'exports', publicAccess: 'None' }
       ]
-      deleteRetentionPolicy: {
-        enabled: true
-        days: 7
-      }
+      deleteRetentionPolicyEnabled: true
+      deleteRetentionPolicyDays: 7
     }
   }
 }
 
-module redis 'br/public:avm/res/cache/redis:0.8.0' = {
+module redis 'br/public:avm/res/cache/redis:0.16.4' = {
   name: 'deploy-redis-cache'
   params: {
     name: names.redis
@@ -247,7 +245,7 @@ module redis 'br/public:avm/res/cache/redis:0.8.0' = {
 // Messaging Services
 // =============================================================================
 
-module serviceBus 'br/public:avm/res/service-bus/namespace:0.10.0' = {
+module serviceBus 'br/public:avm/res/service-bus/namespace:0.16.0' = {
   name: 'deploy-service-bus'
   params: {
     name: names.serviceBus
@@ -264,7 +262,7 @@ module serviceBus 'br/public:avm/res/service-bus/namespace:0.10.0' = {
   }
 }
 
-module signalR 'br/public:avm/res/signal-r-service/signal-r:0.5.0' = {
+module signalR 'br/public:avm/res/signal-r-service/signal-r:0.10.1' = {
   name: 'deploy-signalr'
   params: {
     name: names.signalR
@@ -280,117 +278,10 @@ module signalR 'br/public:avm/res/signal-r-service/signal-r:0.5.0' = {
 }
 
 // =============================================================================
-// Compute Services
+// Web Hosting (Static Web App deployed first for CORS configuration)
 // =============================================================================
 
-module appServicePlan 'br/public:avm/res/web/serverfarm:0.3.0' = {
-  name: 'deploy-app-service-plan'
-  params: {
-    name: names.appServicePlan
-    location: location
-    tags: tags
-    skuName: appServiceSkuName
-    skuCapacity: 1
-    kind: 'Linux'
-    reserved: true
-  }
-}
-
-module appService 'br/public:avm/res/web/site:0.11.1' = {
-  name: 'deploy-app-service'
-  params: {
-    name: names.appService
-    location: location
-    tags: tags
-    kind: 'app,linux'
-    serverFarmResourceId: appServicePlan.outputs.resourceId
-    managedIdentities: {
-      systemAssigned: true
-    }
-    siteConfig: {
-      linuxFxVersion: 'DOTNETCORE|9.0'
-      alwaysOn: appServiceSkuName != 'F1' && appServiceSkuName != 'D1'
-      http20Enabled: true
-      minTlsVersion: '1.2'
-      ftpsState: 'Disabled'
-      healthCheckPath: '/health'
-    }
-    httpsOnly: true
-    clientAffinityEnabled: false
-    appSettingsKeyValuePairs: {
-      ASPNETCORE_ENVIRONMENT: environment == 'prd' ? 'Production' : 'Development'
-      APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
-      CosmosDb__Endpoint: cosmosDb.outputs.endpoint
-      CosmosDb__DatabaseName: projectName
-      SignalR__Endpoint: 'https://${signalR.outputs.name}.service.signalr.net'
-      AppConfig__Endpoint: appConfig.outputs.endpoint
-    }
-  }
-}
-
-module functionAppSync 'br/public:avm/res/web/site:0.11.1' = {
-  name: 'deploy-function-app-sync'
-  params: {
-    name: names.functionAppSync
-    location: location
-    tags: tags
-    kind: 'functionapp,linux'
-    serverFarmResourceId: appServicePlan.outputs.resourceId
-    managedIdentities: {
-      systemAssigned: true
-    }
-    siteConfig: {
-      linuxFxVersion: 'DOTNET-ISOLATED|9.0'
-      use32BitWorkerProcess: false
-      ftpsState: 'Disabled'
-      minTlsVersion: '1.2'
-    }
-    httpsOnly: true
-    appSettingsKeyValuePairs: {
-      FUNCTIONS_EXTENSION_VERSION: '~4'
-      FUNCTIONS_WORKER_RUNTIME: 'dotnet-isolated'
-      AzureWebJobsStorage: storageAccount.outputs.primaryBlobEndpoint
-      APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
-      CosmosDb__Endpoint: cosmosDb.outputs.endpoint
-      CosmosDb__DatabaseName: projectName
-    }
-  }
-}
-
-module functionAppImport 'br/public:avm/res/web/site:0.11.1' = {
-  name: 'deploy-function-app-import'
-  params: {
-    name: names.functionAppImport
-    location: location
-    tags: tags
-    kind: 'functionapp,linux'
-    serverFarmResourceId: appServicePlan.outputs.resourceId
-    managedIdentities: {
-      systemAssigned: true
-    }
-    siteConfig: {
-      linuxFxVersion: 'DOTNET-ISOLATED|9.0'
-      use32BitWorkerProcess: false
-      ftpsState: 'Disabled'
-      minTlsVersion: '1.2'
-    }
-    httpsOnly: true
-    appSettingsKeyValuePairs: {
-      FUNCTIONS_EXTENSION_VERSION: '~4'
-      FUNCTIONS_WORKER_RUNTIME: 'dotnet-isolated'
-      AzureWebJobsStorage: storageAccount.outputs.primaryBlobEndpoint
-      APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
-      CosmosDb__Endpoint: cosmosDb.outputs.endpoint
-      CosmosDb__DatabaseName: projectName
-    }
-  }
-}
-
-// =============================================================================
-// Web Hosting
-// =============================================================================
-
-module staticWebApp 'br/public:avm/res/web/static-site:0.6.0' = {
+module staticWebApp 'br/public:avm/res/web/static-site:0.9.3' = {
   name: 'deploy-static-web-app'
   params: {
     name: names.staticWebApp
@@ -402,6 +293,132 @@ module staticWebApp 'br/public:avm/res/web/static-site:0.6.0' = {
   }
 }
 
+// =============================================================================
+// Compute Services
+// =============================================================================
+
+module appServicePlan 'br/public:avm/res/web/serverfarm:0.5.0' = {
+  name: 'deploy-app-service-plan'
+  params: {
+    name: names.appServicePlan
+    location: location
+    tags: tags
+    skuName: appServiceSkuName
+    skuCapacity: 1
+    kind: 'linux'
+    reserved: true
+  }
+}
+
+module appService 'br/public:avm/res/web/site:0.19.4' = {
+  name: 'deploy-app-service'
+  params: {
+    name: names.appService
+    location: location
+    tags: tags
+    kind: 'app,linux'
+    serverFarmResourceId: appServicePlan.outputs.resourceId
+    managedIdentities: {
+      systemAssigned: true
+    }
+    siteConfig: {
+      linuxFxVersion: 'DOTNETCORE|10.0'
+      alwaysOn: appServiceSkuName != 'F1' && appServiceSkuName != 'D1'
+      http20Enabled: true
+      minTlsVersion: '1.2'
+      ftpsState: 'Disabled'
+      healthCheckPath: '/health'
+    }
+    httpsOnly: true
+    clientAffinityEnabled: false
+    configs: [
+      {
+        name: 'appsettings'
+        properties: {
+          ASPNETCORE_ENVIRONMENT: environment == 'prd' ? 'Production' : 'Development'
+          APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
+          CosmosDb__Endpoint: cosmosDb.outputs.endpoint
+          CosmosDb__DatabaseName: projectName
+          SignalR__Endpoint: 'https://${signalR.outputs.name}.service.signalr.net'
+          AppConfig__Endpoint: appConfig.outputs.endpoint
+          // CORS: Allow Static Web App origin for direct API calls
+          Cors__AllowedOrigins__0: 'https://${staticWebApp.outputs.defaultHostname}'
+          Cors__AllowedOrigins__1: 'http://localhost:4200'
+          Cors__AllowedOrigins__2: 'https://localhost:4200'
+        }
+      }
+    ]
+  }
+}
+
+module functionAppSync 'br/public:avm/res/web/site:0.19.4' = {
+  name: 'deploy-function-app-sync'
+  params: {
+    name: names.functionAppSync
+    location: location
+    tags: tags
+    kind: 'functionapp,linux'
+    serverFarmResourceId: appServicePlan.outputs.resourceId
+    managedIdentities: {
+      systemAssigned: true
+    }
+    siteConfig: {
+      linuxFxVersion: 'DOTNET-ISOLATED|10.0'
+      use32BitWorkerProcess: false
+      ftpsState: 'Disabled'
+      minTlsVersion: '1.2'
+    }
+    httpsOnly: true
+    configs: [
+      {
+        name: 'appsettings'
+        properties: {
+          FUNCTIONS_EXTENSION_VERSION: '~4'
+          FUNCTIONS_WORKER_RUNTIME: 'dotnet-isolated'
+          AzureWebJobsStorage: storageAccount.outputs.primaryBlobEndpoint
+          APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
+          CosmosDb__Endpoint: cosmosDb.outputs.endpoint
+          CosmosDb__DatabaseName: projectName
+        }
+      }
+    ]
+  }
+}
+
+module functionAppImport 'br/public:avm/res/web/site:0.19.4' = {
+  name: 'deploy-function-app-import'
+  params: {
+    name: names.functionAppImport
+    location: location
+    tags: tags
+    kind: 'functionapp,linux'
+    serverFarmResourceId: appServicePlan.outputs.resourceId
+    managedIdentities: {
+      systemAssigned: true
+    }
+    siteConfig: {
+      linuxFxVersion: 'DOTNET-ISOLATED|10.0'
+      use32BitWorkerProcess: false
+      ftpsState: 'Disabled'
+      minTlsVersion: '1.2'
+    }
+    httpsOnly: true
+    configs: [
+      {
+        name: 'appsettings'
+        properties: {
+          FUNCTIONS_EXTENSION_VERSION: '~4'
+          FUNCTIONS_WORKER_RUNTIME: 'dotnet-isolated'
+          AzureWebJobsStorage: storageAccount.outputs.primaryBlobEndpoint
+          APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
+          CosmosDb__Endpoint: cosmosDb.outputs.endpoint
+          CosmosDb__DatabaseName: projectName
+        }
+      }
+    ]
+  }
+}
+
 // Link the App Service API as a backend for the Static Web App
 // This enables the SWA to proxy /api/* requests to the App Service
 resource staticWebAppBackend 'Microsoft.Web/staticSites/linkedBackends@2023-12-01' = {
@@ -410,9 +427,7 @@ resource staticWebAppBackend 'Microsoft.Web/staticSites/linkedBackends@2023-12-0
     backendResourceId: appService.outputs.resourceId
     region: location
   }
-  dependsOn: [
-    staticWebApp
-  ]
+  // Note: Implicit dependency on staticWebApp via the name property
 }
 
 // =============================================================================
