@@ -184,6 +184,9 @@ module cosmosDb 'br/public:avm/res/document-db/database-account:0.18.0' = {
     name: names.cosmosDb
     location: location
     tags: tags
+    // Disable key-based authentication - enforce AAD/RBAC auth only
+    // TOGAF Principle: DP-4 (Data Minimization), Security best practice
+    disableLocalAuth: true
     capabilitiesToAdd: cosmosDbServerless ? ['EnableServerless'] : []
     defaultConsistencyLevel: cosmosDbConsistencyLevel
     failoverLocations: [
@@ -428,6 +431,54 @@ resource staticWebAppBackend 'Microsoft.Web/staticSites/linkedBackends@2023-12-0
     region: location
   }
   // Note: Implicit dependency on staticWebApp via the name property
+}
+
+// =============================================================================
+// CosmosDB RBAC Role Assignments
+// =============================================================================
+// Grant managed identities data plane access to CosmosDB using AAD authentication
+// This is required when local (key-based) authentication is disabled on CosmosDB
+
+// Reference the Cosmos DB Built-in Data Contributor role
+// Role ID: 00000000-0000-0000-0000-000000000002
+var cosmosDbDataContributorRoleId = '00000000-0000-0000-0000-000000000002'
+
+// Get a reference to the deployed CosmosDB account for role assignments
+resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' existing = {
+  name: names.cosmosDb
+}
+
+// Assign Cosmos DB Data Contributor role to App Service managed identity
+resource appServiceCosmosDbRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2024-05-15' = {
+  name: guid(cosmosDbAccount.id, appService.outputs.systemAssignedMIPrincipalId, cosmosDbDataContributorRoleId)
+  parent: cosmosDbAccount
+  properties: {
+    principalId: appService.outputs.systemAssignedMIPrincipalId
+    roleDefinitionId: '${cosmosDbAccount.id}/sqlRoleDefinitions/${cosmosDbDataContributorRoleId}'
+    scope: cosmosDbAccount.id
+  }
+}
+
+// Assign Cosmos DB Data Contributor role to Function App (Sync) managed identity
+resource functionAppSyncCosmosDbRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2024-05-15' = {
+  name: guid(cosmosDbAccount.id, functionAppSync.outputs.systemAssignedMIPrincipalId, cosmosDbDataContributorRoleId)
+  parent: cosmosDbAccount
+  properties: {
+    principalId: functionAppSync.outputs.systemAssignedMIPrincipalId
+    roleDefinitionId: '${cosmosDbAccount.id}/sqlRoleDefinitions/${cosmosDbDataContributorRoleId}'
+    scope: cosmosDbAccount.id
+  }
+}
+
+// Assign Cosmos DB Data Contributor role to Function App (Import) managed identity
+resource functionAppImportCosmosDbRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2024-05-15' = {
+  name: guid(cosmosDbAccount.id, functionAppImport.outputs.systemAssignedMIPrincipalId, cosmosDbDataContributorRoleId)
+  parent: cosmosDbAccount
+  properties: {
+    principalId: functionAppImport.outputs.systemAssignedMIPrincipalId
+    roleDefinitionId: '${cosmosDbAccount.id}/sqlRoleDefinitions/${cosmosDbDataContributorRoleId}'
+    scope: cosmosDbAccount.id
+  }
 }
 
 // =============================================================================
