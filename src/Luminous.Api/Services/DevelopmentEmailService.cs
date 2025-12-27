@@ -3,40 +3,32 @@ using Luminous.Application.Common.Interfaces;
 namespace Luminous.Api.Services;
 
 /// <summary>
-/// Development email service that logs emails instead of sending them.
-/// In development, OTPs are logged to the console for easy testing.
+/// Development email service that logs emails to the console instead of sending them.
+/// Uses the same Handlebars templates as production for consistent email content.
 /// </summary>
 public class DevelopmentEmailService : IEmailService
 {
+    private readonly IEmailTemplateService _templateService;
     private readonly ILogger<DevelopmentEmailService> _logger;
 
-    public DevelopmentEmailService(ILogger<DevelopmentEmailService> logger)
+    public DevelopmentEmailService(
+        IEmailTemplateService templateService,
+        ILogger<DevelopmentEmailService> logger)
     {
+        _templateService = templateService;
         _logger = logger;
     }
 
     public Task SendOtpAsync(string email, string code, CancellationToken cancellationToken = default)
     {
+        var htmlContent = _templateService.RenderOtpEmail(email, code, 10);
+
         _logger.LogInformation(
             "📧 [DEV EMAIL] OTP Code for {Email}: {Code}",
             email,
             code);
 
-        _logger.LogInformation(
-            """
-            ═══════════════════════════════════════════════════════════════
-            Development Email - OTP Authentication
-            ═══════════════════════════════════════════════════════════════
-            To: {Email}
-            Subject: Your Luminous Login Code
-
-            Your one-time password is: {Code}
-
-            This code expires in 10 minutes.
-            ═══════════════════════════════════════════════════════════════
-            """,
-            email,
-            code);
+        LogEmailContent("Your Luminous Login Code", email, htmlContent);
 
         return Task.CompletedTask;
     }
@@ -48,25 +40,20 @@ public class DevelopmentEmailService : IEmailService
         string invitationCode,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation(
-            """
-            ═══════════════════════════════════════════════════════════════
-            Development Email - Family Invitation
-            ═══════════════════════════════════════════════════════════════
-            To: {Email}
-            Subject: You've been invited to join {FamilyName} on Luminous
-
-            {InviterName} has invited you to join their family on Luminous!
-
-            Use this invitation code to join: {InvitationCode}
-
-            This invitation expires in 7 days.
-            ═══════════════════════════════════════════════════════════════
-            """,
+        var htmlContent = _templateService.RenderInvitationEmail(
             email,
-            familyName,
             inviterName,
-            invitationCode);
+            familyName,
+            invitationCode,
+            null,
+            DateTime.UtcNow.AddDays(7));
+
+        _logger.LogInformation(
+            "📧 [DEV EMAIL] Invitation sent to {Email} for family {FamilyName}",
+            email,
+            familyName);
+
+        LogEmailContent($"You've been invited to join {familyName} on Luminous", email, htmlContent);
 
         return Task.CompletedTask;
     }
@@ -77,30 +64,32 @@ public class DevelopmentEmailService : IEmailService
         string familyName,
         CancellationToken cancellationToken = default)
     {
+        var htmlContent = _templateService.RenderWelcomeEmail(email, displayName, familyName);
+
         _logger.LogInformation(
-            """
-            ═══════════════════════════════════════════════════════════════
-            Development Email - Welcome to Luminous
-            ═══════════════════════════════════════════════════════════════
-            To: {Email}
-            Subject: Welcome to {FamilyName} on Luminous!
+            "📧 [DEV EMAIL] Welcome email sent to {Email}",
+            email);
 
-            Hi {DisplayName}!
-
-            Welcome to Luminous! You've successfully joined {FamilyName}.
-
-            Get started by:
-            1. Setting up your profile
-            2. Adding your first calendar
-            3. Creating chores and routines
-
-            Happy organizing!
-            ═══════════════════════════════════════════════════════════════
-            """,
-            email,
-            familyName,
-            displayName);
+        LogEmailContent($"Welcome to {familyName} on Luminous!", email, htmlContent);
 
         return Task.CompletedTask;
+    }
+
+    private void LogEmailContent(string subject, string toEmail, string htmlContent)
+    {
+        _logger.LogDebug(
+            """
+            ═══════════════════════════════════════════════════════════════
+            Development Email
+            ═══════════════════════════════════════════════════════════════
+            To: {ToEmail}
+            Subject: {Subject}
+
+            [HTML Content - {Length} characters]
+            ═══════════════════════════════════════════════════════════════
+            """,
+            toEmail,
+            subject,
+            htmlContent.Length);
     }
 }

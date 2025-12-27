@@ -31,11 +31,25 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.Configure<JwtSettings>(
     builder.Configuration.GetSection(JwtSettings.SectionName));
 
+// Configure Email settings
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection(EmailSettings.SectionName));
+
 // Register local JWT token service (for development)
 builder.Services.AddScoped<ILocalJwtTokenService, LocalJwtTokenService>();
 
-// Register email service (development version logs to console)
-builder.Services.AddScoped<IEmailService, DevelopmentEmailService>();
+// Register email template service
+builder.Services.AddSingleton<IEmailTemplateService, EmailTemplateService>();
+
+// Register email service (DevelopmentEmailService in dev logs to console, AzureEmailService in prod sends via ACS)
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddScoped<IEmailService, DevelopmentEmailService>();
+}
+else
+{
+    builder.Services.AddScoped<IEmailService, AzureEmailService>();
+}
 
 // Register WebAuthn/FIDO2 service
 builder.Services.AddDistributedMemoryCache(); // Use Redis in production

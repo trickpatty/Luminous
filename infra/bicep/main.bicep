@@ -99,6 +99,7 @@ var names = {
   serviceBus: 'sb-${namingPrefix}-${uniqueSuffix}'
   redis: 'redis-${namingPrefix}-${uniqueSuffix}'
   staticWebApp: 'stapp-${namingPrefix}-${uniqueSuffix}'
+  communicationServices: 'acs-${namingPrefix}-${uniqueSuffix}'
   // Resource group scoped (no suffix needed)
   appServicePlan: 'asp-${namingPrefix}'
   logAnalytics: 'log-${namingPrefix}'
@@ -309,6 +310,20 @@ module signalR 'br/public:avm/res/signal-r-service/signal-r:0.10.1' = {
 }
 
 // =============================================================================
+// Communication Services (Email)
+// =============================================================================
+
+module communicationServices 'br/public:avm/res/communication/communication-service:0.4.2' = {
+  name: 'deploy-communication-services'
+  params: {
+    name: names.communicationServices
+    location: 'global' // ACS is a global service
+    tags: tags
+    dataLocation: 'United States' // Data residency
+  }
+}
+
+// =============================================================================
 // Web Hosting (Static Web App deployed first for CORS configuration)
 // =============================================================================
 
@@ -496,3 +511,6 @@ output serviceBusNamespace string = serviceBus.outputs.name
 // Monitoring
 output appInsightsConnectionString string = appInsights.outputs.connectionString
 output logAnalyticsWorkspaceId string = logAnalytics.outputs.resourceId
+
+// Communication Services
+output communicationServicesName string = communicationServices.outputs.name

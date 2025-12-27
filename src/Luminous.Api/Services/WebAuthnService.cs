@@ -62,7 +62,7 @@ public class WebAuthnService : IWebAuthnService
             AttestationConveyancePreference.None);
 
         // Store the options in cache for verification later
-        var sessionId = Guid.NewGuid().ToString();
+        var sessionId = Nanoid.Nanoid.Generate(size: 21);
         var sessionData = new WebAuthnSession
         {
             UserId = userId,
@@ -194,7 +194,7 @@ public class WebAuthnService : IWebAuthnService
             UserVerificationRequirement.Preferred);
 
         // Store options in cache
-        var sessionId = Guid.NewGuid().ToString();
+        var sessionId = Nanoid.Nanoid.Generate(size: 21);
         var sessionData = new WebAuthnSession
         {
             UserId = userId,
