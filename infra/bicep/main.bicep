@@ -105,6 +105,10 @@ var names = {
   appInsights: 'appi-${namingPrefix}'
 }
 
+// Constructed CosmosDB endpoint to avoid circular dependency with role assignments
+// This allows us to use sqlRoleAssignments in the CosmosDB module
+var cosmosDbEndpoint = 'https://${names.cosmosDb}.documents.azure.com:443/'
+
 // Cosmos DB container configurations for multi-tenant data isolation
 var cosmosContainers = [
   { name: 'families', partitionKeyPath: '/id' }
@@ -203,6 +207,22 @@ module cosmosDb 'br/public:avm/res/document-db/database-account:0.18.0' = {
           name: container.name
           paths: [container.partitionKeyPath]
         }]
+      }
+    ]
+    // Grant managed identities data plane access using AAD authentication
+    // Uses Cosmos DB Built-in Data Contributor role (ID: 00000000-0000-0000-0000-000000000002)
+    sqlRoleAssignments: [
+      {
+        principalId: appService.outputs.systemAssignedMIPrincipalId
+        roleDefinitionIdOrName: 'Cosmos DB Built-in Data Contributor'
+      }
+      {
+        principalId: functionAppSync.outputs.systemAssignedMIPrincipalId
+        roleDefinitionIdOrName: 'Cosmos DB Built-in Data Contributor'
+      }
+      {
+        principalId: functionAppImport.outputs.systemAssignedMIPrincipalId
+        roleDefinitionIdOrName: 'Cosmos DB Built-in Data Contributor'
       }
     ]
   }
@@ -340,7 +360,7 @@ module appService 'br/public:avm/res/web/site:0.19.4' = {
         properties: {
           ASPNETCORE_ENVIRONMENT: environment == 'prd' ? 'Production' : 'Development'
           APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
-          CosmosDb__AccountEndpoint: cosmosDb.outputs.endpoint
+          CosmosDb__AccountEndpoint: cosmosDbEndpoint
           CosmosDb__DatabaseName: projectName
           SignalR__Endpoint: 'https://${signalR.outputs.name}.service.signalr.net'
           AppConfig__Endpoint: appConfig.outputs.endpoint
@@ -380,7 +400,7 @@ module functionAppSync 'br/public:avm/res/web/site:0.19.4' = {
           FUNCTIONS_WORKER_RUNTIME: 'dotnet-isolated'
           AzureWebJobsStorage: storageAccount.outputs.primaryBlobEndpoint
           APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
-          CosmosDb__AccountEndpoint: cosmosDb.outputs.endpoint
+          CosmosDb__AccountEndpoint: cosmosDbEndpoint
           CosmosDb__DatabaseName: projectName
         }
       }
@@ -414,7 +434,7 @@ module functionAppImport 'br/public:avm/res/web/site:0.19.4' = {
           FUNCTIONS_WORKER_RUNTIME: 'dotnet-isolated'
           AzureWebJobsStorage: storageAccount.outputs.primaryBlobEndpoint
           APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
-          CosmosDb__AccountEndpoint: cosmosDb.outputs.endpoint
+          CosmosDb__AccountEndpoint: cosmosDbEndpoint
           CosmosDb__DatabaseName: projectName
         }
       }
@@ -434,61 +454,13 @@ resource staticWebAppBackend 'Microsoft.Web/staticSites/linkedBackends@2023-12-0
 }
 
 // =============================================================================
-// CosmosDB RBAC Role Assignments
-// =============================================================================
-// Grant managed identities data plane access to CosmosDB using AAD authentication
-// This is required when local (key-based) authentication is disabled on CosmosDB
-
-// Reference the Cosmos DB Built-in Data Contributor role
-// Role ID: 00000000-0000-0000-0000-000000000002
-var cosmosDbDataContributorRoleId = '00000000-0000-0000-0000-000000000002'
-
-// Get a reference to the deployed CosmosDB account for role assignments
-resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' existing = {
-  name: names.cosmosDb
-}
-
-// Assign Cosmos DB Data Contributor role to App Service managed identity
-resource appServiceCosmosDbRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2024-05-15' = {
-  name: guid(cosmosDbAccount.id, appService.outputs.systemAssignedMIPrincipalId, cosmosDbDataContributorRoleId)
-  parent: cosmosDbAccount
-  properties: {
-    principalId: appService.outputs.systemAssignedMIPrincipalId
-    roleDefinitionId: '${cosmosDbAccount.id}/sqlRoleDefinitions/${cosmosDbDataContributorRoleId}'
-    scope: cosmosDbAccount.id
-  }
-}
-
-// Assign Cosmos DB Data Contributor role to Function App (Sync) managed identity
-resource functionAppSyncCosmosDbRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2024-05-15' = {
-  name: guid(cosmosDbAccount.id, functionAppSync.outputs.systemAssignedMIPrincipalId, cosmosDbDataContributorRoleId)
-  parent: cosmosDbAccount
-  properties: {
-    principalId: functionAppSync.outputs.systemAssignedMIPrincipalId
-    roleDefinitionId: '${cosmosDbAccount.id}/sqlRoleDefinitions/${cosmosDbDataContributorRoleId}'
-    scope: cosmosDbAccount.id
-  }
-}
-
-// Assign Cosmos DB Data Contributor role to Function App (Import) managed identity
-resource functionAppImportCosmosDbRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2024-05-15' = {
-  name: guid(cosmosDbAccount.id, functionAppImport.outputs.systemAssignedMIPrincipalId, cosmosDbDataContributorRoleId)
-  parent: cosmosDbAccount
-  properties: {
-    principalId: functionAppImport.outputs.systemAssignedMIPrincipalId
-    roleDefinitionId: '${cosmosDbAccount.id}/sqlRoleDefinitions/${cosmosDbDataContributorRoleId}'
-    scope: cosmosDbAccount.id
-  }
-}
-
-// =============================================================================
 // Outputs
 // =============================================================================
 
 output resourceGroupName string = resourceGroup().name
 
 // Data Services
-output cosmosDbEndpoint string = cosmosDb.outputs.endpoint
+output cosmosDbEndpoint string = cosmosDbEndpoint
 output cosmosDbAccountName string = cosmosDb.outputs.name
 output storageAccountName string = storageAccount.outputs.name
 output redisHostName string = redis.outputs.hostName
