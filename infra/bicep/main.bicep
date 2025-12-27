@@ -427,9 +427,7 @@ resource staticWebAppBackend 'Microsoft.Web/staticSites/linkedBackends@2023-12-0
     backendResourceId: appService.outputs.resourceId
     region: location
   }
-  dependsOn: [
-    staticWebApp
-  ]
+  // Note: Implicit dependency on staticWebApp via the name property
 }
 
 // =============================================================================
