@@ -337,7 +337,7 @@ module appService 'br/public:avm/res/web/site:0.19.4' = {
         properties: {
           ASPNETCORE_ENVIRONMENT: environment == 'prd' ? 'Production' : 'Development'
           APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
-          CosmosDb__Endpoint: cosmosDb.outputs.endpoint
+          CosmosDb__AccountEndpoint: cosmosDb.outputs.endpoint
           CosmosDb__DatabaseName: projectName
           SignalR__Endpoint: 'https://${signalR.outputs.name}.service.signalr.net'
           AppConfig__Endpoint: appConfig.outputs.endpoint
@@ -377,7 +377,7 @@ module functionAppSync 'br/public:avm/res/web/site:0.19.4' = {
           FUNCTIONS_WORKER_RUNTIME: 'dotnet-isolated'
           AzureWebJobsStorage: storageAccount.outputs.primaryBlobEndpoint
           APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
-          CosmosDb__Endpoint: cosmosDb.outputs.endpoint
+          CosmosDb__AccountEndpoint: cosmosDb.outputs.endpoint
           CosmosDb__DatabaseName: projectName
         }
       }
@@ -411,7 +411,7 @@ module functionAppImport 'br/public:avm/res/web/site:0.19.4' = {
           FUNCTIONS_WORKER_RUNTIME: 'dotnet-isolated'
           AzureWebJobsStorage: storageAccount.outputs.primaryBlobEndpoint
           APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
-          CosmosDb__Endpoint: cosmosDb.outputs.endpoint
+          CosmosDb__AccountEndpoint: cosmosDb.outputs.endpoint
           CosmosDb__DatabaseName: projectName
         }
       }
