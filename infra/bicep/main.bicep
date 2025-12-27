@@ -221,10 +221,8 @@ module storageAccount 'br/public:avm/res/storage/storage-account:0.31.0' = {
         { name: 'imports', publicAccess: 'None' }
         { name: 'exports', publicAccess: 'None' }
       ]
-      deleteRetentionPolicy: {
-        enabled: true
-        days: 7
-      }
+      deleteRetentionPolicyEnabled: true
+      deleteRetentionPolicyDays: 7
     }
   }
 }
@@ -333,18 +331,23 @@ module appService 'br/public:avm/res/web/site:0.19.4' = {
     }
     httpsOnly: true
     clientAffinityEnabled: false
-    appSettingsKeyValuePairs: {
-      ASPNETCORE_ENVIRONMENT: environment == 'prd' ? 'Production' : 'Development'
-      APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
-      CosmosDb__Endpoint: cosmosDb.outputs.endpoint
-      CosmosDb__DatabaseName: projectName
-      SignalR__Endpoint: 'https://${signalR.outputs.name}.service.signalr.net'
-      AppConfig__Endpoint: appConfig.outputs.endpoint
-      // CORS: Allow Static Web App origin for direct API calls
-      Cors__AllowedOrigins__0: 'https://${staticWebApp.outputs.defaultHostname}'
-      Cors__AllowedOrigins__1: 'http://localhost:4200'
-      Cors__AllowedOrigins__2: 'https://localhost:4200'
-    }
+    configs: [
+      {
+        name: 'appsettings'
+        properties: {
+          ASPNETCORE_ENVIRONMENT: environment == 'prd' ? 'Production' : 'Development'
+          APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
+          CosmosDb__Endpoint: cosmosDb.outputs.endpoint
+          CosmosDb__DatabaseName: projectName
+          SignalR__Endpoint: 'https://${signalR.outputs.name}.service.signalr.net'
+          AppConfig__Endpoint: appConfig.outputs.endpoint
+          // CORS: Allow Static Web App origin for direct API calls
+          Cors__AllowedOrigins__0: 'https://${staticWebApp.outputs.defaultHostname}'
+          Cors__AllowedOrigins__1: 'http://localhost:4200'
+          Cors__AllowedOrigins__2: 'https://localhost:4200'
+        }
+      }
+    ]
   }
 }
 
@@ -366,14 +369,19 @@ module functionAppSync 'br/public:avm/res/web/site:0.19.4' = {
       minTlsVersion: '1.2'
     }
     httpsOnly: true
-    appSettingsKeyValuePairs: {
-      FUNCTIONS_EXTENSION_VERSION: '~4'
-      FUNCTIONS_WORKER_RUNTIME: 'dotnet-isolated'
-      AzureWebJobsStorage: storageAccount.outputs.primaryBlobEndpoint
-      APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
-      CosmosDb__Endpoint: cosmosDb.outputs.endpoint
-      CosmosDb__DatabaseName: projectName
-    }
+    configs: [
+      {
+        name: 'appsettings'
+        properties: {
+          FUNCTIONS_EXTENSION_VERSION: '~4'
+          FUNCTIONS_WORKER_RUNTIME: 'dotnet-isolated'
+          AzureWebJobsStorage: storageAccount.outputs.primaryBlobEndpoint
+          APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
+          CosmosDb__Endpoint: cosmosDb.outputs.endpoint
+          CosmosDb__DatabaseName: projectName
+        }
+      }
+    ]
   }
 }
 
@@ -395,14 +403,19 @@ module functionAppImport 'br/public:avm/res/web/site:0.19.4' = {
       minTlsVersion: '1.2'
     }
     httpsOnly: true
-    appSettingsKeyValuePairs: {
-      FUNCTIONS_EXTENSION_VERSION: '~4'
-      FUNCTIONS_WORKER_RUNTIME: 'dotnet-isolated'
-      AzureWebJobsStorage: storageAccount.outputs.primaryBlobEndpoint
-      APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
-      CosmosDb__Endpoint: cosmosDb.outputs.endpoint
-      CosmosDb__DatabaseName: projectName
-    }
+    configs: [
+      {
+        name: 'appsettings'
+        properties: {
+          FUNCTIONS_EXTENSION_VERSION: '~4'
+          FUNCTIONS_WORKER_RUNTIME: 'dotnet-isolated'
+          AzureWebJobsStorage: storageAccount.outputs.primaryBlobEndpoint
+          APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
+          CosmosDb__Endpoint: cosmosDb.outputs.endpoint
+          CosmosDb__DatabaseName: projectName
+        }
+      }
+    ]
   }
 }
 
