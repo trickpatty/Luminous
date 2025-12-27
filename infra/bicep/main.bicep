@@ -100,6 +100,7 @@ var names = {
   redis: 'redis-${namingPrefix}-${uniqueSuffix}'
   staticWebApp: 'stapp-${namingPrefix}-${uniqueSuffix}'
   communicationServices: 'acs-${namingPrefix}-${uniqueSuffix}'
+  emailService: 'email-${namingPrefix}-${uniqueSuffix}'
   // Resource group scoped (no suffix needed)
   appServicePlan: 'asp-${namingPrefix}'
   logAnalytics: 'log-${namingPrefix}'
@@ -313,6 +314,31 @@ module signalR 'br/public:avm/res/signal-r-service/signal-r:0.10.1' = {
 // Communication Services (Email)
 // =============================================================================
 
+// Email Communication Service with Azure-managed domain for sending emails
+module emailService 'br/public:avm/res/communication/email-service:0.3.2' = {
+  name: 'deploy-email-service'
+  params: {
+    name: names.emailService
+    location: 'global' // Email service is global
+    tags: tags
+    dataLocation: 'United States' // Data residency
+    domains: [
+      {
+        name: 'AzureManagedDomain' // Use Azure-managed domain for easy setup
+        domainManagement: 'AzureManaged'
+        userEngagementTracking: 'Disabled'
+        senderUsernames: [
+          {
+            username: 'noreply'
+            displayName: 'Luminous'
+          }
+        ]
+      }
+    ]
+  }
+}
+
+// Communication Service linked to the Email Service for sending emails
 module communicationServices 'br/public:avm/res/communication/communication-service:0.4.2' = {
   name: 'deploy-communication-services'
   params: {
@@ -320,6 +346,9 @@ module communicationServices 'br/public:avm/res/communication/communication-serv
     location: 'global' // ACS is a global service
     tags: tags
     dataLocation: 'United States' // Data residency
+    linkedDomains: [
+      emailService.outputs.domainResourceIds[0] // Link the Azure-managed domain
+    ]
   }
 }
 
@@ -392,6 +421,17 @@ module appService 'br/public:avm/res/web/site:0.19.4' = {
           Cors__AllowedOrigins__0: 'https://${staticWebApp.outputs.defaultHostname}'
           Cors__AllowedOrigins__1: 'http://localhost:4200'
           Cors__AllowedOrigins__2: 'https://localhost:4200'
+          // Email settings - Azure deployments use ACS, local dev uses console logging
+          Email__UseDevelopmentMode: 'false'
+          Email__SenderName: 'Luminous'
+          Email__BaseUrl: 'https://${staticWebApp.outputs.defaultHostname}'
+          Email__HelpUrl: 'https://${staticWebApp.outputs.defaultHostname}/help'
+          // Note: Email__ConnectionString and Email__SenderAddress must be configured post-deployment:
+          // 1. Get ACS connection string from Azure Portal (Communication Service > Keys)
+          // 2. Store in Key Vault as 'acs-connection-string' secret
+          // 3. Add app setting: Email__ConnectionString=@Microsoft.KeyVault(VaultName=kv-name;SecretName=acs-connection-string)
+          // 4. Get sender address from Azure Portal (Email Service > Provision Domains)
+          //    Format: DoNotReply@<guid>.azurecomm.net
         }
       }
     ]
@@ -514,3 +554,5 @@ output logAnalyticsWorkspaceId string = logAnalytics.outputs.resourceId
 
 // Communication Services
 output communicationServicesName string = communicationServices.outputs.name
+output emailServiceName string = emailService.outputs.name
+output emailDomainResourceId string = emailService.outputs.domainResourceIds[0]

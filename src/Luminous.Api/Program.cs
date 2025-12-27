@@ -41,8 +41,11 @@ builder.Services.AddScoped<ILocalJwtTokenService, LocalJwtTokenService>();
 // Register email template service
 builder.Services.AddSingleton<IEmailTemplateService, EmailTemplateService>();
 
-// Register email service (DevelopmentEmailService in dev logs to console, AzureEmailService in prod sends via ACS)
-if (builder.Environment.IsDevelopment())
+// Register email service based on configuration
+// - UseDevelopmentMode=true (local dev): Logs emails to console
+// - UseDevelopmentMode=false (Azure): Sends emails via Azure Communication Services
+var emailSettings = builder.Configuration.GetSection(EmailSettings.SectionName).Get<EmailSettings>();
+if (emailSettings?.UseDevelopmentMode == true)
 {
     builder.Services.AddScoped<IEmailService, DevelopmentEmailService>();
 }
