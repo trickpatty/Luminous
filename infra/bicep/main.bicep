@@ -213,15 +213,15 @@ module cosmosDb 'br/public:avm/res/document-db/database-account:0.18.0' = {
     // Cosmos DB Built-in Data Contributor role: 00000000-0000-0000-0000-000000000002
     sqlRoleAssignments: [
       {
-        principalId: appService.outputs.systemAssignedMIPrincipalId
+        principalId: appService.outputs.systemAssignedMIPrincipalId!
         roleDefinitionId: '00000000-0000-0000-0000-000000000002'
       }
       {
-        principalId: functionAppSync.outputs.systemAssignedMIPrincipalId
+        principalId: functionAppSync.outputs.systemAssignedMIPrincipalId!
         roleDefinitionId: '00000000-0000-0000-0000-000000000002'
       }
       {
-        principalId: functionAppImport.outputs.systemAssignedMIPrincipalId
+        principalId: functionAppImport.outputs.systemAssignedMIPrincipalId!
         roleDefinitionId: '00000000-0000-0000-0000-000000000002'
       }
     ]
