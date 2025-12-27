@@ -246,9 +246,9 @@ public class WebAuthnService : IWebAuthnService
 
         var options = AssertionOptions.FromJson(session.OptionsJson);
 
-        // Find the credential
+        // Find the credential - use RawId (byte[]) instead of Id (string) in v4.0.0
         var credential = await _unitOfWork.Credentials.GetByCredentialIdAsync(
-            assertionResponse.Id,
+            assertionResponse.RawId,
             cancellationToken);
 
         if (credential == null || !credential.IsActive)
@@ -271,7 +271,6 @@ public class WebAuthnService : IWebAuthnService
                 OriginalOptions = options,
                 StoredPublicKey = credential.PublicKey,
                 StoredSignatureCounter = credential.SignatureCounter,
-                StoredDevicePublicKeys = [],
                 IsUserHandleOwnerOfCredentialIdCallback = async (args, ct) =>
                 {
                     // Verify user handle if present
