@@ -362,6 +362,7 @@ module appService 'br/public:avm/res/web/site:0.19.4' = {
           APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
           CosmosDb__AccountEndpoint: cosmosDbEndpoint
           CosmosDb__DatabaseName: projectName
+          CosmosDb__UseManagedIdentity: 'true'
           SignalR__Endpoint: 'https://${signalR.outputs.name}.service.signalr.net'
           AppConfig__Endpoint: appConfig.outputs.endpoint
           // CORS: Allow Static Web App origin for direct API calls
@@ -402,6 +403,7 @@ module functionAppSync 'br/public:avm/res/web/site:0.19.4' = {
           APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
           CosmosDb__AccountEndpoint: cosmosDbEndpoint
           CosmosDb__DatabaseName: projectName
+          CosmosDb__UseManagedIdentity: 'true'
         }
       }
     ]
@@ -436,6 +438,7 @@ module functionAppImport 'br/public:avm/res/web/site:0.19.4' = {
           APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
           CosmosDb__AccountEndpoint: cosmosDbEndpoint
           CosmosDb__DatabaseName: projectName
+          CosmosDb__UseManagedIdentity: 'true'
         }
       }
     ]
