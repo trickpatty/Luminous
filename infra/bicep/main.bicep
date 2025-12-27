@@ -105,6 +105,10 @@ var names = {
   appInsights: 'appi-${namingPrefix}'
 }
 
+// Constructed CosmosDB endpoint to avoid circular dependency with role assignments
+// This allows us to use sqlRoleAssignments in the CosmosDB module
+var cosmosDbEndpoint = 'https://${names.cosmosDb}.documents.azure.com:443/'
+
 // Cosmos DB container configurations for multi-tenant data isolation
 var cosmosContainers = [
   { name: 'families', partitionKeyPath: '/id' }
@@ -184,6 +188,9 @@ module cosmosDb 'br/public:avm/res/document-db/database-account:0.18.0' = {
     name: names.cosmosDb
     location: location
     tags: tags
+    // Disable key-based authentication - enforce AAD/RBAC auth only
+    // TOGAF Principle: DP-4 (Data Minimization), Security best practice
+    disableLocalAuthentication: true
     capabilitiesToAdd: cosmosDbServerless ? ['EnableServerless'] : []
     defaultConsistencyLevel: cosmosDbConsistencyLevel
     failoverLocations: [
@@ -200,6 +207,22 @@ module cosmosDb 'br/public:avm/res/document-db/database-account:0.18.0' = {
           name: container.name
           paths: [container.partitionKeyPath]
         }]
+      }
+    ]
+    // Grant managed identities data plane access using AAD authentication
+    // Cosmos DB Built-in Data Contributor role: 00000000-0000-0000-0000-000000000002
+    sqlRoleAssignments: [
+      {
+        principalId: appService.outputs.systemAssignedMIPrincipalId!
+        roleDefinitionId: '00000000-0000-0000-0000-000000000002'
+      }
+      {
+        principalId: functionAppSync.outputs.systemAssignedMIPrincipalId!
+        roleDefinitionId: '00000000-0000-0000-0000-000000000002'
+      }
+      {
+        principalId: functionAppImport.outputs.systemAssignedMIPrincipalId!
+        roleDefinitionId: '00000000-0000-0000-0000-000000000002'
       }
     ]
   }
@@ -337,7 +360,7 @@ module appService 'br/public:avm/res/web/site:0.19.4' = {
         properties: {
           ASPNETCORE_ENVIRONMENT: environment == 'prd' ? 'Production' : 'Development'
           APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
-          CosmosDb__AccountEndpoint: cosmosDb.outputs.endpoint
+          CosmosDb__AccountEndpoint: cosmosDbEndpoint
           CosmosDb__DatabaseName: projectName
           SignalR__Endpoint: 'https://${signalR.outputs.name}.service.signalr.net'
           AppConfig__Endpoint: appConfig.outputs.endpoint
@@ -377,7 +400,7 @@ module functionAppSync 'br/public:avm/res/web/site:0.19.4' = {
           FUNCTIONS_WORKER_RUNTIME: 'dotnet-isolated'
           AzureWebJobsStorage: storageAccount.outputs.primaryBlobEndpoint
           APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
-          CosmosDb__AccountEndpoint: cosmosDb.outputs.endpoint
+          CosmosDb__AccountEndpoint: cosmosDbEndpoint
           CosmosDb__DatabaseName: projectName
         }
       }
@@ -411,7 +434,7 @@ module functionAppImport 'br/public:avm/res/web/site:0.19.4' = {
           FUNCTIONS_WORKER_RUNTIME: 'dotnet-isolated'
           AzureWebJobsStorage: storageAccount.outputs.primaryBlobEndpoint
           APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
-          CosmosDb__AccountEndpoint: cosmosDb.outputs.endpoint
+          CosmosDb__AccountEndpoint: cosmosDbEndpoint
           CosmosDb__DatabaseName: projectName
         }
       }
@@ -437,7 +460,7 @@ resource staticWebAppBackend 'Microsoft.Web/staticSites/linkedBackends@2023-12-0
 output resourceGroupName string = resourceGroup().name
 
 // Data Services
-output cosmosDbEndpoint string = cosmosDb.outputs.endpoint
+output cosmosDbEndpoint string = cosmosDbEndpoint
 output cosmosDbAccountName string = cosmosDb.outputs.name
 output storageAccountName string = storageAccount.outputs.name
 output redisHostName string = redis.outputs.hostName
