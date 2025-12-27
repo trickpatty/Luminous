@@ -423,7 +423,13 @@ module appService 'br/public:avm/res/web/site:0.19.4' = {
           Cors__AllowedOrigins__1: 'http://localhost:4200'
           Cors__AllowedOrigins__2: 'https://localhost:4200'
           // Redis cache for distributed session/cache (WebAuthn sessions, etc.)
-          Redis__ConnectionString: '${redis.outputs.name}.redis.cache.windows.net:6380,password=${redis.outputs.primaryAccessKey},ssl=True,abortConnect=False'
+          // Note: Redis connection string must be configured post-deployment via Key Vault:
+          // 1. Get Redis primary access key from Azure Portal (Redis Cache > Access keys)
+          // 2. Store in Key Vault as 'redis-connection-string' with value:
+          //    <hostname>:6380,password=<primary-key>,ssl=True,abortConnect=False
+          // 3. Add app setting: Redis__ConnectionString=@Microsoft.KeyVault(VaultName=kv-name;SecretName=redis-connection-string)
+          Redis__HostName: redis.outputs.hostName
+          Redis__SslPort: string(redis.outputs.sslPort)
           Redis__InstanceName: 'luminous-${environment}:'
           // Email settings - Azure deployments use ACS, local dev uses console logging
           Email__UseDevelopmentMode: 'false'

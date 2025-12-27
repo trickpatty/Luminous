@@ -109,7 +109,7 @@ public class AuthController : ApiControllerBase
 
         if (!result.Success)
         {
-            return Unauthorized(ApiResponse<OtpVerifyResultDto>.Fail(result.Error ?? "Invalid OTP"));
+            return Unauthorized(ApiResponse<OtpVerifyResultDto>.Fail("INVALID_OTP", result.Error ?? "Invalid OTP"));
         }
 
         return OkResponse(result);
@@ -134,7 +134,7 @@ public class AuthController : ApiControllerBase
         var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId))
         {
-            return Unauthorized(ApiResponse<PasskeyRegisterStartResultDto>.Fail("User not authenticated"));
+            return Unauthorized(ApiResponse<PasskeyRegisterStartResultDto>.Fail("UNAUTHORIZED", "User not authenticated"));
         }
 
         var command = new PasskeyRegisterStartCommand
@@ -171,7 +171,7 @@ public class AuthController : ApiControllerBase
 
         if (!result.Success)
         {
-            return BadRequest(ApiResponse<PasskeyRegisterCompleteResultDto>.Fail(result.Error ?? "Registration failed"));
+            return BadRequest(ApiResponse<PasskeyRegisterCompleteResultDto>.Fail("REGISTRATION_FAILED", result.Error ?? "Registration failed"));
         }
 
         return OkResponse(result);
@@ -226,7 +226,7 @@ public class AuthController : ApiControllerBase
 
         if (!result.Success)
         {
-            return Unauthorized(ApiResponse<PasskeyAuthenticateCompleteResultDto>.Fail(result.Error ?? "Authentication failed"));
+            return Unauthorized(ApiResponse<PasskeyAuthenticateCompleteResultDto>.Fail("AUTHENTICATION_FAILED", result.Error ?? "Authentication failed"));
         }
 
         return OkResponse(result);
@@ -249,7 +249,7 @@ public class AuthController : ApiControllerBase
         var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId))
         {
-            return Unauthorized(ApiResponse<PasskeyListResultDto>.Fail("User not authenticated"));
+            return Unauthorized(ApiResponse<PasskeyListResultDto>.Fail("UNAUTHORIZED", "User not authenticated"));
         }
 
         var result = await Mediator.Send(new ListPasskeysQuery { UserId = userId });
@@ -271,7 +271,7 @@ public class AuthController : ApiControllerBase
         var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId))
         {
-            return Unauthorized(ApiResponse<bool>.Fail("User not authenticated"));
+            return Unauthorized(ApiResponse<bool>.Fail("UNAUTHORIZED", "User not authenticated"));
         }
 
         await Mediator.Send(new DeletePasskeyCommand
@@ -309,7 +309,7 @@ public class AuthController : ApiControllerBase
 
         if (result == null)
         {
-            return Unauthorized(ApiResponse<AuthResultDto>.Fail("Invalid or expired refresh token"));
+            return Unauthorized(ApiResponse<AuthResultDto>.Fail("INVALID_TOKEN", "Invalid or expired refresh token"));
         }
 
         return OkResponse(result);

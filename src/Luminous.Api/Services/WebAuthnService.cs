@@ -56,11 +56,13 @@ public class WebAuthnService : IWebAuthnService
             UserVerification = UserVerificationRequirement.Preferred
         };
 
-        var options = _fido2.RequestNewCredential(
-            user,
-            excludeCredentials,
-            authenticatorSelection,
-            AttestationConveyancePreference.None);
+        var options = _fido2.RequestNewCredential(new RequestNewCredentialParams
+        {
+            User = user,
+            ExcludeCredentials = excludeCredentials,
+            AuthenticatorSelection = authenticatorSelection,
+            AttestationPreference = AttestationConveyancePreference.None
+        });
 
         // Store the options in cache for verification later
         var sessionId = Nanoid.Generate(size: 21);
@@ -119,24 +121,18 @@ public class WebAuthnService : IWebAuthnService
         try
         {
             // Verify the attestation response
-            var result = await _fido2.MakeNewCredentialAsync(
-                attestationResponse,
-                options,
-                async (args, ct) =>
+            // In Fido2 v4.0.0, MakeNewCredentialAsync returns RegisteredPublicKeyCredential directly
+            // and throws Fido2VerificationException on failure
+            var credential = await _fido2.MakeNewCredentialAsync(new MakeNewCredentialParams
+            {
+                AttestationResponse = attestationResponse,
+                OriginalOptions = options,
+                IsCredentialIdUniqueToUserCallback = async (args, ct) =>
                 {
                     // Check if credential ID already exists
                     return !await _unitOfWork.Credentials.CredentialIdExistsAsync(args.CredentialId, ct);
-                },
-                cancellationToken);
-
-            if (result.Result == null)
-            {
-                return new RegisteredCredentialResult
-                {
-                    Success = false,
-                    Error = result.ErrorMessage ?? "Registration verification failed."
-                };
-            }
+                }
+            }, cancellationToken);
 
             // Remove the session from cache
             await _cache.RemoveAsync($"webauthn:register:{sessionId}", cancellationToken);
@@ -148,12 +144,12 @@ public class WebAuthnService : IWebAuthnService
             return new RegisteredCredentialResult
             {
                 Success = true,
-                CredentialId = result.Result.Id,
-                PublicKey = result.Result.PublicKey,
-                UserHandle = result.Result.User.Id,
-                SignatureCounter = result.Result.Counter,
-                AaGuid = result.Result.AaGuid,
-                CredentialType = result.Result.Type.ToString(),
+                CredentialId = credential.Id,
+                PublicKey = credential.PublicKey,
+                UserHandle = credential.User.Id,
+                SignatureCounter = credential.SignCount,
+                AaGuid = credential.AaGuid,
+                CredentialType = credential.Type.ToString(),
                 UserId = session.UserId
             };
         }
@@ -190,9 +186,11 @@ public class WebAuthnService : IWebAuthnService
             }
         }
 
-        var options = _fido2.GetAssertionOptions(
-            allowedCredentials ?? [],
-            UserVerificationRequirement.Preferred);
+        var options = _fido2.GetAssertionOptions(new GetAssertionOptionsParams
+        {
+            AllowedCredentials = allowedCredentials ?? [],
+            UserVerification = UserVerificationRequirement.Preferred
+        });
 
         // Store options in cache
         var sessionId = Nanoid.Generate(size: 21);
@@ -265,14 +263,16 @@ public class WebAuthnService : IWebAuthnService
 
         try
         {
-            // Verify the assertion
-            var result = await _fido2.MakeAssertionAsync(
-                assertionResponse,
-                options,
-                credential.PublicKey,
-                [],
-                credential.SignatureCounter,
-                async (args, ct) =>
+            // In Fido2 v4.0.0, MakeAssertionAsync returns VerifyAssertionResult directly
+            // and throws Fido2VerificationException on failure
+            var result = await _fido2.MakeAssertionAsync(new MakeAssertionParams
+            {
+                AssertionResponse = assertionResponse,
+                OriginalOptions = options,
+                StoredPublicKey = credential.PublicKey,
+                StoredSignatureCounter = credential.SignatureCounter,
+                StoredDevicePublicKeys = [],
+                IsUserHandleOwnerOfCredentialIdCallback = async (args, ct) =>
                 {
                     // Verify user handle if present
                     if (args.UserHandle != null && args.UserHandle.Length > 0)
@@ -281,17 +281,8 @@ public class WebAuthnService : IWebAuthnService
                         return credential.UserId == expectedUserId;
                     }
                     return true;
-                },
-                cancellationToken);
-
-            if (result.Status != "ok")
-            {
-                return new AuthenticationResult
-                {
-                    Success = false,
-                    Error = result.ErrorMessage ?? "Authentication verification failed."
-                };
-            }
+                }
+            }, cancellationToken);
 
             // Remove the session from cache
             await _cache.RemoveAsync($"webauthn:auth:{sessionId}", cancellationToken);
@@ -305,7 +296,7 @@ public class WebAuthnService : IWebAuthnService
                 Success = true,
                 UserId = credential.UserId,
                 CredentialId = credential.CredentialId,
-                SignatureCounter = result.Counter
+                SignatureCounter = result.SignCount
             };
         }
         catch (Exception ex)
