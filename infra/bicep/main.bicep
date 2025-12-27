@@ -124,7 +124,7 @@ var cosmosContainers = [
 // Monitoring (Deploy first - other resources depend on these)
 // =============================================================================
 
-module logAnalytics 'br/public:avm/res/operational-insights/workspace:0.9.0' = {
+module logAnalytics 'br/public:avm/res/operational-insights/workspace:0.14.2' = {
   name: 'deploy-log-analytics'
   params: {
     name: names.logAnalytics
@@ -135,7 +135,7 @@ module logAnalytics 'br/public:avm/res/operational-insights/workspace:0.9.0' = {
   }
 }
 
-module appInsights 'br/public:avm/res/insights/component:0.4.1' = {
+module appInsights 'br/public:avm/res/insights/component:0.7.1' = {
   name: 'deploy-app-insights'
   params: {
     name: names.appInsights
@@ -150,7 +150,7 @@ module appInsights 'br/public:avm/res/insights/component:0.4.1' = {
 // Security
 // =============================================================================
 
-module keyVault 'br/public:avm/res/key-vault/vault:0.9.0' = {
+module keyVault 'br/public:avm/res/key-vault/vault:0.13.3' = {
   name: 'deploy-key-vault'
   params: {
     name: names.keyVault
@@ -164,7 +164,7 @@ module keyVault 'br/public:avm/res/key-vault/vault:0.9.0' = {
   }
 }
 
-module appConfig 'br/public:avm/res/app-configuration/configuration-store:0.5.1' = {
+module appConfig 'br/public:avm/res/app-configuration/configuration-store:0.9.2' = {
   name: 'deploy-app-config'
   params: {
     name: names.appConfig
@@ -178,7 +178,7 @@ module appConfig 'br/public:avm/res/app-configuration/configuration-store:0.5.1'
 // Data Services
 // =============================================================================
 
-module cosmosDb 'br/public:avm/res/document-db/database-account:0.8.1' = {
+module cosmosDb 'br/public:avm/res/document-db/database-account:0.18.0' = {
   name: 'deploy-cosmos-db'
   params: {
     name: names.cosmosDb
@@ -205,7 +205,7 @@ module cosmosDb 'br/public:avm/res/document-db/database-account:0.8.1' = {
   }
 }
 
-module storageAccount 'br/public:avm/res/storage/storage-account:0.14.3' = {
+module storageAccount 'br/public:avm/res/storage/storage-account:0.31.0' = {
   name: 'deploy-storage-account'
   params: {
     name: names.storageAccount
@@ -229,7 +229,7 @@ module storageAccount 'br/public:avm/res/storage/storage-account:0.14.3' = {
   }
 }
 
-module redis 'br/public:avm/res/cache/redis:0.8.0' = {
+module redis 'br/public:avm/res/cache/redis:0.16.4' = {
   name: 'deploy-redis-cache'
   params: {
     name: names.redis
@@ -247,7 +247,7 @@ module redis 'br/public:avm/res/cache/redis:0.8.0' = {
 // Messaging Services
 // =============================================================================
 
-module serviceBus 'br/public:avm/res/service-bus/namespace:0.10.0' = {
+module serviceBus 'br/public:avm/res/service-bus/namespace:0.16.0' = {
   name: 'deploy-service-bus'
   params: {
     name: names.serviceBus
@@ -264,7 +264,7 @@ module serviceBus 'br/public:avm/res/service-bus/namespace:0.10.0' = {
   }
 }
 
-module signalR 'br/public:avm/res/signal-r-service/signal-r:0.5.0' = {
+module signalR 'br/public:avm/res/signal-r-service/signal-r:0.10.1' = {
   name: 'deploy-signalr'
   params: {
     name: names.signalR
@@ -283,7 +283,7 @@ module signalR 'br/public:avm/res/signal-r-service/signal-r:0.5.0' = {
 // Web Hosting (Static Web App deployed first for CORS configuration)
 // =============================================================================
 
-module staticWebApp 'br/public:avm/res/web/static-site:0.6.0' = {
+module staticWebApp 'br/public:avm/res/web/static-site:0.9.3' = {
   name: 'deploy-static-web-app'
   params: {
     name: names.staticWebApp
@@ -299,7 +299,7 @@ module staticWebApp 'br/public:avm/res/web/static-site:0.6.0' = {
 // Compute Services
 // =============================================================================
 
-module appServicePlan 'br/public:avm/res/web/serverfarm:0.3.0' = {
+module appServicePlan 'br/public:avm/res/web/serverfarm:0.5.0' = {
   name: 'deploy-app-service-plan'
   params: {
     name: names.appServicePlan
@@ -312,7 +312,7 @@ module appServicePlan 'br/public:avm/res/web/serverfarm:0.3.0' = {
   }
 }
 
-module appService 'br/public:avm/res/web/site:0.11.1' = {
+module appService 'br/public:avm/res/web/site:0.19.4' = {
   name: 'deploy-app-service'
   params: {
     name: names.appService
@@ -348,7 +348,7 @@ module appService 'br/public:avm/res/web/site:0.11.1' = {
   }
 }
 
-module functionAppSync 'br/public:avm/res/web/site:0.11.1' = {
+module functionAppSync 'br/public:avm/res/web/site:0.19.4' = {
   name: 'deploy-function-app-sync'
   params: {
     name: names.functionAppSync
@@ -377,7 +377,7 @@ module functionAppSync 'br/public:avm/res/web/site:0.11.1' = {
   }
 }
 
-module functionAppImport 'br/public:avm/res/web/site:0.11.1' = {
+module functionAppImport 'br/public:avm/res/web/site:0.19.4' = {
   name: 'deploy-function-app-import'
   params: {
     name: names.functionAppImport
