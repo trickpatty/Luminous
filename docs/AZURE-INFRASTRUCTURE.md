@@ -162,6 +162,13 @@ Resources use a naming pattern with a **6-character unique suffix** derived from
 | Service Bus | `sb-lum-{env}-{suffix}` | Async messaging | Basic / Standard |
 | SignalR Service | `sigr-lum-{env}-{suffix}` | Real-time sync | Free / Standard |
 
+### Communication Resources
+
+| Resource | Name Pattern | Purpose |
+|----------|--------------|---------|
+| Email Service | `email-lum-{env}-{suffix}` | Email delivery service |
+| Communication Service | `acs-lum-{env}-{suffix}` | Azure Communication Services |
+
 ### Security Resources
 
 | Resource | Name Pattern | Purpose |
@@ -281,6 +288,8 @@ All resources are deployed using AVMs directly from the public Bicep registry (`
 | App Service Plan | `br/public:avm/res/web/serverfarm:0.5.0` |
 | App Service/Functions | `br/public:avm/res/web/site:0.19.4` |
 | Static Web App | `br/public:avm/res/web/static-site:0.9.3` |
+| Email Service | `br/public:avm/res/communication/email-service:0.3.2` |
+| Communication Service | `br/public:avm/res/communication/communication-service:0.4.2` |
 
 ### Quick Start
 
@@ -366,6 +375,117 @@ az deployment group show \
 # Test API endpoint
 curl https://app-lum-dev-api.azurewebsites.net/health
 ```
+
+---
+
+## Post-Deployment Configuration
+
+After deploying the infrastructure, some resources require manual configuration.
+
+### Azure Communication Services (Email)
+
+The infrastructure deployment creates the Email Service with an Azure-managed domain and links it to a Communication Service. However, you must manually configure the connection string and sender address in the App Service.
+
+#### Step 1: Wait for Domain Provisioning
+
+The Azure-managed email domain takes a few minutes to provision. Check the status:
+
+1. Open the Azure Portal
+2. Navigate to **Email Communication Services** > `email-lum-{env}-{suffix}`
+3. Go to **Provision domains** in the left menu
+4. Wait for the Azure-managed domain to show **Status: Ready**
+
+The domain will look like: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.azurecomm.net`
+
+#### Step 2: Get the Sender Address
+
+Once the domain is provisioned:
+
+1. In the Email Service, go to **Provision domains**
+2. Click on the **Azure-managed domain**
+3. Go to **MailFrom addresses**
+4. Copy the sender address (e.g., `DoNotReply@xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.azurecomm.net`)
+
+#### Step 3: Get the ACS Connection String
+
+1. Navigate to **Communication Services** > `acs-lum-{env}-{suffix}`
+2. Go to **Settings** > **Keys**
+3. Copy the **Primary connection string**
+
+#### Step 4: Store Connection String in Key Vault
+
+For security, store the connection string in Key Vault:
+
+```bash
+# Store the ACS connection string
+az keyvault secret set \
+  --vault-name kv-lum-{env}-{suffix} \
+  --name acs-connection-string \
+  --value "endpoint=https://acs-lum-{env}-{suffix}.communication.azure.com/;accesskey=..."
+```
+
+#### Step 5: Configure App Service Settings
+
+Add the email configuration to the App Service:
+
+```bash
+# Using Key Vault reference for connection string (recommended)
+az webapp config appsettings set \
+  --resource-group rg-lum-{env} \
+  --name app-lum-{env}-{suffix} \
+  --settings \
+    "Email__ConnectionString=@Microsoft.KeyVault(VaultName=kv-lum-{env}-{suffix};SecretName=acs-connection-string)" \
+    "Email__SenderAddress=DoNotReply@xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.azurecomm.net"
+```
+
+Or via the Azure Portal:
+
+1. Navigate to **App Service** > `app-lum-{env}-{suffix}`
+2. Go to **Settings** > **Configuration**
+3. Add the following Application Settings:
+
+| Name | Value |
+|------|-------|
+| `Email__ConnectionString` | `@Microsoft.KeyVault(VaultName=kv-lum-...;SecretName=acs-connection-string)` |
+| `Email__SenderAddress` | `DoNotReply@xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.azurecomm.net` |
+
+4. Click **Save** and restart the App Service
+
+#### Step 6: Verify Email Sending
+
+Test the email configuration:
+
+```bash
+# Get a dev token (if using dev environment)
+curl -X POST https://app-lum-dev-{suffix}.azurewebsites.net/api/devauth/token
+
+# Request an OTP (this will send a real email in Azure)
+curl -X POST https://app-lum-dev-{suffix}.azurewebsites.net/api/auth/otp/request \
+  -H "Content-Type: application/json" \
+  -d '{"email": "your-email@example.com"}'
+```
+
+Check the Application Insights logs for email delivery status.
+
+#### Troubleshooting Email
+
+| Issue | Solution |
+|-------|----------|
+| "Connection string is not configured" | Ensure `Email__ConnectionString` is set and App Service has Key Vault access |
+| "Sender address not valid" | Verify the domain is provisioned and address format matches |
+| "403 Forbidden" | Check the App Service managed identity has access to Key Vault secrets |
+| "Domain not found" | Wait for domain provisioning (can take 5-10 minutes) |
+
+#### Email Configuration Summary
+
+| Setting | Description | Example |
+|---------|-------------|---------|
+| `Email__UseDevelopmentMode` | `false` for Azure, `true` for local | Set by Bicep deployment |
+| `Email__ConnectionString` | ACS connection string | Store in Key Vault |
+| `Email__SenderAddress` | Verified sender address | `DoNotReply@{guid}.azurecomm.net` |
+| `Email__SenderName` | Display name for emails | `Luminous` |
+| `Email__BaseUrl` | Base URL for email links | `https://{static-web-app-url}` |
+| `Email__HelpUrl` | Help center URL | `https://{static-web-app-url}/help` |
 
 ---
 
@@ -614,3 +734,4 @@ az monitor app-insights query \
 |---------|------|--------|---------|
 | 1.0.0 | 2025-12-21 | Luminous Team | Initial infrastructure documentation |
 | 1.1.0 | 2025-12-27 | Luminous Team | Updated AVM module versions to latest |
+| 1.2.0 | 2025-12-27 | Luminous Team | Added Azure Communication Services (Email) and post-deployment configuration |

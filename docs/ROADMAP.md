@@ -371,6 +371,16 @@ Deliver the multi-tenant platform with user registration, family creation, devic
 - [x] Updated AuthController with all auth endpoints
 - [x] CosmosDB containers: otptokens, refreshtokens
 
+**Email service deliverables:**
+- [x] AzureEmailService for production email via Azure Communication Services
+- [x] EmailTemplateService with Handlebars template rendering
+- [x] HTML email templates (base.hbs, otp.hbs, invitation.hbs, welcome.hbs)
+- [x] EmailSettings configuration class with UseDevelopmentMode flag
+- [x] Config-based email service selection (DevelopmentEmailService vs AzureEmailService)
+- [x] Azure Email Service and Communication Service in Bicep (AVMs)
+- [x] NanoId session IDs in WebAuthnService (replaces GUIDs)
+- [x] CreateInvitationCommand sends invitation emails
+
 #### 1.4 Web Dashboard MVP ✅ COMPLETED
 
 - [x] **1.4.1** Create family dashboard layout
@@ -805,3 +815,4 @@ These can be developed in parallel after Phase 0:
 | 2.9.0 | 2025-12-24 | Luminous Team | Phase 1.3 Family Member Management completed |
 | 3.0.0 | 2025-12-24 | Luminous Team | Phase 1.4 Web Dashboard MVP completed; Phase 1 complete |
 | 3.1.0 | 2025-12-27 | Luminous Team | Phase 1.3.5 Authentication Endpoints completed (OTP, Passkey, Token Refresh) |
+| 3.2.0 | 2025-12-27 | Luminous Team | Added email services (Azure ACS, Handlebars templates, config-based service selection) |
