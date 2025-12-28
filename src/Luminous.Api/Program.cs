@@ -9,6 +9,7 @@ using Luminous.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi.Models.References;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -181,20 +182,12 @@ builder.Services.AddSwaggerGen(options =>
         Description = "Enter your JWT token. In development, use POST /api/devauth/token to get a token."
     });
 
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
+    // Use the new delegate pattern for .NET 10 / OpenApi 3.x
+    options.AddSecurityRequirement(document =>
+        new OpenApiSecurityRequirement
         {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
+            [new OpenApiSecuritySchemeReference("Bearer", document)] = Array.Empty<string>()
+        });
 });
 
 // Configure CORS
