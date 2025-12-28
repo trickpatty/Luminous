@@ -111,6 +111,12 @@ var names = {
 // This allows us to use sqlRoleAssignments in the CosmosDB module
 var cosmosDbEndpoint = 'https://${names.cosmosDb}.documents.azure.com:443/'
 
+// Azure Built-in Role IDs
+// https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles
+var builtInRoles = {
+  keyVaultSecretsUser: '4633458b-17de-408a-b874-0445c86b69e6' // Key Vault Secrets User
+}
+
 // Cosmos DB container configurations for multi-tenant data isolation
 var cosmosContainers = [
   { name: 'families', partitionKeyPath: '/id' }
@@ -169,6 +175,25 @@ module keyVault 'br/public:avm/res/key-vault/vault:0.13.3' = {
     enableSoftDelete: environment == 'prd'
     softDeleteRetentionInDays: 90
     enablePurgeProtection: environment == 'prd'
+    // Grant Key Vault Secrets User role to App Service and Function Apps
+    // This allows them to read secrets using @Microsoft.KeyVault references
+    roleAssignments: [
+      {
+        principalId: appService.outputs.systemAssignedMIPrincipalId!
+        principalType: 'ServicePrincipal'
+        roleDefinitionIdOrName: builtInRoles.keyVaultSecretsUser
+      }
+      {
+        principalId: functionAppSync.outputs.systemAssignedMIPrincipalId!
+        principalType: 'ServicePrincipal'
+        roleDefinitionIdOrName: builtInRoles.keyVaultSecretsUser
+      }
+      {
+        principalId: functionAppImport.outputs.systemAssignedMIPrincipalId!
+        principalType: 'ServicePrincipal'
+        roleDefinitionIdOrName: builtInRoles.keyVaultSecretsUser
+      }
+    ]
   }
 }
 
@@ -271,6 +296,11 @@ module redis 'br/public:avm/res/cache/redis:0.16.4' = {
     redisVersion: '6'
     minimumTlsVersion: '1.2'
     publicNetworkAccess: 'Enabled'
+    // Export Redis connection string to Key Vault for secure access
+    secretsExportConfiguration: {
+      keyVaultResourceId: keyVault.outputs.resourceId
+      primaryConnectionStringName: 'redis-connection-string'
+    }
   }
 }
 
@@ -354,6 +384,57 @@ module communicationServices 'br/public:avm/res/communication/communication-serv
 }
 
 // =============================================================================
+// Key Vault Secrets (deployed after Key Vault and services are ready)
+// =============================================================================
+
+// Reference the Key Vault for storing secrets
+resource keyVaultRef 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
+  name: names.keyVault
+}
+
+// Reference the deployed Communication Service to get its connection string
+resource communicationServicesRef 'Microsoft.Communication/communicationServices@2023-04-01' existing = {
+  name: names.communicationServices
+}
+
+// Store ACS connection string in Key Vault
+// This allows App Service to securely access the connection string via Key Vault reference
+resource acsConnectionStringSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVaultRef
+  name: 'acs-connection-string'
+  properties: {
+    value: communicationServicesRef.listKeys().primaryConnectionString
+    contentType: 'text/plain'
+    attributes: {
+      enabled: true
+    }
+  }
+  dependsOn: [keyVault, communicationServices]
+}
+
+// Reference the Email Service domain to get the mail-from domain for sender address
+resource emailDomainRef 'Microsoft.Communication/emailServices/domains@2023-04-01' existing = {
+  name: '${names.emailService}/AzureManagedDomain'
+}
+
+// Generate and store JWT secret key in Key Vault
+// This is used for signing JWT tokens - must be at least 32 characters for HMACSHA256
+resource jwtSecretKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVaultRef
+  name: 'jwt-secret-key'
+  properties: {
+    // Generate a unique secret key based on resource group ID and a salt
+    // This ensures each environment has a different secret key
+    value: '${uniqueString(resourceGroup().id, 'jwt-secret')}${uniqueString(subscription().id, 'jwt-luminous')}${uniqueString(resourceGroup().id, 'auth-key')}'
+    contentType: 'text/plain'
+    attributes: {
+      enabled: true
+    }
+  }
+  dependsOn: [keyVault]
+}
+
+// =============================================================================
 // Web Hosting (Static Web App deployed first for CORS configuration)
 // =============================================================================
 
@@ -407,45 +488,73 @@ module appService 'br/public:avm/res/web/site:0.19.4' = {
     }
     httpsOnly: true
     clientAffinityEnabled: false
-    configs: [
+    // Send diagnostic logs to Log Analytics (linked to Application Insights)
+    diagnosticSettings: [
       {
-        name: 'appsettings'
-        properties: {
-          ASPNETCORE_ENVIRONMENT: environment == 'prd' ? 'Production' : 'Development'
-          APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
-          CosmosDb__AccountEndpoint: cosmosDbEndpoint
-          CosmosDb__DatabaseName: projectName
-          CosmosDb__UseManagedIdentity: 'true'
-          SignalR__Endpoint: 'https://${signalR.outputs.name}.service.signalr.net'
-          AppConfig__Endpoint: appConfig.outputs.endpoint
-          // CORS: Allow Static Web App origin for direct API calls
-          Cors__AllowedOrigins__0: 'https://${staticWebApp.outputs.defaultHostname}'
-          Cors__AllowedOrigins__1: 'http://localhost:4200'
-          Cors__AllowedOrigins__2: 'https://localhost:4200'
-          // Redis cache for distributed session/cache (WebAuthn sessions, etc.)
-          // Note: Redis connection string must be configured post-deployment via Key Vault:
-          // 1. Get Redis primary access key from Azure Portal (Redis Cache > Access keys)
-          // 2. Store in Key Vault as 'redis-connection-string' with value:
-          //    <hostname>:6380,password=<primary-key>,ssl=True,abortConnect=False
-          // 3. Add app setting: Redis__ConnectionString=@Microsoft.KeyVault(VaultName=kv-name;SecretName=redis-connection-string)
-          Redis__HostName: redis.outputs.hostName
-          Redis__SslPort: string(redis.outputs.sslPort)
-          Redis__InstanceName: 'luminous-${environment}:'
-          // Email settings - Azure deployments use ACS, local dev uses console logging
-          Email__UseDevelopmentMode: 'false'
-          Email__SenderName: 'Luminous'
-          Email__BaseUrl: 'https://${staticWebApp.outputs.defaultHostname}'
-          Email__HelpUrl: 'https://${staticWebApp.outputs.defaultHostname}/help'
-          // Note: Email__ConnectionString and Email__SenderAddress must be configured post-deployment:
-          // 1. Get ACS connection string from Azure Portal (Communication Service > Keys)
-          // 2. Store in Key Vault as 'acs-connection-string' secret
-          // 3. Add app setting: Email__ConnectionString=@Microsoft.KeyVault(VaultName=kv-name;SecretName=acs-connection-string)
-          // 4. Get sender address from Azure Portal (Email Service > Provision Domains)
-          //    Format: DoNotReply@<guid>.azurecomm.net
-        }
+        workspaceResourceId: logAnalytics.outputs.resourceId
+        logCategoriesAndGroups: [
+          { categoryGroup: 'allLogs' }
+        ]
+        metricCategories: [
+          { category: 'AllMetrics' }
+        ]
       }
     ]
+    // Note: App settings are deployed separately to avoid circular dependency with Key Vault secrets
   }
+}
+
+// Deploy App Service settings after all secrets are created in Key Vault
+// This avoids circular dependency: App Service needs secrets, but Key Vault needs App Service's managed identity
+module appServiceSettings 'br/public:avm/res/web/site/config:0.1.1' = {
+  name: 'deploy-app-service-settings'
+  params: {
+    appName: names.appService
+    name: 'appsettings'
+    properties: {
+      ASPNETCORE_ENVIRONMENT: environment == 'prd' ? 'Production' : 'Development'
+      APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
+      CosmosDb__AccountEndpoint: cosmosDbEndpoint
+      CosmosDb__DatabaseName: projectName
+      CosmosDb__UseManagedIdentity: 'true'
+      SignalR__Endpoint: 'https://${signalR.outputs.name}.service.signalr.net'
+      AppConfig__Endpoint: appConfig.outputs.endpoint
+      // CORS: Allow Static Web App origin for direct API calls
+      Cors__AllowedOrigins__0: 'https://${staticWebApp.outputs.defaultHostname}'
+      Cors__AllowedOrigins__1: 'http://localhost:4200'
+      Cors__AllowedOrigins__2: 'https://localhost:4200'
+      // Redis cache for distributed session/cache (WebAuthn sessions, etc.)
+      // Connection string is securely stored in Key Vault by the Redis module
+      Redis__ConnectionString: '@Microsoft.KeyVault(VaultName=${names.keyVault};SecretName=redis-connection-string)'
+      Redis__InstanceName: 'luminous-${environment}:'
+      // Email settings - Azure deployments use ACS, local dev uses console logging
+      Email__UseDevelopmentMode: 'false'
+      Email__ConnectionString: '@Microsoft.KeyVault(VaultName=${names.keyVault};SecretName=acs-connection-string)'
+      // Sender address format: DoNotReply@<azure-managed-domain>.azurecomm.net
+      Email__SenderAddress: 'DoNotReply@${emailDomainRef.properties.mailFromSenderDomain}'
+      Email__SenderName: 'Luminous'
+      Email__BaseUrl: 'https://${staticWebApp.outputs.defaultHostname}'
+      Email__HelpUrl: 'https://${staticWebApp.outputs.defaultHostname}/help'
+      // JWT settings for authentication
+      Jwt__SecretKey: '@Microsoft.KeyVault(VaultName=${names.keyVault};SecretName=jwt-secret-key)'
+      Jwt__Issuer: 'https://luminous.auth'
+      Jwt__Audience: 'luminous-api'
+      Jwt__ExpirationMinutes: '60'
+      Jwt__RefreshExpirationDays: '7'
+      // FIDO2/WebAuthn settings for passkey authentication
+      Fido2__ServerDomain: staticWebApp.outputs.defaultHostname
+      Fido2__ServerName: 'Luminous Family Hub'
+      Fido2__Origins__0: 'https://${staticWebApp.outputs.defaultHostname}'
+    }
+  }
+  dependsOn: [
+    appService
+    keyVault
+    redis // Ensures Redis secret is exported to Key Vault
+    acsConnectionStringSecret
+    jwtSecretKeySecret
+    emailService // Ensures email domain exists for sender address
+  ]
 }
 
 module functionAppSync 'br/public:avm/res/web/site:0.19.4' = {
@@ -466,6 +575,18 @@ module functionAppSync 'br/public:avm/res/web/site:0.19.4' = {
       minTlsVersion: '1.2'
     }
     httpsOnly: true
+    // Send diagnostic logs to Log Analytics (linked to Application Insights)
+    diagnosticSettings: [
+      {
+        workspaceResourceId: logAnalytics.outputs.resourceId
+        logCategoriesAndGroups: [
+          { categoryGroup: 'allLogs' }
+        ]
+        metricCategories: [
+          { category: 'AllMetrics' }
+        ]
+      }
+    ]
     configs: [
       {
         name: 'appsettings'
@@ -501,6 +622,18 @@ module functionAppImport 'br/public:avm/res/web/site:0.19.4' = {
       minTlsVersion: '1.2'
     }
     httpsOnly: true
+    // Send diagnostic logs to Log Analytics (linked to Application Insights)
+    diagnosticSettings: [
+      {
+        workspaceResourceId: logAnalytics.outputs.resourceId
+        logCategoriesAndGroups: [
+          { categoryGroup: 'allLogs' }
+        ]
+        metricCategories: [
+          { category: 'AllMetrics' }
+        ]
+      }
+    ]
     configs: [
       {
         name: 'appsettings'
