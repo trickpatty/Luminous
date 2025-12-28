@@ -117,6 +117,21 @@ export interface RegisterRequest {
   displayName: string;
   familyName?: string; // Optional - if creating new family
   inviteCode?: string; // Optional - if joining existing family
+  timezone?: string; // Optional - timezone for the family
+}
+
+/**
+ * Family creation result from registration
+ */
+export interface FamilyCreationResult {
+  family: {
+    id: string;
+    name: string;
+    timezone: string;
+    memberCount: number;
+    deviceCount: number;
+  };
+  auth: TokenPair;
 }
 
 /**

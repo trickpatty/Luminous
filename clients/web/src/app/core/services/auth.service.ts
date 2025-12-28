@@ -13,6 +13,7 @@ import {
   LoginRequest,
   VerifyOtpRequest,
   RegisterRequest,
+  FamilyCreationResult,
   PasskeyRegistrationOptions,
   PasskeyAuthenticationOptions,
   PasskeyRegistrationResponse,
@@ -215,15 +216,16 @@ export class AuthService {
   // ============================================
 
   /**
-   * Register a new user
+   * Register a new user and create a family
    * @param request Registration details
+   * @returns Observable with family creation result including auth tokens
    */
-  register(request: RegisterRequest): Observable<TokenPair> {
+  register(request: RegisterRequest): Observable<FamilyCreationResult> {
     this._isLoading.set(true);
     this._error.set(null);
 
-    return this.api.post<TokenPair>('auth/register', request).pipe(
-      tap((tokens) => this.handleAuthSuccess(tokens)),
+    return this.api.post<FamilyCreationResult>('auth/register', request).pipe(
+      tap((result) => this.handleAuthSuccess(result.auth)),
       catchError((error) => {
         this._isLoading.set(false);
         this._error.set(error.error?.message || 'Registration failed');
