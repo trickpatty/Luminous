@@ -8,8 +8,7 @@ using Luminous.Application.Common.Interfaces;
 using Luminous.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
-using Microsoft.OpenApi.Models.References;
+using Microsoft.OpenApi;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
