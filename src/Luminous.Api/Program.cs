@@ -8,7 +8,6 @@ using Luminous.Application.Common.Interfaces;
 using Luminous.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -154,39 +153,22 @@ builder.Services.AddAuthorization(options =>
 // Configure controllers
 builder.Services.AddControllers();
 
-// Configure OpenAPI/Swagger
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
+// Configure OpenAPI with native ASP.NET Core support
+builder.Services.AddOpenApi("v1", options =>
 {
-    options.SwaggerDoc("v1", new OpenApiInfo
+    options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
     {
-        Title = "Luminous API",
-        Version = "v1",
-        Description = "API for the Luminous Family Hub",
-        Contact = new OpenApiContact
+        document.Info.Title = "Luminous API";
+        document.Info.Version = "v1";
+        document.Info.Description = "API for the Luminous Family Hub";
+        document.Info.Contact = new Microsoft.OpenApi.Models.OpenApiContact
         {
             Name = "Luminous Team",
             Url = new Uri("https://github.com/trickpatty/Luminous")
-        }
+        };
+        return Task.CompletedTask;
     });
-
-    // Add JWT authentication to Swagger
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "Enter your JWT token. In development, use POST /api/devauth/token to get a token."
-    });
-
-    // Use the new delegate pattern for .NET 10 / OpenApi 3.x
-    options.AddSecurityRequirement(document =>
-        new OpenApiSecurityRequirement
-        {
-            [new OpenApiSecuritySchemeReference("Bearer", document)] = []
-        });
 });
 
 // Configure CORS
@@ -211,10 +193,10 @@ var app = builder.Build();
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
+    app.MapOpenApi();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Luminous API v1");
+        options.SwaggerEndpoint("/openapi/v1.json", "Luminous API v1");
         options.DisplayRequestDuration();
     });
 }
