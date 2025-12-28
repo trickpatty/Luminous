@@ -506,12 +506,12 @@ module appService 'br/public:avm/res/web/site:0.19.4' = {
 
 // Deploy App Service settings after all secrets are created in Key Vault
 // This avoids circular dependency: App Service needs secrets, but Key Vault needs App Service's managed identity
-module appServiceSettings 'br/public:avm/res/web/site/config--appsettings:0.7.0' = {
+module appServiceSettings 'br/public:avm/res/web/site/config:0.1.1' = {
   name: 'deploy-app-service-settings'
   params: {
     appName: names.appService
-    kind: 'appsettings'
-    appSettingsKeyValuePairs: {
+    name: 'appsettings'
+    properties: {
       ASPNETCORE_ENVIRONMENT: environment == 'prd' ? 'Production' : 'Development'
       APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
       CosmosDb__AccountEndpoint: cosmosDbEndpoint
