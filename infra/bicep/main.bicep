@@ -506,42 +506,46 @@ module appService 'br/public:avm/res/web/site:0.19.4' = {
 
 // Deploy App Service settings after all secrets are created in Key Vault
 // This avoids circular dependency: App Service needs secrets, but Key Vault needs App Service's managed identity
-resource appServiceSettings 'Microsoft.Web/sites/config@2023-12-01' = {
-  name: '${names.appService}/appsettings'
-  properties: {
-    ASPNETCORE_ENVIRONMENT: environment == 'prd' ? 'Production' : 'Development'
-    APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
-    CosmosDb__AccountEndpoint: cosmosDbEndpoint
-    CosmosDb__DatabaseName: projectName
-    CosmosDb__UseManagedIdentity: 'true'
-    SignalR__Endpoint: 'https://${signalR.outputs.name}.service.signalr.net'
-    AppConfig__Endpoint: appConfig.outputs.endpoint
-    // CORS: Allow Static Web App origin for direct API calls
-    Cors__AllowedOrigins__0: 'https://${staticWebApp.outputs.defaultHostname}'
-    Cors__AllowedOrigins__1: 'http://localhost:4200'
-    Cors__AllowedOrigins__2: 'https://localhost:4200'
-    // Redis cache for distributed session/cache (WebAuthn sessions, etc.)
-    // Connection string is securely stored in Key Vault by the Redis module
-    Redis__ConnectionString: '@Microsoft.KeyVault(VaultName=${names.keyVault};SecretName=redis-connection-string)'
-    Redis__InstanceName: 'luminous-${environment}:'
-    // Email settings - Azure deployments use ACS, local dev uses console logging
-    Email__UseDevelopmentMode: 'false'
-    Email__ConnectionString: '@Microsoft.KeyVault(VaultName=${names.keyVault};SecretName=acs-connection-string)'
-    // Sender address format: DoNotReply@<azure-managed-domain>.azurecomm.net
-    Email__SenderAddress: 'DoNotReply@${emailDomainRef.properties.mailFromSenderDomain}'
-    Email__SenderName: 'Luminous'
-    Email__BaseUrl: 'https://${staticWebApp.outputs.defaultHostname}'
-    Email__HelpUrl: 'https://${staticWebApp.outputs.defaultHostname}/help'
-    // JWT settings for authentication
-    Jwt__SecretKey: '@Microsoft.KeyVault(VaultName=${names.keyVault};SecretName=jwt-secret-key)'
-    Jwt__Issuer: 'https://luminous.auth'
-    Jwt__Audience: 'luminous-api'
-    Jwt__ExpirationMinutes: '60'
-    Jwt__RefreshExpirationDays: '7'
-    // FIDO2/WebAuthn settings for passkey authentication
-    Fido2__ServerDomain: staticWebApp.outputs.defaultHostname
-    Fido2__ServerName: 'Luminous Family Hub'
-    Fido2__Origins__0: 'https://${staticWebApp.outputs.defaultHostname}'
+module appServiceSettings 'br/public:avm/res/web/site/config--appsettings:0.7.0' = {
+  name: 'deploy-app-service-settings'
+  params: {
+    appName: names.appService
+    kind: 'appsettings'
+    appSettingsKeyValuePairs: {
+      ASPNETCORE_ENVIRONMENT: environment == 'prd' ? 'Production' : 'Development'
+      APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.outputs.connectionString
+      CosmosDb__AccountEndpoint: cosmosDbEndpoint
+      CosmosDb__DatabaseName: projectName
+      CosmosDb__UseManagedIdentity: 'true'
+      SignalR__Endpoint: 'https://${signalR.outputs.name}.service.signalr.net'
+      AppConfig__Endpoint: appConfig.outputs.endpoint
+      // CORS: Allow Static Web App origin for direct API calls
+      Cors__AllowedOrigins__0: 'https://${staticWebApp.outputs.defaultHostname}'
+      Cors__AllowedOrigins__1: 'http://localhost:4200'
+      Cors__AllowedOrigins__2: 'https://localhost:4200'
+      // Redis cache for distributed session/cache (WebAuthn sessions, etc.)
+      // Connection string is securely stored in Key Vault by the Redis module
+      Redis__ConnectionString: '@Microsoft.KeyVault(VaultName=${names.keyVault};SecretName=redis-connection-string)'
+      Redis__InstanceName: 'luminous-${environment}:'
+      // Email settings - Azure deployments use ACS, local dev uses console logging
+      Email__UseDevelopmentMode: 'false'
+      Email__ConnectionString: '@Microsoft.KeyVault(VaultName=${names.keyVault};SecretName=acs-connection-string)'
+      // Sender address format: DoNotReply@<azure-managed-domain>.azurecomm.net
+      Email__SenderAddress: 'DoNotReply@${emailDomainRef.properties.mailFromSenderDomain}'
+      Email__SenderName: 'Luminous'
+      Email__BaseUrl: 'https://${staticWebApp.outputs.defaultHostname}'
+      Email__HelpUrl: 'https://${staticWebApp.outputs.defaultHostname}/help'
+      // JWT settings for authentication
+      Jwt__SecretKey: '@Microsoft.KeyVault(VaultName=${names.keyVault};SecretName=jwt-secret-key)'
+      Jwt__Issuer: 'https://luminous.auth'
+      Jwt__Audience: 'luminous-api'
+      Jwt__ExpirationMinutes: '60'
+      Jwt__RefreshExpirationDays: '7'
+      // FIDO2/WebAuthn settings for passkey authentication
+      Fido2__ServerDomain: staticWebApp.outputs.defaultHostname
+      Fido2__ServerName: 'Luminous Family Hub'
+      Fido2__Origins__0: 'https://${staticWebApp.outputs.defaultHostname}'
+    }
   }
   dependsOn: [
     appService
