@@ -65,8 +65,11 @@ export class LoginComponent implements OnInit {
     if (!this.email || !this.otpCode) return;
 
     this.authService.verifyOtp(this.email, this.otpCode).subscribe({
-      next: () => {
-        this.navigateToDashboard();
+      next: (result) => {
+        if (result.success && result.auth) {
+          this.navigateToDashboard();
+        }
+        // Error handling is done in the auth service
       },
     });
   }

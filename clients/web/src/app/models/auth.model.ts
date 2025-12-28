@@ -133,6 +133,16 @@ export interface RegisterStartResult {
 }
 
 /**
+ * Result from OTP verification
+ */
+export interface OtpVerifyResult {
+  success: boolean;
+  auth?: TokenPair;
+  error?: string;
+  remainingAttempts: number;
+}
+
+/**
  * Request to complete registration (step 2 of 2)
  * Note: Email is not included as it's retrieved from the secure server-side session
  */
