@@ -82,3 +82,70 @@ public sealed record FamilyCreationResultDto
     /// </summary>
     public AuthResultDto Auth { get; init; } = new();
 }
+
+/// <summary>
+/// Result of starting the registration process.
+/// </summary>
+public sealed record RegisterStartResultDto
+{
+    /// <summary>
+    /// Whether the operation succeeded.
+    /// </summary>
+    public bool Success { get; init; }
+
+    /// <summary>
+    /// The session ID for completing registration.
+    /// </summary>
+    public string? SessionId { get; init; }
+
+    /// <summary>
+    /// Message describing the result.
+    /// </summary>
+    public string Message { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Masked email address for display.
+    /// </summary>
+    public string MaskedEmail { get; init; } = string.Empty;
+
+    /// <summary>
+    /// When the OTP expires.
+    /// </summary>
+    public DateTime? ExpiresAt { get; init; }
+
+    /// <summary>
+    /// Seconds until a new OTP can be requested.
+    /// </summary>
+    public int? RetryAfterSeconds { get; init; }
+}
+
+/// <summary>
+/// Result of completing the registration process.
+/// </summary>
+public sealed record RegisterCompleteResultDto
+{
+    /// <summary>
+    /// Whether the operation succeeded.
+    /// </summary>
+    public bool Success { get; init; }
+
+    /// <summary>
+    /// Error message if registration failed.
+    /// </summary>
+    public string? Error { get; init; }
+
+    /// <summary>
+    /// The created family details.
+    /// </summary>
+    public FamilyDto? Family { get; init; }
+
+    /// <summary>
+    /// The authentication result for the owner.
+    /// </summary>
+    public AuthResultDto? Auth { get; init; }
+
+    /// <summary>
+    /// Remaining OTP verification attempts.
+    /// </summary>
+    public int RemainingAttempts { get; init; }
+}

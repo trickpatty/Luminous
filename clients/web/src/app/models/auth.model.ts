@@ -110,18 +110,68 @@ export interface PasskeyAuthenticationResponse {
 }
 
 /**
- * User registration request
+ * User registration request (deprecated - use RegisterStartRequest)
+ * @deprecated Use RegisterStartRequest and RegisterCompleteRequest for secure 2-step registration
  */
 export interface RegisterRequest {
   email: string;
   displayName: string;
-  familyName?: string; // Optional - if creating new family
-  inviteCode?: string; // Optional - if joining existing family
-  timezone?: string; // Optional - timezone for the family
+  familyName?: string;
+  inviteCode?: string;
+  timezone?: string;
 }
 
 /**
- * Family creation result from registration
+ * Request to start registration (step 1 of 2)
+ */
+export interface RegisterStartRequest {
+  email: string;
+  displayName: string;
+  familyName: string;
+  timezone?: string;
+}
+
+/**
+ * Result from starting registration
+ */
+export interface RegisterStartResult {
+  success: boolean;
+  sessionId?: string;
+  message: string;
+  maskedEmail: string;
+  expiresAt?: string;
+  retryAfterSeconds?: number;
+}
+
+/**
+ * Request to complete registration (step 2 of 2)
+ */
+export interface RegisterCompleteRequest {
+  sessionId: string;
+  email: string;
+  code: string;
+}
+
+/**
+ * Result from completing registration
+ */
+export interface RegisterCompleteResult {
+  success: boolean;
+  error?: string;
+  family?: {
+    id: string;
+    name: string;
+    timezone: string;
+    memberCount: number;
+    deviceCount: number;
+  };
+  auth?: TokenPair;
+  remainingAttempts: number;
+}
+
+/**
+ * Family creation result from registration (deprecated)
+ * @deprecated Use RegisterCompleteResult instead
  */
 export interface FamilyCreationResult {
   family: {

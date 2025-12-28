@@ -3,9 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService, WebAuthnService } from '../../../../core';
-import { RegisterRequest } from '../../../../models';
+import { RegisterStartRequest } from '../../../../models';
 
-type RegisterStep = 'details' | 'passkey' | 'complete';
+type RegisterStep = 'details' | 'verify' | 'passkey' | 'complete';
 
 @Component({
   selector: 'app-register',
@@ -22,8 +22,15 @@ export class RegisterComponent {
   email = '';
   displayName = '';
   familyName = '';
-  inviteCode = '';
-  isJoiningFamily = false;
+
+  // Verification state
+  sessionId = '';
+  maskedEmail = '';
+  verificationCode = '';
+  remainingAttempts = signal<number | null>(null);
+  codeExpiresAt = signal<Date | null>(null);
+  canResend = signal(false);
+  resendCountdown = signal(0);
 
   // UI state
   step = signal<RegisterStep>('details');
@@ -31,51 +38,116 @@ export class RegisterComponent {
   error = this.authService.error;
   passkeySupported = signal(false);
 
+  private resendTimer?: ReturnType<typeof setInterval>;
+
   constructor() {
     this.passkeySupported.set(this.webAuthnService.isSupported());
   }
 
   /**
-   * Toggle between creating new family and joining existing
+   * Step 1: Submit registration details and request email verification
    */
-  toggleJoinFamily(): void {
-    this.isJoiningFamily = !this.isJoiningFamily;
-    if (!this.isJoiningFamily) {
-      this.inviteCode = '';
-    } else {
-      this.familyName = '';
-    }
-  }
-
-  /**
-   * Register new user
-   */
-  async register(): Promise<void> {
-    const request: RegisterRequest = {
+  async startRegistration(): Promise<void> {
+    const request: RegisterStartRequest = {
       email: this.email,
       displayName: this.displayName,
+      familyName: this.familyName,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     };
 
-    if (this.isJoiningFamily) {
-      request.inviteCode = this.inviteCode;
-    } else {
-      request.familyName = this.familyName;
-    }
+    this.authService.startRegistration(request).subscribe({
+      next: (result) => {
+        if (result.success && result.sessionId) {
+          this.sessionId = result.sessionId;
+          this.maskedEmail = result.maskedEmail;
 
-    this.authService.register(request).subscribe({
-      next: () => {
-        // If passkey is supported, offer to set one up
-        if (this.passkeySupported()) {
-          this.step.set('passkey');
-        } else {
-          this.step.set('complete');
+          if (result.expiresAt) {
+            this.codeExpiresAt.set(new Date(result.expiresAt));
+          }
+
+          // Start resend countdown
+          if (result.retryAfterSeconds) {
+            this.startResendCountdown(result.retryAfterSeconds);
+          }
+
+          this.step.set('verify');
         }
       },
     });
   }
 
   /**
-   * Set up a passkey for the new account
+   * Step 2: Verify the email with OTP code
+   */
+  async verifyEmail(): Promise<void> {
+    this.authService
+      .completeRegistration({
+        sessionId: this.sessionId,
+        email: this.email,
+        code: this.verificationCode,
+      })
+      .subscribe({
+        next: (result) => {
+          if (result.success) {
+            // Registration complete - proceed to passkey setup
+            if (this.passkeySupported()) {
+              this.step.set('passkey');
+            } else {
+              this.step.set('complete');
+            }
+          } else {
+            // Show remaining attempts if verification failed
+            this.remainingAttempts.set(result.remainingAttempts);
+          }
+        },
+      });
+  }
+
+  /**
+   * Resend verification code
+   */
+  resendCode(): void {
+    if (!this.canResend()) return;
+
+    const request: RegisterStartRequest = {
+      email: this.email,
+      displayName: this.displayName,
+      familyName: this.familyName,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    };
+
+    this.authService.startRegistration(request).subscribe({
+      next: (result) => {
+        if (result.success && result.sessionId) {
+          this.sessionId = result.sessionId;
+          this.verificationCode = '';
+          this.remainingAttempts.set(null);
+
+          if (result.expiresAt) {
+            this.codeExpiresAt.set(new Date(result.expiresAt));
+          }
+
+          if (result.retryAfterSeconds) {
+            this.startResendCountdown(result.retryAfterSeconds);
+          }
+        }
+      },
+    });
+  }
+
+  /**
+   * Go back to details step
+   */
+  backToDetails(): void {
+    this.clearResendTimer();
+    this.sessionId = '';
+    this.verificationCode = '';
+    this.remainingAttempts.set(null);
+    this.step.set('details');
+  }
+
+  /**
+   * Step 3: Set up a passkey for the new account
    */
   async setupPasskey(): Promise<void> {
     if (!this.passkeySupported()) {
@@ -116,5 +188,35 @@ export class RegisterComponent {
    */
   continueToDashboard(): void {
     this.router.navigate(['/dashboard']);
+  }
+
+  /**
+   * Start countdown timer for resend button
+   */
+  private startResendCountdown(seconds: number): void {
+    this.clearResendTimer();
+    this.canResend.set(false);
+    this.resendCountdown.set(seconds);
+
+    this.resendTimer = setInterval(() => {
+      const current = this.resendCountdown();
+      if (current <= 1) {
+        this.clearResendTimer();
+        this.canResend.set(true);
+        this.resendCountdown.set(0);
+      } else {
+        this.resendCountdown.set(current - 1);
+      }
+    }, 1000);
+  }
+
+  /**
+   * Clear the resend countdown timer
+   */
+  private clearResendTimer(): void {
+    if (this.resendTimer) {
+      clearInterval(this.resendTimer);
+      this.resendTimer = undefined;
+    }
   }
 }
