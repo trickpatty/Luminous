@@ -44,3 +44,8 @@ param signalRSku = 'Free_F1'
 
 // Static Web App - Standard tier for dev (required for linked backend)
 param staticWebAppSku = 'Standard'
+
+// Role Assignments - defaults to true
+// Set to false if the deploying identity lacks User Access Administrator or Owner role
+// When false, role assignments must be created separately by a privileged identity
+// param deployRoleAssignments = true
