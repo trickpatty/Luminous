@@ -1,6 +1,7 @@
 using System.Text;
 using Fido2NetLib;
 using Luminous.Api.Configuration;
+using Luminous.Api.Helpers;
 using Luminous.Api.Middleware;
 using Luminous.Api.Services;
 using Luminous.Application;
@@ -65,11 +66,24 @@ else
     var redisConnectionString = builder.Configuration.GetValue<string>("Redis:ConnectionString");
     if (!string.IsNullOrEmpty(redisConnectionString))
     {
-        builder.Services.AddStackExchangeRedisCache(options =>
+        try
         {
-            options.Configuration = redisConnectionString;
-            options.InstanceName = builder.Configuration.GetValue<string>("Redis:InstanceName") ?? "luminous:";
-        });
+            // Convert URL format (rediss://) to StackExchange.Redis format if needed
+            var stackExchangeConfig = RedisConnectionHelper.ConvertToStackExchangeFormat(redisConnectionString);
+
+            builder.Services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = stackExchangeConfig;
+                options.InstanceName = builder.Configuration.GetValue<string>("Redis:InstanceName") ?? "luminous:";
+            });
+
+            Log.Information("Redis cache configured successfully");
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Failed to configure Redis cache, falling back to in-memory cache");
+            builder.Services.AddDistributedMemoryCache();
+        }
     }
     else
     {
