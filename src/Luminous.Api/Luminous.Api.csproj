@@ -9,7 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
-    <PackageReference Include="Swashbuckle.AspNetCore" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" />
     <PackageReference Include="Serilog.AspNetCore" />
     <PackageReference Include="AspNetCore.HealthChecks.CosmosDb" />
     <PackageReference Include="AspNetCore.HealthChecks.Redis" />

@@ -12,7 +12,10 @@ import {
   AuthUserInfo,
   LoginRequest,
   VerifyOtpRequest,
-  RegisterRequest,
+  RegisterStartRequest,
+  RegisterStartResult,
+  RegisterCompleteRequest,
+  RegisterCompleteResult,
   PasskeyRegistrationOptions,
   PasskeyAuthenticationOptions,
   PasskeyRegistrationResponse,
@@ -211,19 +214,47 @@ export class AuthService {
   }
 
   // ============================================
-  // User Registration
+  // User Registration (2-Step with Email Verification)
   // ============================================
 
   /**
-   * Register a new user
+   * Start the registration process by sending an OTP to verify email ownership.
+   * Step 1 of 2: Validates email, sends verification code, returns session ID.
    * @param request Registration details
+   * @returns Observable with session ID and verification status
    */
-  register(request: RegisterRequest): Observable<TokenPair> {
+  startRegistration(request: RegisterStartRequest): Observable<RegisterStartResult> {
     this._isLoading.set(true);
     this._error.set(null);
 
-    return this.api.post<TokenPair>('auth/register', request).pipe(
-      tap((tokens) => this.handleAuthSuccess(tokens)),
+    return this.api.post<RegisterStartResult>('auth/register/start', request).pipe(
+      tap(() => this._isLoading.set(false)),
+      catchError((error) => {
+        this._isLoading.set(false);
+        this._error.set(error.error?.message || 'Failed to start registration');
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Complete the registration process by verifying the OTP and creating the account.
+   * Step 2 of 2: Verifies email ownership, creates family and user, returns auth tokens.
+   * @param request Verification request with session ID and OTP code
+   * @returns Observable with created family and auth tokens
+   */
+  completeRegistration(request: RegisterCompleteRequest): Observable<RegisterCompleteResult> {
+    this._isLoading.set(true);
+    this._error.set(null);
+
+    return this.api.post<RegisterCompleteResult>('auth/register/complete', request).pipe(
+      tap((result) => {
+        if (result.success && result.auth) {
+          this.handleAuthSuccess(result.auth);
+        } else {
+          this._isLoading.set(false);
+        }
+      }),
       catchError((error) => {
         this._isLoading.set(false);
         this._error.set(error.error?.message || 'Registration failed');

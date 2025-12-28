@@ -3,8 +3,19 @@
     <!-- Header -->
     <div class="text-center">
       <h1 class="text-3xl font-bold text-primary-600">Luminous</h1>
-      <h2 class="mt-4 text-2xl font-semibold text-gray-900">Create your account</h2>
-      <p class="mt-2 text-gray-600">Start organizing your family life</p>
+      @if (step() === 'details') {
+        <h2 class="mt-4 text-2xl font-semibold text-gray-900">Create your account</h2>
+        <p class="mt-2 text-gray-600">Start organizing your family life</p>
+      } @else if (step() === 'verify') {
+        <h2 class="mt-4 text-2xl font-semibold text-gray-900">Verify your email</h2>
+        <p class="mt-2 text-gray-600">We sent a code to {{ maskedEmail }}</p>
+      } @else if (step() === 'passkey') {
+        <h2 class="mt-4 text-2xl font-semibold text-gray-900">Secure your account</h2>
+        <p class="mt-2 text-gray-600">Set up passwordless login</p>
+      } @else {
+        <h2 class="mt-4 text-2xl font-semibold text-gray-900">Welcome!</h2>
+        <p class="mt-2 text-gray-600">Your account is ready</p>
+      }
     </div>
 
     <!-- Error Alert -->
@@ -22,7 +33,7 @@
     <div class="card-lg">
       <!-- Details Step -->
       @if (step() === 'details') {
-        <form (ngSubmit)="register()" class="space-y-6">
+        <form (ngSubmit)="startRegistration()" class="space-y-6">
           <div>
             <label for="displayName" class="label">Your name</label>
             <input
@@ -51,72 +62,119 @@
               placeholder="you@example.com"
               [disabled]="isLoading()"
             />
+            <p class="mt-1 text-xs text-gray-500">
+              We'll send a verification code to this email
+            </p>
           </div>
 
-          <!-- Family Section -->
-          <div class="space-y-4">
-            <div class="flex items-center justify-between">
-              <span class="text-sm font-medium text-gray-700">
-                {{ isJoiningFamily ? 'Join a family' : 'Create a new family' }}
-              </span>
-              <button
-                type="button"
-                (click)="toggleJoinFamily()"
-                class="text-sm text-primary-600 hover:text-primary-700"
-              >
-                {{ isJoiningFamily ? 'Create new instead' : 'Join existing' }}
-              </button>
-            </div>
-
-            @if (!isJoiningFamily) {
-              <div>
-                <label for="familyName" class="label">Family name</label>
-                <input
-                  id="familyName"
-                  name="familyName"
-                  type="text"
-                  required
-                  [(ngModel)]="familyName"
-                  class="input"
-                  placeholder="The Smith Family"
-                  [disabled]="isLoading()"
-                />
-              </div>
-            } @else {
-              <div>
-                <label for="inviteCode" class="label">Invite code</label>
-                <input
-                  id="inviteCode"
-                  name="inviteCode"
-                  type="text"
-                  required
-                  [(ngModel)]="inviteCode"
-                  class="input"
-                  placeholder="Enter invite code"
-                  [disabled]="isLoading()"
-                />
-                <p class="mt-1 text-xs text-gray-500">
-                  Ask a family member for the invite code
-                </p>
-              </div>
-            }
+          <div>
+            <label for="familyName" class="label">Family name</label>
+            <input
+              id="familyName"
+              name="familyName"
+              type="text"
+              required
+              [(ngModel)]="familyName"
+              class="input"
+              placeholder="The Smith Family"
+              [disabled]="isLoading()"
+            />
           </div>
 
           <button
             type="submit"
             class="btn-primary w-full"
-            [disabled]="isLoading() || !email || !displayName || (!familyName && !inviteCode)"
+            [disabled]="isLoading() || !email || !displayName || !familyName"
           >
             @if (isLoading()) {
               <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              Creating account...
+              Sending verification...
             } @else {
-              Create Account
+              Continue
             }
           </button>
+        </form>
+      }
+
+      <!-- Verify Step -->
+      @if (step() === 'verify') {
+        <form (ngSubmit)="verifyEmail()" class="space-y-6">
+          <div class="text-center">
+            <div class="mx-auto w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mb-4">
+              <svg class="h-8 w-8 text-primary-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <p class="text-sm text-gray-600">
+              Enter the 6-digit code we sent to your email
+            </p>
+          </div>
+
+          <div>
+            <label for="verificationCode" class="label">Verification code</label>
+            <input
+              id="verificationCode"
+              name="verificationCode"
+              type="text"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              maxlength="6"
+              required
+              [(ngModel)]="verificationCode"
+              class="input text-center text-2xl tracking-widest"
+              placeholder="000000"
+              [disabled]="isLoading()"
+              autocomplete="one-time-code"
+            />
+            @if (remainingAttempts() !== null && remainingAttempts()! > 0) {
+              <p class="mt-1 text-xs text-amber-600">
+                {{ remainingAttempts() }} attempts remaining
+              </p>
+            }
+          </div>
+
+          <button
+            type="submit"
+            class="btn-primary w-full"
+            [disabled]="isLoading() || verificationCode.length !== 6"
+          >
+            @if (isLoading()) {
+              <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Verifying...
+            } @else {
+              Verify Email
+            }
+          </button>
+
+          <div class="flex items-center justify-between text-sm">
+            <button
+              type="button"
+              (click)="backToDetails()"
+              class="text-gray-600 hover:text-gray-900"
+              [disabled]="isLoading()"
+            >
+              &larr; Back
+            </button>
+
+            <button
+              type="button"
+              (click)="resendCode()"
+              class="text-primary-600 hover:text-primary-700 disabled:text-gray-400"
+              [disabled]="!canResend() || isLoading()"
+            >
+              @if (resendCountdown() > 0) {
+                Resend in {{ resendCountdown() }}s
+              } @else {
+                Resend code
+              }
+            </button>
+          </div>
         </form>
       }
 
@@ -191,7 +249,7 @@
     </div>
 
     <!-- Login Link -->
-    @if (step() === 'details') {
+    @if (step() === 'details' || step() === 'verify') {
       <p class="text-center text-sm text-gray-600">
         Already have an account?
         <a routerLink="/auth/login" class="font-medium text-primary-600 hover:text-primary-500">

@@ -110,13 +110,52 @@ export interface PasskeyAuthenticationResponse {
 }
 
 /**
- * User registration request
+ * Request to start registration (step 1 of 2)
  */
-export interface RegisterRequest {
+export interface RegisterStartRequest {
   email: string;
   displayName: string;
-  familyName?: string; // Optional - if creating new family
-  inviteCode?: string; // Optional - if joining existing family
+  familyName: string;
+  timezone?: string;
+  inviteCode?: string;
+}
+
+/**
+ * Result from starting registration
+ */
+export interface RegisterStartResult {
+  success: boolean;
+  sessionId?: string;
+  message: string;
+  maskedEmail: string;
+  expiresAt?: string;
+  retryAfterSeconds?: number;
+}
+
+/**
+ * Request to complete registration (step 2 of 2)
+ * Note: Email is not included as it's retrieved from the secure server-side session
+ */
+export interface RegisterCompleteRequest {
+  sessionId: string;
+  code: string;
+}
+
+/**
+ * Result from completing registration
+ */
+export interface RegisterCompleteResult {
+  success: boolean;
+  error?: string;
+  family?: {
+    id: string;
+    name: string;
+    timezone: string;
+    memberCount: number;
+    deviceCount: number;
+  };
+  auth?: TokenPair;
+  remainingAttempts: number;
 }
 
 /**

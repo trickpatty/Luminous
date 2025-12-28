@@ -3,7 +3,7 @@ import { provideRouter, withComponentInputBinding, withViewTransitions } from '@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 
 import { routes } from './app.routes';
-import { authInterceptor, errorInterceptor } from './core';
+import { apiResponseInterceptor, authInterceptor, errorInterceptor } from './core';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -16,6 +16,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(
       withInterceptors([
         errorInterceptor,
+        apiResponseInterceptor,
         authInterceptor,
       ])
     ),

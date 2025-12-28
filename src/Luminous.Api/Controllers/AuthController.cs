@@ -14,22 +14,82 @@ namespace Luminous.Api.Controllers;
 /// </summary>
 public class AuthController : ApiControllerBase
 {
+    #region Registration (2-Step with Email Verification)
+
     /// <summary>
-    /// Registers a new family and owner, returning authentication tokens.
-    /// This is the primary signup flow for creating a new family (tenant).
+    /// Starts the registration process by sending an OTP to verify email ownership.
+    /// Step 1 of 2: Validates email, sends verification code, and returns a session ID.
     /// </summary>
-    /// <param name="command">The registration command.</param>
-    /// <returns>The created family and authentication tokens.</returns>
-    [HttpPost("register")]
+    /// <param name="request">The registration request details.</param>
+    /// <returns>Session ID and email verification status.</returns>
+    [HttpPost("register/start")]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(ApiResponse<FamilyCreationResultDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<RegisterStartResultDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
-    public async Task<ActionResult<ApiResponse<FamilyCreationResultDto>>> Register([FromBody] RegisterFamilyCommand command)
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status429TooManyRequests)]
+    public async Task<ActionResult<ApiResponse<RegisterStartResultDto>>> StartRegistration(
+        [FromBody] RegisterStartRequest request)
     {
+        var command = new RegisterStartCommand
+        {
+            Email = request.Email,
+            DisplayName = request.DisplayName,
+            FamilyName = request.FamilyName,
+            Timezone = request.Timezone ?? "UTC",
+            InviteCode = request.InviteCode,
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+            UserAgent = Request.Headers.UserAgent.ToString()
+        };
+
         var result = await Mediator.Send(command);
-        return CreatedResponse($"/api/families/{result.Family.Id}", result);
+
+        if (!result.Success)
+        {
+            return BadRequest(ApiResponse<RegisterStartResultDto>.Fail("RATE_LIMITED", result.Message));
+        }
+
+        return OkResponse(result);
     }
+
+    /// <summary>
+    /// Completes the registration process by verifying the OTP and creating the account.
+    /// Step 2 of 2: Verifies email ownership, creates family and user, returns auth tokens.
+    /// </summary>
+    /// <param name="request">The verification request with session ID and OTP code.</param>
+    /// <returns>The created family and authentication tokens.</returns>
+    [HttpPost("register/complete")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse<RegisterCompleteResultDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<ApiResponse<RegisterCompleteResultDto>>> CompleteRegistration(
+        [FromBody] RegisterCompleteRequest request)
+    {
+        var command = new RegisterCompleteCommand
+        {
+            SessionId = request.SessionId,
+            Code = request.Code,
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+            UserAgent = Request.Headers.UserAgent.ToString()
+        };
+
+        var result = await Mediator.Send(command);
+
+        if (!result.Success)
+        {
+            if (result.RemainingAttempts > 0)
+            {
+                return BadRequest(ApiResponse<RegisterCompleteResultDto>.Fail("INVALID_CODE", result.Error ?? "Invalid verification code"));
+            }
+            return Unauthorized(ApiResponse<RegisterCompleteResultDto>.Fail("VERIFICATION_FAILED", result.Error ?? "Verification failed"));
+        }
+
+        return Created($"/api/families/{result.Family!.Id}", ApiResponse<RegisterCompleteResultDto>.Ok(result));
+    }
+
+    #endregion
 
     /// <summary>
     /// Gets the currently authenticated user's information.
@@ -319,6 +379,53 @@ public class AuthController : ApiControllerBase
 }
 
 #region Request DTOs
+
+/// <summary>
+/// Request to start registration (step 1).
+/// </summary>
+public sealed record RegisterStartRequest
+{
+    /// <summary>
+    /// The email address of the user.
+    /// </summary>
+    public string Email { get; init; } = string.Empty;
+
+    /// <summary>
+    /// The display name of the user.
+    /// </summary>
+    public string DisplayName { get; init; } = string.Empty;
+
+    /// <summary>
+    /// The name of the family to create (required if not using invite code).
+    /// </summary>
+    public string FamilyName { get; init; } = string.Empty;
+
+    /// <summary>
+    /// The timezone for the family (IANA timezone ID, required if not using invite code).
+    /// </summary>
+    public string? Timezone { get; init; }
+
+    /// <summary>
+    /// Optional invite code to join an existing family instead of creating a new one.
+    /// </summary>
+    public string? InviteCode { get; init; }
+}
+
+/// <summary>
+/// Request to complete registration (step 2).
+/// </summary>
+public sealed record RegisterCompleteRequest
+{
+    /// <summary>
+    /// The session ID from the registration start.
+    /// </summary>
+    public string SessionId { get; init; } = string.Empty;
+
+    /// <summary>
+    /// The 6-digit verification code.
+    /// </summary>
+    public string Code { get; init; } = string.Empty;
+}
 
 /// <summary>
 /// Request to send an OTP.
