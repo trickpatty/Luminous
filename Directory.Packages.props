@@ -38,6 +38,7 @@
     <PackageVersion Include="Fido2.AspNet" Version="4.0.0" />
 
     <!-- Caching -->
+    <PackageVersion Include="Microsoft.Extensions.Caching.Abstractions" Version="9.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.0" />
 
     <!-- Health Checks -->
