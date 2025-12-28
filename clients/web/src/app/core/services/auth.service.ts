@@ -12,6 +12,7 @@ import {
   AuthUserInfo,
   LoginRequest,
   VerifyOtpRequest,
+  OtpVerifyResult,
   RegisterStartRequest,
   RegisterStartResult,
   RegisterCompleteRequest,
@@ -98,12 +99,19 @@ export class AuthService {
    * @param email User email
    * @param code OTP code
    */
-  verifyOtp(email: string, code: string): Observable<TokenPair> {
+  verifyOtp(email: string, code: string): Observable<OtpVerifyResult> {
     this._isLoading.set(true);
     this._error.set(null);
 
-    return this.api.post<TokenPair>('auth/otp/verify', { email, code } as VerifyOtpRequest).pipe(
-      tap((tokens) => this.handleAuthSuccess(tokens)),
+    return this.api.post<OtpVerifyResult>('auth/otp/verify', { email, code } as VerifyOtpRequest).pipe(
+      tap((result) => {
+        if (result.success && result.auth) {
+          this.handleAuthSuccess(result.auth);
+        } else {
+          this._isLoading.set(false);
+          this._error.set(result.error || 'Invalid or expired OTP');
+        }
+      }),
       catchError((error) => {
         this._isLoading.set(false);
         this._error.set(error.error?.message || 'Invalid or expired OTP');
