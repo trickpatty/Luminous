@@ -547,6 +547,7 @@ For users transitioning from passwords:
 - [ADR-003: Azure as Cloud Platform](./ADR-003-azure-cloud-platform.md)
 - [ADR-006: Multi-Tenant Architecture](./ADR-006-multi-tenant-architecture.md)
 - [ADR-001: .NET 10 as Backend Platform](./ADR-001-dotnet-backend.md)
+- [ADR-011: Secure Registration Flow](./ADR-011-secure-registration-flow.md)
 
 ## References
 

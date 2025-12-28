@@ -1,7 +1,7 @@
 # Luminous Architecture Document
 
-> **Document Version:** 2.3.0
-> **Last Updated:** 2025-12-23
+> **Document Version:** 2.4.0
+> **Last Updated:** 2025-12-28
 > **Status:** Active
 > **TOGAF Phase:** Phase B-D (Architecture Development)
 
@@ -424,6 +424,7 @@ luminous/
 | **Identity** | In-house (FIDO2/WebAuthn) | Latest | Passwordless-first auth |
 | **IaC** | Bicep + AVMs | Latest | Azure-native, verified modules |
 | **Identifiers** | NanoId | 3.1.0 | URL-friendly, compact unique IDs |
+| **OpenAPI** | ASP.NET Core OpenAPI | 10.0.1 | Native document generation |
 
 ### Platform Matrix
 
@@ -480,6 +481,57 @@ luminous/
 |  |  [Authorize(Policy = "DeviceAccess")]                          |  |
 |  |                                                                |  |
 |  +---------------------------------------------------------------+  |
+|                                                                      |
++---------------------------------------------------------------------+
+```
+
+### Secure User Registration Flow
+
+New user registration uses a secure 2-step process with email verification to prevent identity impersonation:
+
+```
++---------------------------------------------------------------------+
+|                   SECURE REGISTRATION FLOW                           |
++---------------------------------------------------------------------+
+|                                                                      |
+|  STEP 1: Registration Start                                          |
+|  POST /api/auth/register/start                                       |
+|  +---------------------------------------------------------------+  |
+|  | Client sends: email, displayName, inviteCode (optional)       |  |
+|  | Server:                                                        |  |
+|  |   1. Validates email is not already registered                |  |
+|  |   2. Stores email in server-side session (NOT trusted later)  |  |
+|  |   3. Generates 6-digit OTP                                    |  |
+|  |   4. Sends OTP to email address                               |  |
+|  |   5. Returns session ID                                       |  |
+|  +---------------------------------------------------------------+  |
+|                              |                                       |
+|                              v                                       |
+|  STEP 2: OTP Verification                                            |
+|  POST /api/auth/otp/verify                                           |
+|  +---------------------------------------------------------------+  |
+|  | Client sends: email, code                                      |  |
+|  | Server validates OTP and marks email as verified in session    |  |
+|  +---------------------------------------------------------------+  |
+|                              |                                       |
+|                              v                                       |
+|  STEP 3: Registration Complete                                       |
+|  POST /api/auth/register/complete                                    |
+|  +---------------------------------------------------------------+  |
+|  | Client sends: passkey attestation (NO email - security!)       |  |
+|  | Server:                                                        |  |
+|  |   1. Retrieves verified email from session (server-side)      |  |
+|  |   2. Creates user with email from session                     |  |
+|  |   3. Creates family or joins via invite code                  |  |
+|  |   4. Stores passkey credential                                |  |
+|  |   5. Issues JWT tokens                                        |  |
+|  +---------------------------------------------------------------+  |
+|                                                                      |
+|  SECURITY NOTES:                                                     |
+|  - Email is stored server-side in session, never trusted from client|
+|  - OTP must be verified before registration can complete             |
+|  - Invite codes allow joining existing families                      |
+|  - Prevents attackers from registering with someone else's email     |
 |                                                                      |
 +---------------------------------------------------------------------+
 ```
@@ -707,6 +759,8 @@ services:
 | [ADR-008](./adr/ADR-008-magic-import-approval.md) | Magic Import Requires Approval | Accepted | 2025-12-21 |
 | [ADR-009](./adr/ADR-009-zero-distraction-principle.md) | Zero-Distraction Design Principle | Accepted | 2025-12-21 |
 | [ADR-010](./adr/ADR-010-passwordless-authentication.md) | In-House Passwordless Auth | Accepted | 2025-12-21 |
+| [ADR-011](./adr/ADR-011-secure-registration-flow.md) | Secure Registration with Email Verification | Accepted | 2025-12-28 |
+| [ADR-012](./adr/ADR-012-native-openapi.md) | Native ASP.NET Core OpenAPI | Accepted | 2025-12-28 |
 
 ---
 
@@ -730,3 +784,4 @@ services:
 | 2.1.0 | 2025-12-21 | Luminous Team | Migrate from Guid to NanoId for unique identifiers |
 | 2.2.0 | 2025-12-22 | Luminous Team | Added CI/CD documentation reference |
 | 2.3.0 | 2025-12-23 | Luminous Team | Phase 0 complete: Updated status to Active |
+| 2.4.0 | 2025-12-28 | Luminous Team | Added secure registration flow, native OpenAPI |

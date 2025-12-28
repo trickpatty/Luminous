@@ -1,7 +1,7 @@
 # Luminous Local Development Guide
 
-> **Document Version:** 1.2.0
-> **Last Updated:** 2025-12-22
+> **Document Version:** 1.4.0
+> **Last Updated:** 2025-12-28
 > **Status:** Active
 
 This guide covers setting up and running the Luminous development environment locally.
@@ -16,8 +16,10 @@ This guide covers setting up and running the Luminous development environment lo
 4. [Running the API](#running-the-api)
 5. [Running the Web App](#running-the-web-app)
 6. [Development Authentication](#development-authentication)
-7. [Cosmos DB Emulator](#cosmos-db-emulator)
-8. [Troubleshooting](#troubleshooting)
+7. [Email Service](#email-service-local-development)
+8. [User Registration Flow](#user-registration-flow)
+9. [Cosmos DB Emulator](#cosmos-db-emulator)
+10. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -210,7 +212,8 @@ Once running, the API is available at:
 | Endpoint | Description |
 |----------|-------------|
 | http://localhost:5000 | API base URL |
-| http://localhost:5000/swagger | Swagger UI |
+| http://localhost:5000/swagger | Swagger UI (interactive docs) |
+| http://localhost:5000/openapi/v1.json | OpenAPI 3.0 specification |
 | http://localhost:5000/health | Health check |
 | http://localhost:5000/api/devauth/status | Dev auth status |
 
@@ -436,6 +439,78 @@ If you need to test with real email delivery locally:
   }
 }
 ```
+
+---
+
+## User Registration Flow
+
+### Overview
+
+Luminous uses a secure 2-step registration flow with email verification. This prevents attackers from registering accounts using someone else's email address.
+
+### Registration Steps
+
+```
+1. POST /api/auth/register/start
+   → Validates email, stores in session, sends OTP
+
+2. POST /api/auth/otp/verify
+   → Verifies OTP code, marks email as verified
+
+3. POST /api/auth/register/complete
+   → Creates user with session email, registers passkey
+```
+
+### Testing Registration Locally
+
+**Step 1: Start Registration**
+```bash
+curl -X POST http://localhost:5000/api/auth/register/start \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "newuser@example.com",
+    "displayName": "New User"
+  }'
+
+# Response includes sessionId
+# Watch console for OTP code (in development mode)
+```
+
+**Step 2: Verify Email with OTP**
+```bash
+# Use the OTP code from the console output
+curl -X POST http://localhost:5000/api/auth/otp/verify \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "newuser@example.com",
+    "code": "123456"
+  }'
+```
+
+**Step 3: Complete Registration with Passkey**
+
+This step requires a WebAuthn-compatible browser or client. The Angular app handles this automatically.
+
+### Joining an Existing Family
+
+To join an existing family, include the invite code in Step 1:
+
+```bash
+curl -X POST http://localhost:5000/api/auth/register/start \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "familymember@example.com",
+    "displayName": "Family Member",
+    "inviteCode": "ABC123"
+  }'
+```
+
+### Security Notes
+
+- Email is stored **server-side in session**, not trusted from the client
+- Registration fails if email is not verified via OTP
+- The `/api/auth/register/complete` endpoint does NOT accept email as a parameter
+- Invite codes are validated against existing family invitations
 
 ---
 
@@ -735,3 +810,4 @@ The settings hide build artifacts (`bin/`, `obj/`, `node_modules/`) for cleaner 
 | 1.1.0 | 2025-12-22 | Luminous Team | Added comprehensive VS Code configuration |
 | 1.2.0 | 2025-12-22 | Luminous Team | Added ARM64/Apple Silicon support and Mailpit |
 | 1.3.0 | 2025-12-27 | Luminous Team | Added Email Service documentation (local development) |
+| 1.4.0 | 2025-12-28 | Luminous Team | Added User Registration Flow, OpenAPI endpoint |
