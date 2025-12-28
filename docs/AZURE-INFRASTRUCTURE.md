@@ -1,7 +1,7 @@
 # Azure Infrastructure Guide
 
-> **Document Version:** 1.0.0
-> **Last Updated:** 2025-12-27
+> **Document Version:** 1.3.0
+> **Last Updated:** 2025-12-28
 > **Status:** Active
 > **TOGAF Phase:** Phase D (Technology Architecture)
 
@@ -219,7 +219,12 @@ az bicep version
    - `rg-lum-dev` - Development environment
    - `rg-lum-stg` - Staging environment
    - `rg-lum-prd` - Production environment
-3. **Service Principal** for CI/CD with Contributor role on the resource groups (not subscription-wide)
+3. **Service Principal** for CI/CD with the following roles on the resource groups:
+   - **Contributor** - Required for deploying resources
+   - **User Access Administrator** - Required for creating role assignments (Key Vault, Cosmos DB)
+
+   > **Note:** The deployment creates role assignments to grant managed identities access to Key Vault secrets and Cosmos DB data. Without the `User Access Administrator` role, you must deploy with `deployRoleAssignments=false` and create role assignments separately.
+
 4. **Registered Resource Providers**:
    - Microsoft.DocumentDB
    - Microsoft.Web
@@ -244,6 +249,35 @@ az provider register --namespace Microsoft.KeyVault
 az provider register --namespace Microsoft.AppConfiguration
 az provider register --namespace Microsoft.Insights
 az provider register --namespace Microsoft.OperationalInsights
+```
+
+### Granting Role Assignment Permissions
+
+To allow a service principal to create role assignments during deployment:
+
+```bash
+# Get the service principal object ID
+SP_OBJECT_ID=$(az ad sp show --id <service-principal-app-id> --query id -o tsv)
+
+# Grant User Access Administrator on the resource group
+az role assignment create \
+  --assignee-object-id $SP_OBJECT_ID \
+  --assignee-principal-type ServicePrincipal \
+  --role "User Access Administrator" \
+  --scope /subscriptions/<subscription-id>/resourceGroups/rg-lum-dev
+
+# Repeat for other environments as needed
+az role assignment create \
+  --assignee-object-id $SP_OBJECT_ID \
+  --assignee-principal-type ServicePrincipal \
+  --role "User Access Administrator" \
+  --scope /subscriptions/<subscription-id>/resourceGroups/rg-lum-stg
+
+az role assignment create \
+  --assignee-object-id $SP_OBJECT_ID \
+  --assignee-principal-type ServicePrincipal \
+  --role "User Access Administrator" \
+  --scope /subscriptions/<subscription-id>/resourceGroups/rg-lum-prd
 ```
 
 ---
@@ -666,6 +700,49 @@ AzureDiagnostics
 
 ### Common Issues
 
+#### Deployment Fails - Role Assignment Permission Error
+
+```
+Error: Authorization failed for template resource of type 'Microsoft.Authorization/roleAssignments'.
+The client does not have permission to perform action 'Microsoft.Authorization/roleAssignments/write'
+```
+
+**Cause:** The deploying identity (service principal or user) lacks the `User Access Administrator` or `Owner` role on the resource group. This role is required to create role assignments that grant managed identities access to Key Vault and Cosmos DB.
+
+**Solution 1 - Grant Permissions (Recommended):**
+
+```bash
+# Get the service principal object ID
+SP_OBJECT_ID=$(az ad sp show --id <service-principal-app-id> --query id -o tsv)
+
+# Grant User Access Administrator role
+az role assignment create \
+  --assignee-object-id $SP_OBJECT_ID \
+  --assignee-principal-type ServicePrincipal \
+  --role "User Access Administrator" \
+  --scope /subscriptions/<subscription-id>/resourceGroups/rg-lum-<env>
+```
+
+**Solution 2 - Deploy Without Role Assignments:**
+
+Deploy with role assignments disabled, then have a privileged identity create them separately:
+
+```bash
+# Deploy infrastructure without role assignments
+az deployment group create \
+  --resource-group rg-lum-dev \
+  --template-file infra/bicep/main.bicep \
+  --parameters @infra/bicep/parameters/dev.bicepparam \
+  --parameters deployRoleAssignments=false
+
+# Later, with elevated permissions, deploy only role assignments
+az deployment group create \
+  --resource-group rg-lum-dev \
+  --template-file infra/bicep/main.bicep \
+  --parameters @infra/bicep/parameters/dev.bicepparam \
+  --parameters deployRoleAssignments=true
+```
+
 #### Deployment Fails - Resource Provider Not Registered
 
 ```
@@ -735,3 +812,4 @@ az monitor app-insights query \
 | 1.0.0 | 2025-12-21 | Luminous Team | Initial infrastructure documentation |
 | 1.1.0 | 2025-12-27 | Luminous Team | Updated AVM module versions to latest |
 | 1.2.0 | 2025-12-27 | Luminous Team | Added Azure Communication Services (Email) and post-deployment configuration |
+| 1.3.0 | 2025-12-28 | Luminous Team | Added role assignment permission requirements and troubleshooting |
