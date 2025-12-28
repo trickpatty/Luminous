@@ -70,6 +70,10 @@ param redisCapacity int = environment == 'prd' ? 1 : 0
 @description('SignalR Service SKU')
 param signalRSku string = environment == 'prd' ? 'Standard_S1' : 'Free_F1'
 
+// Role Assignments Configuration
+@description('Deploy role assignments for managed identities. Set to false if deploying identity lacks User Access Administrator/Owner role.')
+param deployRoleAssignments bool = true
+
 // Static Web App Configuration
 @description('Static Web App SKU')
 @allowed(['Free', 'Standard'])
@@ -177,7 +181,9 @@ module keyVault 'br/public:avm/res/key-vault/vault:0.13.3' = {
     enablePurgeProtection: environment == 'prd'
     // Grant Key Vault Secrets User role to App Service and Function Apps
     // This allows them to read secrets using @Microsoft.KeyVault references
-    roleAssignments: [
+    // Note: Role assignments require the deploying identity to have User Access Administrator or Owner role
+    // Set deployRoleAssignments=false if the deploying identity lacks these permissions
+    roleAssignments: deployRoleAssignments ? [
       {
         principalId: appService.outputs.systemAssignedMIPrincipalId!
         principalType: 'ServicePrincipal'
@@ -193,7 +199,7 @@ module keyVault 'br/public:avm/res/key-vault/vault:0.13.3' = {
         principalType: 'ServicePrincipal'
         roleDefinitionIdOrName: builtInRoles.keyVaultSecretsUser
       }
-    ]
+    ] : []
   }
 }
 
@@ -246,7 +252,8 @@ module cosmosDb 'br/public:avm/res/document-db/database-account:0.18.0' = {
     ]
     // Grant managed identities data plane access using AAD authentication
     // Cosmos DB Built-in Data Contributor role: 00000000-0000-0000-0000-000000000002
-    sqlRoleAssignments: [
+    // Note: Cosmos DB SQL role assignments are separate from Azure RBAC but included in the same conditional
+    sqlRoleAssignments: deployRoleAssignments ? [
       {
         principalId: appService.outputs.systemAssignedMIPrincipalId!
         roleDefinitionId: '00000000-0000-0000-0000-000000000002'
@@ -259,7 +266,7 @@ module cosmosDb 'br/public:avm/res/document-db/database-account:0.18.0' = {
         principalId: functionAppImport.outputs.systemAssignedMIPrincipalId!
         roleDefinitionId: '00000000-0000-0000-0000-000000000002'
       }
-    ]
+    ] : []
   }
 }
 
