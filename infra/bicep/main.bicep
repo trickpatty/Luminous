@@ -299,7 +299,7 @@ module redis 'br/public:avm/res/cache/redis:0.16.4' = {
     // Export Redis connection string to Key Vault for secure access
     secretsExportConfiguration: {
       keyVaultResourceId: keyVault.outputs.resourceId
-      primaryConnectionStringSecretName: 'redis-connection-string'
+      primaryConnectionStringName: 'redis-connection-string'
     }
   }
 }
@@ -392,13 +392,18 @@ resource keyVaultRef 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
   name: names.keyVault
 }
 
+// Reference the deployed Communication Service to get its connection string
+resource communicationServicesRef 'Microsoft.Communication/communicationServices@2023-04-01' existing = {
+  name: names.communicationServices
+}
+
 // Store ACS connection string in Key Vault
 // This allows App Service to securely access the connection string via Key Vault reference
 resource acsConnectionStringSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   parent: keyVaultRef
   name: 'acs-connection-string'
   properties: {
-    value: listKeys(communicationServices.outputs.resourceId, '2023-04-01').primaryConnectionString
+    value: communicationServicesRef.listKeys().primaryConnectionString
     contentType: 'text/plain'
     attributes: {
       enabled: true
@@ -410,7 +415,6 @@ resource acsConnectionStringSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01
 // Reference the Email Service domain to get the mail-from domain for sender address
 resource emailDomainRef 'Microsoft.Communication/emailServices/domains@2023-04-01' existing = {
   name: '${names.emailService}/AzureManagedDomain'
-  dependsOn: [emailService]
 }
 
 // Generate and store JWT secret key in Key Vault
@@ -471,7 +475,6 @@ module appService 'br/public:avm/res/web/site:0.19.4' = {
     tags: tags
     kind: 'app,linux'
     serverFarmResourceId: appServicePlan.outputs.resourceId
-    appInsightsResourceId: appInsights.outputs.resourceId
     managedIdentities: {
       systemAssigned: true
     }
@@ -485,6 +488,18 @@ module appService 'br/public:avm/res/web/site:0.19.4' = {
     }
     httpsOnly: true
     clientAffinityEnabled: false
+    // Send diagnostic logs to Log Analytics (linked to Application Insights)
+    diagnosticSettings: [
+      {
+        workspaceResourceId: logAnalytics.outputs.resourceId
+        logCategoriesAndGroups: [
+          { categoryGroup: 'allLogs' }
+        ]
+        metricCategories: [
+          { category: 'AllMetrics' }
+        ]
+      }
+    ]
     // Note: App settings are deployed separately to avoid circular dependency with Key Vault secrets
   }
 }
@@ -534,7 +549,7 @@ resource appServiceSettings 'Microsoft.Web/sites/config@2023-12-01' = {
     redis // Ensures Redis secret is exported to Key Vault
     acsConnectionStringSecret
     jwtSecretKeySecret
-    emailDomainRef
+    emailService // Ensures email domain exists for sender address
   ]
 }
 
@@ -546,7 +561,6 @@ module functionAppSync 'br/public:avm/res/web/site:0.19.4' = {
     tags: tags
     kind: 'functionapp,linux'
     serverFarmResourceId: appServicePlan.outputs.resourceId
-    appInsightsResourceId: appInsights.outputs.resourceId
     managedIdentities: {
       systemAssigned: true
     }
@@ -557,6 +571,18 @@ module functionAppSync 'br/public:avm/res/web/site:0.19.4' = {
       minTlsVersion: '1.2'
     }
     httpsOnly: true
+    // Send diagnostic logs to Log Analytics (linked to Application Insights)
+    diagnosticSettings: [
+      {
+        workspaceResourceId: logAnalytics.outputs.resourceId
+        logCategoriesAndGroups: [
+          { categoryGroup: 'allLogs' }
+        ]
+        metricCategories: [
+          { category: 'AllMetrics' }
+        ]
+      }
+    ]
     configs: [
       {
         name: 'appsettings'
@@ -582,7 +608,6 @@ module functionAppImport 'br/public:avm/res/web/site:0.19.4' = {
     tags: tags
     kind: 'functionapp,linux'
     serverFarmResourceId: appServicePlan.outputs.resourceId
-    appInsightsResourceId: appInsights.outputs.resourceId
     managedIdentities: {
       systemAssigned: true
     }
@@ -593,6 +618,18 @@ module functionAppImport 'br/public:avm/res/web/site:0.19.4' = {
       minTlsVersion: '1.2'
     }
     httpsOnly: true
+    // Send diagnostic logs to Log Analytics (linked to Application Insights)
+    diagnosticSettings: [
+      {
+        workspaceResourceId: logAnalytics.outputs.resourceId
+        logCategoriesAndGroups: [
+          { categoryGroup: 'allLogs' }
+        ]
+        metricCategories: [
+          { category: 'AllMetrics' }
+        ]
+      }
+    ]
     configs: [
       {
         name: 'appsettings'
