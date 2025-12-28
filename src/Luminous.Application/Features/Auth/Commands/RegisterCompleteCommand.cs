@@ -4,6 +4,7 @@ using Luminous.Application.Common.Interfaces;
 using Luminous.Application.DTOs;
 using Luminous.Application.Features.Auth.Models;
 using Luminous.Domain.Entities;
+using Luminous.Domain.Enums;
 using Luminous.Domain.Interfaces;
 using MediatR;
 using Microsoft.Extensions.Caching.Distributed;
@@ -198,11 +199,12 @@ public sealed class RegisterCompleteCommandHandler : IRequestHandler<RegisterCom
             family = await _unitOfWork.Families.GetByIdAsync(familyId, cancellationToken)
                 ?? throw new NotFoundException($"Family not found for invite code.");
 
-            // Create the user as a member (not owner) of the existing family
-            user = User.CreateMember(
+            // Create the user as an adult member of the existing family
+            user = User.Create(
                 family.Id,
                 normalizedEmail,
-                sessionData.DisplayName);
+                sessionData.DisplayName,
+                UserRole.Adult);
 
             _logger.LogInformation(
                 "User joining family {FamilyId} via invite code",
