@@ -162,7 +162,7 @@ builder.Services.AddOpenApi("v1", options =>
         document.Info.Title = "Luminous API";
         document.Info.Version = "v1";
         document.Info.Description = "API for the Luminous Family Hub";
-        document.Info.Contact = new Microsoft.OpenApi.Models.OpenApiContact
+        document.Info.Contact = new Microsoft.OpenApi.OpenApiContact
         {
             Name = "Luminous Team",
             Url = new Uri("https://github.com/trickpatty/Luminous")
