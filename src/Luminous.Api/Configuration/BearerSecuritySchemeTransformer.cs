@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.OpenApi;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 
 namespace Luminous.Api.Configuration;
 
@@ -21,7 +21,7 @@ internal sealed class BearerSecuritySchemeTransformer(
         if (authenticationSchemes.Any(authScheme => authScheme.Name == "Bearer"))
         {
             document.Components ??= new OpenApiComponents();
-            document.Components.SecuritySchemes = new Dictionary<string, OpenApiSecurityScheme>
+            document.Components.SecuritySchemes = new Dictionary<string, IOpenApiSecurityScheme>
             {
                 ["Bearer"] = new OpenApiSecurityScheme
                 {
@@ -34,17 +34,10 @@ internal sealed class BearerSecuritySchemeTransformer(
             };
 
             // Apply security requirement globally to all operations
-            document.SecurityRequirements ??= [];
-            document.SecurityRequirements.Add(new OpenApiSecurityRequirement
+            document.Security ??= [];
+            document.Security.Add(new OpenApiSecurityRequirement
             {
-                [new OpenApiSecurityScheme
-                {
-                    Reference = new OpenApiReference
-                    {
-                        Type = ReferenceType.SecurityScheme,
-                        Id = "Bearer"
-                    }
-                }] = Array.Empty<string>()
+                [new OpenApiSecuritySchemeReference("Bearer")] = []
             });
         }
     }
