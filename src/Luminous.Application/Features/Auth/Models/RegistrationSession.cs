@@ -17,14 +17,19 @@ public sealed record RegistrationSessionData
     public string DisplayName { get; init; } = string.Empty;
 
     /// <summary>
-    /// The family name to create.
+    /// The family name to create (only used when creating a new family).
     /// </summary>
     public string FamilyName { get; init; } = string.Empty;
 
     /// <summary>
-    /// The timezone for the family.
+    /// The timezone for the family (only used when creating a new family).
     /// </summary>
     public string Timezone { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Optional invite code to join an existing family instead of creating a new one.
+    /// </summary>
+    public string? InviteCode { get; init; }
 
     /// <summary>
     /// When the session was created.

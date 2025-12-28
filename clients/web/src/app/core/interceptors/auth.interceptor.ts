@@ -9,7 +9,8 @@ import { AuthService } from '../services/auth.service';
  * These are anonymous endpoints that don't require authentication.
  */
 const ANONYMOUS_AUTH_ENDPOINTS = [
-  '/auth/register',
+  '/auth/register/start',
+  '/auth/register/complete',
   '/auth/check-email',
   '/auth/otp/request',
   '/auth/otp/verify',

@@ -20,24 +20,29 @@ namespace Luminous.Application.Features.Auth.Commands;
 public sealed record RegisterStartCommand : IRequest<RegisterStartResultDto>
 {
     /// <summary>
-    /// The name of the family to create.
+    /// The name of the family to create (required if not using invite code).
     /// </summary>
     public string FamilyName { get; init; } = string.Empty;
 
     /// <summary>
-    /// The timezone for the family (IANA timezone ID).
+    /// The timezone for the family (IANA timezone ID, required if not using invite code).
     /// </summary>
     public string Timezone { get; init; } = "UTC";
 
     /// <summary>
-    /// The email address of the family owner.
+    /// The email address of the user.
     /// </summary>
     public string Email { get; init; } = string.Empty;
 
     /// <summary>
-    /// The display name of the family owner.
+    /// The display name of the user.
     /// </summary>
     public string DisplayName { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Optional invite code to join an existing family instead of creating a new one.
+    /// </summary>
+    public string? InviteCode { get; init; }
 
     /// <summary>
     /// The client IP address (for rate limiting).
@@ -57,14 +62,24 @@ public sealed class RegisterStartCommandValidator : AbstractValidator<RegisterSt
 {
     public RegisterStartCommandValidator()
     {
+        // FamilyName is required only when not joining with an invite code
         RuleFor(x => x.FamilyName)
-            .NotEmpty().WithMessage("Family name is required.")
+            .NotEmpty().WithMessage("Family name is required when creating a new family.")
+            .When(x => string.IsNullOrEmpty(x.InviteCode));
+
+        RuleFor(x => x.FamilyName)
             .MaximumLength(100).WithMessage("Family name must not exceed 100 characters.")
-            .Matches(@"^[\w\s\-'\.]+$").WithMessage("Family name contains invalid characters.");
+            .Matches(@"^[\w\s\-'\.]+$").WithMessage("Family name contains invalid characters.")
+            .When(x => !string.IsNullOrEmpty(x.FamilyName));
+
+        // Timezone is required only when not joining with an invite code
+        RuleFor(x => x.Timezone)
+            .NotEmpty().WithMessage("Timezone is required when creating a new family.")
+            .When(x => string.IsNullOrEmpty(x.InviteCode));
 
         RuleFor(x => x.Timezone)
-            .NotEmpty().WithMessage("Timezone is required.")
-            .MaximumLength(50).WithMessage("Timezone must not exceed 50 characters.");
+            .MaximumLength(50).WithMessage("Timezone must not exceed 50 characters.")
+            .When(x => !string.IsNullOrEmpty(x.Timezone));
 
         RuleFor(x => x.Email)
             .NotEmpty().WithMessage("Email is required.")
@@ -75,6 +90,10 @@ public sealed class RegisterStartCommandValidator : AbstractValidator<RegisterSt
             .NotEmpty().WithMessage("Display name is required.")
             .MaximumLength(50).WithMessage("Display name must not exceed 50 characters.")
             .Matches(@"^[\w\s\-'\.]+$").WithMessage("Display name contains invalid characters.");
+
+        RuleFor(x => x.InviteCode)
+            .MaximumLength(50).WithMessage("Invite code must not exceed 50 characters.")
+            .When(x => !string.IsNullOrEmpty(x.InviteCode));
     }
 }
 
@@ -177,6 +196,7 @@ public sealed class RegisterStartCommandHandler : IRequestHandler<RegisterStartC
             DisplayName = request.DisplayName,
             FamilyName = request.FamilyName,
             Timezone = request.Timezone,
+            InviteCode = request.InviteCode,
             CreatedAt = DateTime.UtcNow
         };
 

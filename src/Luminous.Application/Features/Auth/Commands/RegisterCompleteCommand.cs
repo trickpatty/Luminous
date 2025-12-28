@@ -15,6 +15,7 @@ namespace Luminous.Application.Features.Auth.Commands;
 /// <summary>
 /// Command to complete registration by verifying the OTP and creating the account.
 /// This is step 2 of the secure registration flow.
+/// Email is retrieved from the session to prevent identity impersonation attacks.
 /// </summary>
 public sealed record RegisterCompleteCommand : IRequest<RegisterCompleteResultDto>
 {
@@ -22,11 +23,6 @@ public sealed record RegisterCompleteCommand : IRequest<RegisterCompleteResultDt
     /// The session ID from the registration start.
     /// </summary>
     public string SessionId { get; init; } = string.Empty;
-
-    /// <summary>
-    /// The email address for verification.
-    /// </summary>
-    public string Email { get; init; } = string.Empty;
 
     /// <summary>
     /// The OTP code to verify.
@@ -53,10 +49,6 @@ public sealed class RegisterCompleteCommandValidator : AbstractValidator<Registe
     {
         RuleFor(x => x.SessionId)
             .NotEmpty().WithMessage("Session ID is required.");
-
-        RuleFor(x => x.Email)
-            .NotEmpty().WithMessage("Email is required.")
-            .EmailAddress().WithMessage("A valid email address is required.");
 
         RuleFor(x => x.Code)
             .NotEmpty().WithMessage("Verification code is required.")
@@ -92,9 +84,7 @@ public sealed class RegisterCompleteCommandHandler : IRequestHandler<RegisterCom
 
     public async Task<RegisterCompleteResultDto> Handle(RegisterCompleteCommand request, CancellationToken cancellationToken)
     {
-        var normalizedEmail = request.Email.ToLowerInvariant();
-
-        // Retrieve registration session data
+        // Retrieve registration session data - this is our trusted source for the email
         var sessionJson = await _cache.GetStringAsync(
             $"registration:{request.SessionId}",
             cancellationToken);
@@ -111,12 +101,9 @@ public sealed class RegisterCompleteCommandHandler : IRequestHandler<RegisterCom
         }
 
         var sessionData = JsonSerializer.Deserialize<RegistrationSessionData>(sessionJson);
-        if (sessionData == null || sessionData.Email != normalizedEmail)
+        if (sessionData == null)
         {
-            _logger.LogWarning(
-                "Registration session email mismatch. Session: {SessionEmail}, Request: {RequestEmail}",
-                sessionData?.Email,
-                normalizedEmail);
+            _logger.LogWarning("Failed to deserialize registration session: {SessionId}", request.SessionId);
             return new RegisterCompleteResultDto
             {
                 Success = false,
@@ -124,6 +111,9 @@ public sealed class RegisterCompleteCommandHandler : IRequestHandler<RegisterCom
                 RemainingAttempts = 0
             };
         }
+
+        // Use the email from the session (trusted) - not from the request
+        var normalizedEmail = sessionData.Email;
 
         // Get the latest active OTP for this email
         var otpToken = await _unitOfWork.OtpTokens.GetLatestActiveByEmailAsync(
@@ -182,25 +172,64 @@ public sealed class RegisterCompleteCommandHandler : IRequestHandler<RegisterCom
             throw new ConflictException("An account with this email was just created. Please try logging in.");
         }
 
-        // Create the family (tenant)
-        var family = Family.Create(sessionData.FamilyName, sessionData.Timezone, normalizedEmail);
-        await _unitOfWork.Families.AddAsync(family, cancellationToken);
+        Family family;
+        User user;
 
-        // Create the owner user with verified email
-        var owner = User.CreateOwner(
-            family.Id,
-            normalizedEmail,
-            sessionData.DisplayName);
+        if (!string.IsNullOrEmpty(sessionData.InviteCode))
+        {
+            // TODO: Implement invite code validation when invite system is built
+            // For now, look up family by invite code pattern: FAMILY_ID-RANDOM_CODE
+            // This is a placeholder implementation that should be replaced with proper invite validation
 
-        owner.EmailVerified = true; // Email is now verified via OTP
-        owner.RecordLogin();
+            // Try to parse the invite code to get family ID (temporary implementation)
+            var inviteParts = sessionData.InviteCode.Split('-');
+            if (inviteParts.Length < 2)
+            {
+                await _cache.RemoveAsync($"registration:{request.SessionId}", cancellationToken);
+                return new RegisterCompleteResultDto
+                {
+                    Success = false,
+                    Error = "Invalid invite code format.",
+                    RemainingAttempts = 0
+                };
+            }
 
-        await _unitOfWork.Users.AddAsync(owner, cancellationToken);
+            var familyId = inviteParts[0];
+            family = await _unitOfWork.Families.GetByIdAsync(familyId, cancellationToken)
+                ?? throw new NotFoundException($"Family not found for invite code.");
+
+            // Create the user as a member (not owner) of the existing family
+            user = User.CreateMember(
+                family.Id,
+                normalizedEmail,
+                sessionData.DisplayName);
+
+            _logger.LogInformation(
+                "User joining family {FamilyId} via invite code",
+                family.Id);
+        }
+        else
+        {
+            // Create a new family (tenant)
+            family = Family.Create(sessionData.FamilyName, sessionData.Timezone, normalizedEmail);
+            await _unitOfWork.Families.AddAsync(family, cancellationToken);
+
+            // Create the owner user
+            user = User.CreateOwner(
+                family.Id,
+                normalizedEmail,
+                sessionData.DisplayName);
+        }
+
+        user.EmailVerified = true; // Email is now verified via OTP
+        user.RecordLogin();
+
+        await _unitOfWork.Users.AddAsync(user, cancellationToken);
 
         // Create refresh token
         var (refreshToken, rawRefreshToken) = RefreshToken.Create(
-            owner.Id,
-            owner.FamilyId,
+            user.Id,
+            user.FamilyId,
             TimeSpan.FromDays(7),
             request.IpAddress,
             request.UserAgent);
@@ -212,12 +241,12 @@ public sealed class RegisterCompleteCommandHandler : IRequestHandler<RegisterCom
         await _cache.RemoveAsync($"registration:{request.SessionId}", cancellationToken);
 
         // Generate authentication token
-        var authResult = _tokenService.GenerateToken(owner);
+        var authResult = _tokenService.GenerateToken(user);
         authResult = authResult with { RefreshToken = rawRefreshToken };
 
         _logger.LogInformation(
             "User {UserId} registered successfully with verified email {Email}",
-            owner.Id,
+            user.Id,
             normalizedEmail);
 
         return new RegisterCompleteResultDto

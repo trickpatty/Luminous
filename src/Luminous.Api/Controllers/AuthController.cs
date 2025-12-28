@@ -37,6 +37,7 @@ public class AuthController : ApiControllerBase
             DisplayName = request.DisplayName,
             FamilyName = request.FamilyName,
             Timezone = request.Timezone ?? "UTC",
+            InviteCode = request.InviteCode,
             IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
             UserAgent = Request.Headers.UserAgent.ToString()
         };
@@ -69,7 +70,6 @@ public class AuthController : ApiControllerBase
         var command = new RegisterCompleteCommand
         {
             SessionId = request.SessionId,
-            Email = request.Email,
             Code = request.Code,
             IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
             UserAgent = Request.Headers.UserAgent.ToString()
@@ -87,24 +87,6 @@ public class AuthController : ApiControllerBase
         }
 
         return Created($"/api/families/{result.Family!.Id}", ApiResponse<RegisterCompleteResultDto>.Ok(result));
-    }
-
-    /// <summary>
-    /// [DEPRECATED] Registers a new family and owner without email verification.
-    /// Use register/start and register/complete instead for secure registration.
-    /// </summary>
-    /// <param name="command">The registration command.</param>
-    /// <returns>The created family and authentication tokens.</returns>
-    [Obsolete("Use register/start and register/complete endpoints instead for secure registration with email verification")]
-    [HttpPost("register")]
-    [AllowAnonymous]
-    [ProducesResponseType(typeof(ApiResponse<FamilyCreationResultDto>), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
-    public async Task<ActionResult<ApiResponse<FamilyCreationResultDto>>> Register([FromBody] RegisterFamilyCommand command)
-    {
-        var result = await Mediator.Send(command);
-        return CreatedResponse($"/api/families/{result.Family.Id}", result);
     }
 
     #endregion
@@ -404,24 +386,29 @@ public class AuthController : ApiControllerBase
 public sealed record RegisterStartRequest
 {
     /// <summary>
-    /// The email address of the family owner.
+    /// The email address of the user.
     /// </summary>
     public string Email { get; init; } = string.Empty;
 
     /// <summary>
-    /// The display name of the family owner.
+    /// The display name of the user.
     /// </summary>
     public string DisplayName { get; init; } = string.Empty;
 
     /// <summary>
-    /// The name of the family to create.
+    /// The name of the family to create (required if not using invite code).
     /// </summary>
     public string FamilyName { get; init; } = string.Empty;
 
     /// <summary>
-    /// The timezone for the family (IANA timezone ID).
+    /// The timezone for the family (IANA timezone ID, required if not using invite code).
     /// </summary>
     public string? Timezone { get; init; }
+
+    /// <summary>
+    /// Optional invite code to join an existing family instead of creating a new one.
+    /// </summary>
+    public string? InviteCode { get; init; }
 }
 
 /// <summary>
@@ -433,11 +420,6 @@ public sealed record RegisterCompleteRequest
     /// The session ID from the registration start.
     /// </summary>
     public string SessionId { get; init; } = string.Empty;
-
-    /// <summary>
-    /// The email address for verification.
-    /// </summary>
-    public string Email { get; init; } = string.Empty;
 
     /// <summary>
     /// The 6-digit verification code.

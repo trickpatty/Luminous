@@ -12,12 +12,10 @@ import {
   AuthUserInfo,
   LoginRequest,
   VerifyOtpRequest,
-  RegisterRequest,
   RegisterStartRequest,
   RegisterStartResult,
   RegisterCompleteRequest,
   RegisterCompleteResult,
-  FamilyCreationResult,
   PasskeyRegistrationOptions,
   PasskeyAuthenticationOptions,
   PasskeyRegistrationResponse,
@@ -257,26 +255,6 @@ export class AuthService {
           this._isLoading.set(false);
         }
       }),
-      catchError((error) => {
-        this._isLoading.set(false);
-        this._error.set(error.error?.message || 'Registration failed');
-        return throwError(() => error);
-      })
-    );
-  }
-
-  /**
-   * @deprecated Use startRegistration and completeRegistration for secure 2-step registration
-   * Register a new user and create a family (insecure - no email verification)
-   * @param request Registration details
-   * @returns Observable with family creation result including auth tokens
-   */
-  register(request: RegisterRequest): Observable<FamilyCreationResult> {
-    this._isLoading.set(true);
-    this._error.set(null);
-
-    return this.api.post<FamilyCreationResult>('auth/register', request).pipe(
-      tap((result) => this.handleAuthSuccess(result.auth)),
       catchError((error) => {
         this._isLoading.set(false);
         this._error.set(error.error?.message || 'Registration failed');

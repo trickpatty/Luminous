@@ -83,7 +83,6 @@ export class RegisterComponent {
     this.authService
       .completeRegistration({
         sessionId: this.sessionId,
-        email: this.email,
         code: this.verificationCode,
       })
       .subscribe({

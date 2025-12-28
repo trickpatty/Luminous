@@ -110,18 +110,6 @@ export interface PasskeyAuthenticationResponse {
 }
 
 /**
- * User registration request (deprecated - use RegisterStartRequest)
- * @deprecated Use RegisterStartRequest and RegisterCompleteRequest for secure 2-step registration
- */
-export interface RegisterRequest {
-  email: string;
-  displayName: string;
-  familyName?: string;
-  inviteCode?: string;
-  timezone?: string;
-}
-
-/**
  * Request to start registration (step 1 of 2)
  */
 export interface RegisterStartRequest {
@@ -129,6 +117,7 @@ export interface RegisterStartRequest {
   displayName: string;
   familyName: string;
   timezone?: string;
+  inviteCode?: string;
 }
 
 /**
@@ -145,10 +134,10 @@ export interface RegisterStartResult {
 
 /**
  * Request to complete registration (step 2 of 2)
+ * Note: Email is not included as it's retrieved from the secure server-side session
  */
 export interface RegisterCompleteRequest {
   sessionId: string;
-  email: string;
   code: string;
 }
 
@@ -167,21 +156,6 @@ export interface RegisterCompleteResult {
   };
   auth?: TokenPair;
   remainingAttempts: number;
-}
-
-/**
- * Family creation result from registration (deprecated)
- * @deprecated Use RegisterCompleteResult instead
- */
-export interface FamilyCreationResult {
-  family: {
-    id: string;
-    name: string;
-    timezone: string;
-    memberCount: number;
-    deviceCount: number;
-  };
-  auth: TokenPair;
 }
 
 /**
