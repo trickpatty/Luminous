@@ -22,6 +22,12 @@ import {
   PasskeyRegistrationResponse,
   PasskeyAuthenticationResponse,
   PasskeyCredential,
+  PasskeyRegisterStartResult,
+  PasskeyRegistrationStartData,
+  PasskeyAuthenticateStartResult,
+  PasskeyAuthenticationStartData,
+  PasskeyRegisterCompleteRequest,
+  PasskeyAuthenticateCompleteRequest,
 } from '../../models';
 
 /**
@@ -138,12 +144,17 @@ export class AuthService {
   /**
    * Start passkey registration process
    * @param email User email for the passkey
+   * @returns Observable with parsed WebAuthn options and session ID
    */
-  startPasskeyRegistration(email: string): Observable<PasskeyRegistrationOptions> {
+  startPasskeyRegistration(email: string): Observable<PasskeyRegistrationStartData> {
     this._isLoading.set(true);
     this._error.set(null);
 
-    return this.api.post<PasskeyRegistrationOptions>('auth/passkey/register/start', { email }).pipe(
+    return this.api.post<PasskeyRegisterStartResult>('auth/passkey/register/start', { email }).pipe(
+      map((result) => ({
+        options: JSON.parse(result.options) as PasskeyRegistrationOptions,
+        sessionId: result.sessionId,
+      })),
       tap(() => this._isLoading.set(false)),
       catchError((error) => {
         this._isLoading.set(false);
@@ -155,13 +166,28 @@ export class AuthService {
 
   /**
    * Complete passkey registration with credential response
+   * @param sessionId Session ID from registration start
    * @param response Passkey credential response from browser
+   * @param displayName Optional display name for the passkey
    */
-  completePasskeyRegistration(response: PasskeyRegistrationResponse): Observable<TokenPair> {
+  completePasskeyRegistration(
+    sessionId: string,
+    response: PasskeyRegistrationResponse,
+    displayName?: string
+  ): Observable<{ success: boolean; credentialId?: string; error?: string }> {
     this._isLoading.set(true);
 
-    return this.api.post<TokenPair>('auth/passkey/register/complete', response).pipe(
-      tap((tokens) => this.handleAuthSuccess(tokens)),
+    const request: PasskeyRegisterCompleteRequest = {
+      sessionId,
+      attestationResponse: response,
+      displayName,
+    };
+
+    return this.api.post<{ success: boolean; credentialId?: string; error?: string }>(
+      'auth/passkey/register/complete',
+      request
+    ).pipe(
+      tap(() => this._isLoading.set(false)),
       catchError((error) => {
         this._isLoading.set(false);
         this._error.set(error.error?.message || 'Failed to complete passkey registration');
@@ -173,13 +199,18 @@ export class AuthService {
   /**
    * Start passkey authentication (login)
    * @param email Optional email to limit credentials
+   * @returns Observable with parsed WebAuthn options and session ID
    */
-  startPasskeyAuthentication(email?: string): Observable<PasskeyAuthenticationOptions> {
+  startPasskeyAuthentication(email?: string): Observable<PasskeyAuthenticationStartData> {
     this._isLoading.set(true);
     this._error.set(null);
 
     const body = email ? { email } : {};
-    return this.api.post<PasskeyAuthenticationOptions>('auth/passkey/authenticate/start', body).pipe(
+    return this.api.post<PasskeyAuthenticateStartResult>('auth/passkey/authenticate/start', body).pipe(
+      map((result) => ({
+        options: JSON.parse(result.options) as PasskeyAuthenticationOptions,
+        sessionId: result.sessionId,
+      })),
       tap(() => this._isLoading.set(false)),
       catchError((error) => {
         this._isLoading.set(false);
@@ -191,13 +222,31 @@ export class AuthService {
 
   /**
    * Complete passkey authentication with credential response
+   * @param sessionId Session ID from authentication start
    * @param response Passkey authentication response from browser
    */
-  completePasskeyAuthentication(response: PasskeyAuthenticationResponse): Observable<TokenPair> {
+  completePasskeyAuthentication(
+    sessionId: string,
+    response: PasskeyAuthenticationResponse
+  ): Observable<{ success: boolean; auth?: TokenPair; error?: string }> {
     this._isLoading.set(true);
 
-    return this.api.post<TokenPair>('auth/passkey/authenticate/complete', response).pipe(
-      tap((tokens) => this.handleAuthSuccess(tokens)),
+    const request: PasskeyAuthenticateCompleteRequest = {
+      sessionId,
+      assertionResponse: response,
+    };
+
+    return this.api.post<{ success: boolean; auth?: TokenPair; error?: string }>(
+      'auth/passkey/authenticate/complete',
+      request
+    ).pipe(
+      tap((result) => {
+        if (result.success && result.auth) {
+          this.handleAuthSuccess(result.auth);
+        } else {
+          this._isLoading.set(false);
+        }
+      }),
       catchError((error) => {
         this._isLoading.set(false);
         this._error.set(error.error?.message || 'Passkey authentication failed');

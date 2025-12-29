@@ -186,3 +186,54 @@ export interface PasskeyCredential {
   lastUsedAt?: string;
   transports?: AuthenticatorTransport[];
 }
+
+/**
+ * API response from passkey registration start endpoint.
+ * Note: The options field is a JSON string that needs to be parsed.
+ */
+export interface PasskeyRegisterStartResult {
+  options: string; // JSON string of PasskeyRegistrationOptions
+  sessionId: string;
+}
+
+/**
+ * Parsed result from passkey registration start, ready for WebAuthn API
+ */
+export interface PasskeyRegistrationStartData {
+  options: PasskeyRegistrationOptions;
+  sessionId: string;
+}
+
+/**
+ * API response from passkey authentication start endpoint.
+ * Note: The options field is a JSON string that needs to be parsed.
+ */
+export interface PasskeyAuthenticateStartResult {
+  options: string; // JSON string of PasskeyAuthenticationOptions
+  sessionId: string;
+}
+
+/**
+ * Parsed result from passkey authentication start, ready for WebAuthn API
+ */
+export interface PasskeyAuthenticationStartData {
+  options: PasskeyAuthenticationOptions;
+  sessionId: string;
+}
+
+/**
+ * Complete passkey registration request to server
+ */
+export interface PasskeyRegisterCompleteRequest {
+  sessionId: string;
+  attestationResponse: PasskeyRegistrationResponse;
+  displayName?: string;
+}
+
+/**
+ * Complete passkey authentication request to server
+ */
+export interface PasskeyAuthenticateCompleteRequest {
+  sessionId: string;
+  assertionResponse: PasskeyAuthenticationResponse;
+}

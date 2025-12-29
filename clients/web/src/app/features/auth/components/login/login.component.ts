@@ -83,15 +83,17 @@ export class LoginComponent implements OnInit {
     try {
       // Get authentication options from server
       this.authService.startPasskeyAuthentication(this.email || undefined).subscribe({
-        next: async (options) => {
+        next: async (data) => {
           try {
-            // Create credential with browser
-            const credential = await this.webAuthnService.authenticateWithPasskey(options);
+            // Create credential with browser using parsed options
+            const credential = await this.webAuthnService.authenticateWithPasskey(data.options);
 
-            // Complete authentication with server
-            this.authService.completePasskeyAuthentication(credential).subscribe({
-              next: () => {
-                this.navigateToDashboard();
+            // Complete authentication with server, including sessionId
+            this.authService.completePasskeyAuthentication(data.sessionId, credential).subscribe({
+              next: (result) => {
+                if (result.success) {
+                  this.navigateToDashboard();
+                }
               },
             });
           } catch (err) {
@@ -110,12 +112,14 @@ export class LoginComponent implements OnInit {
   private async startConditionalPasskeyAuth(): Promise<void> {
     try {
       this.authService.startPasskeyAuthentication().subscribe({
-        next: async (options) => {
+        next: async (data) => {
           try {
-            const credential = await this.webAuthnService.authenticateWithPasskey(options, true);
-            this.authService.completePasskeyAuthentication(credential).subscribe({
-              next: () => {
-                this.navigateToDashboard();
+            const credential = await this.webAuthnService.authenticateWithPasskey(data.options, true);
+            this.authService.completePasskeyAuthentication(data.sessionId, credential).subscribe({
+              next: (result) => {
+                if (result.success) {
+                  this.navigateToDashboard();
+                }
               },
             });
           } catch {
