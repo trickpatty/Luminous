@@ -32,6 +32,9 @@ export class RegisterComponent {
   canResend = signal(false);
   resendCountdown = signal(0);
 
+  // Passkey registration state
+  passkeySessionId = '';
+
   // UI state
   step = signal<RegisterStep>('details');
   isLoading = this.authService.isLoading;
@@ -156,19 +159,41 @@ export class RegisterComponent {
 
     try {
       this.authService.startPasskeyRegistration(this.email).subscribe({
-        next: async (options) => {
+        next: async (data) => {
           try {
-            const credential = await this.webAuthnService.createPasskey(options);
-            this.authService.completePasskeyRegistration(credential).subscribe({
-              next: () => {
-                this.step.set('complete');
+            // Store the passkey session ID for completing registration
+            this.passkeySessionId = data.sessionId;
+
+            // Create the passkey with the parsed options
+            const credential = await this.webAuthnService.createPasskey(data.options);
+
+            // Complete registration with sessionId
+            this.authService.completePasskeyRegistration(
+              this.passkeySessionId,
+              credential,
+              'Primary Passkey'
+            ).subscribe({
+              next: (result) => {
+                if (result.success) {
+                  this.step.set('complete');
+                } else {
+                  console.error('Passkey registration failed:', result.error);
+                  // Allow user to skip if passkey fails
+                }
               },
+              error: (err) => {
+                console.error('Passkey registration error:', err);
+                // Allow user to skip if passkey fails
+              }
             });
           } catch (err) {
             console.error('Passkey setup failed:', err);
             // Allow user to skip if passkey fails
           }
         },
+        error: (err) => {
+          console.error('Failed to start passkey registration:', err);
+        }
       });
     } catch (err) {
       console.error('Failed to start passkey registration:', err);
