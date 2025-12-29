@@ -96,10 +96,10 @@ public sealed class PasskeyAuthenticateCompleteCommandHandler : IRequestHandler<
             };
         }
 
-        // Get the user
-        var user = await _unitOfWork.Users.GetByIdAsync(
+        // Get the user using cross-partition query (familyId not available during authentication)
+        var user = await _unitOfWork.Users.GetByIdCrossPartitionAsync(
             result.UserId!,
-            cancellationToken: cancellationToken);
+            cancellationToken);
 
         if (user == null)
         {

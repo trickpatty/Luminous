@@ -13,6 +13,13 @@ public interface IUserRepository : IRepository<User>
     new Task<User?> GetByIdAsync(string userId, string? familyId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets a user by ID using a cross-partition query.
+    /// Use this only when the familyId is not available (e.g., during passkey authentication).
+    /// This is less efficient than the partition-key-based lookup.
+    /// </summary>
+    Task<User?> GetByIdCrossPartitionAsync(string userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets a user by email address.
     /// </summary>
     Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
