@@ -25,6 +25,15 @@ public sealed class UserRepository : CosmosRepositoryBase<User>, IUserRepository
         return await base.GetByIdAsync(userId, familyId, cancellationToken);
     }
 
+    public async Task<User?> GetByIdCrossPartitionAsync(string userId, CancellationToken cancellationToken = default)
+    {
+        var query = new QueryDefinition("SELECT * FROM c WHERE c.id = @userId")
+            .WithParameter("@userId", userId);
+
+        var results = await QueryAsync(query, cancellationToken: cancellationToken);
+        return results.FirstOrDefault();
+    }
+
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
         var query = new QueryDefinition("SELECT * FROM c WHERE c.email = @email")

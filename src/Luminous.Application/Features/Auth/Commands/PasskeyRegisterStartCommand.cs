@@ -47,15 +47,18 @@ public sealed class PasskeyRegisterStartCommandHandler : IRequestHandler<Passkey
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IWebAuthnService _webAuthnService;
+    private readonly ICurrentUserService _currentUserService;
     private readonly ILogger<PasskeyRegisterStartCommandHandler> _logger;
 
     public PasskeyRegisterStartCommandHandler(
         IUnitOfWork unitOfWork,
         IWebAuthnService webAuthnService,
+        ICurrentUserService currentUserService,
         ILogger<PasskeyRegisterStartCommandHandler> logger)
     {
         _unitOfWork = unitOfWork;
         _webAuthnService = webAuthnService;
+        _currentUserService = currentUserService;
         _logger = logger;
     }
 
@@ -63,8 +66,12 @@ public sealed class PasskeyRegisterStartCommandHandler : IRequestHandler<Passkey
         PasskeyRegisterStartCommand request,
         CancellationToken cancellationToken)
     {
+        // Get familyId from current user context (required for CosmosDB partition key)
+        var familyId = _currentUserService.FamilyId
+            ?? throw new UnauthorizedAccessException("Family ID not found in claims.");
+
         // Get the user
-        var user = await _unitOfWork.Users.GetByIdAsync(request.UserId, cancellationToken: cancellationToken);
+        var user = await _unitOfWork.Users.GetByIdAsync(request.UserId, familyId, cancellationToken);
         if (user == null)
         {
             _logger.LogWarning("User not found for passkey registration: {UserId}", request.UserId);
