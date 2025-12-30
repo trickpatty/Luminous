@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -12,7 +12,7 @@ type AuthStep = 'email' | 'otp' | 'passkey';
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './login.component.html',
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly webAuthnService = inject(WebAuthnService);
   private readonly router = inject(Router);
@@ -42,6 +42,12 @@ export class LoginComponent implements OnInit {
         this.startConditionalPasskeyAuth();
       }
     }
+  }
+
+  ngOnDestroy(): void {
+    // Abort any pending conditional WebAuthn operation to prevent
+    // "a pending request already in progress" errors on other pages
+    this.webAuthnService.abortConditionalMediation();
   }
 
   /**

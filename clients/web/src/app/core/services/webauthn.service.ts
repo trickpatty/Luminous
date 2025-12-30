@@ -15,6 +15,11 @@ import {
 })
 export class WebAuthnService {
   /**
+   * Active AbortController for the current conditional mediation operation.
+   * Used to cancel pending WebAuthn operations when navigating away.
+   */
+  private conditionalAbortController: AbortController | null = null;
+  /**
    * Check if WebAuthn is supported in the current browser
    */
   isSupported(): boolean {
@@ -145,9 +150,22 @@ export class WebAuthnService {
     // Use conditional mediation for autofill UI if requested
     if (conditional) {
       (credentialRequestOptions as CredentialRequestOptions & { mediation: string }).mediation = 'conditional';
+
+      // Cancel any existing conditional operation before starting a new one
+      this.abortConditionalMediation();
+
+      // Create and store a new AbortController for this conditional operation
+      this.conditionalAbortController = new AbortController();
+      (credentialRequestOptions as CredentialRequestOptions & { signal: AbortSignal }).signal =
+        this.conditionalAbortController.signal;
     }
 
     const credential = (await navigator.credentials.get(credentialRequestOptions)) as PublicKeyCredential;
+
+    // Clear the abort controller after successful completion
+    if (conditional) {
+      this.conditionalAbortController = null;
+    }
 
     if (!credential) {
       throw new Error('Failed to authenticate with passkey');
@@ -173,6 +191,17 @@ export class WebAuthnService {
    */
   async abortOngoingOperation(controller: AbortController): Promise<void> {
     controller.abort();
+  }
+
+  /**
+   * Abort the current conditional mediation operation.
+   * Call this when navigating away from a page with passkey autofill.
+   */
+  abortConditionalMediation(): void {
+    if (this.conditionalAbortController) {
+      this.conditionalAbortController.abort();
+      this.conditionalAbortController = null;
+    }
   }
 
   // ============================================
