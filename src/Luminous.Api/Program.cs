@@ -164,8 +164,17 @@ builder.Services.AddAuthorization(options =>
               .RequireRole("Owner"));
 });
 
-// Configure controllers
-builder.Services.AddControllers();
+// Configure controllers with Fido2-compatible JSON serialization
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Use camelCase for property names (default but explicit)
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        // Allow case-insensitive matching for incoming JSON
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+        // Add Fido2's Base64UrlConverter for proper WebAuthn response deserialization
+        options.JsonSerializerOptions.Converters.Add(new Fido2NetLib.Base64UrlConverter());
+    });
 
 // Configure OpenAPI with native ASP.NET Core support
 builder.Services.AddOpenApi("v1", options =>
