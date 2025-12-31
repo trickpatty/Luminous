@@ -3,6 +3,8 @@
  */
 export interface FamilySettings {
   defaultView: 'day' | 'week' | 'month' | 'agenda';
+  weekStartDay: number; // 0 = Sunday, 1 = Monday, 6 = Saturday
+  useCelsius: boolean;
   privacyModeEnabled: boolean;
   privacyModeTimeoutMinutes: number;
   sleepMode: SleepModeSettings;

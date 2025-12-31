@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import {
   AuthService,
   UserService,
@@ -21,6 +22,7 @@ import { User, UserRole, Invitation, InvitationStatus } from '../../../../models
   imports: [
     CommonModule,
     FormsModule,
+    RouterModule,
     CardComponent,
     ButtonComponent,
     AlertComponent,
@@ -72,22 +74,22 @@ import { User, UserRole, Invitation, InvitationStatus } from '../../../../models
           <div class="divide-y divide-gray-100">
             @for (member of members(); track member.id) {
               <div class="flex items-center justify-between py-4 px-2 hover:bg-gray-50 rounded-lg -mx-2">
-                <div class="flex items-center gap-4">
+                <a [routerLink]="['/dashboard/profile', member.id]" class="flex items-center gap-4 flex-1 min-w-0">
                   <app-avatar
                     [name]="member.displayName"
                     [color]="member.profile.color"
                     size="md"
                   />
-                  <div>
-                    <p class="text-sm font-medium text-gray-900">
+                  <div class="min-w-0">
+                    <p class="text-sm font-medium text-gray-900 hover:text-primary-600 transition-colors">
                       {{ member.displayName }}
                       @if (member.id === currentUserId()) {
                         <span class="text-xs text-gray-500 ml-1">(You)</span>
                       }
                     </p>
-                    <p class="text-sm text-gray-500">{{ member.email }}</p>
+                    <p class="text-sm text-gray-500 truncate">{{ member.email }}</p>
                   </div>
-                </div>
+                </a>
                 <div class="flex items-center gap-3">
                   <span
                     class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"

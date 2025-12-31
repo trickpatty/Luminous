@@ -293,6 +293,8 @@ export class SettingsComponent implements OnInit {
       this.familyName = family.name;
       this.timezone = family.timezone;
       this.defaultView = family.settings.defaultView;
+      this.weekStartDay = family.settings.weekStartDay ?? 0;
+      this.useCelsius = family.settings.useCelsius ?? false;
       this.privacyModeEnabled = family.settings.privacyModeEnabled;
       this.privacyModeTimeout = family.settings.privacyModeTimeoutMinutes;
       this.sleepModeEnabled = family.settings.sleepMode.enabled;
@@ -320,6 +322,8 @@ export class SettingsComponent implements OnInit {
       timezone: this.timezone,
       settings: {
         defaultView: this.defaultView,
+        weekStartDay: this.weekStartDay,
+        useCelsius: this.useCelsius,
         privacyModeEnabled: this.privacyModeEnabled,
         privacyModeTimeoutMinutes: this.privacyModeTimeout,
         sleepMode: {
