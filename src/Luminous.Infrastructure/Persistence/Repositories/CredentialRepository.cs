@@ -35,10 +35,12 @@ public sealed class CredentialRepository : CosmosRepositoryBase<Credential>, ICr
         byte[] credentialId,
         CancellationToken cancellationToken = default)
     {
+        // byte[] properties are serialized as Base64 strings in CosmosDB,
+        // but the property name remains 'credentialId' (camelCase)
         var base64CredentialId = Convert.ToBase64String(credentialId);
 
         var query = new QueryDefinition(
-            "SELECT * FROM c WHERE c.credentialIdBase64 = @credentialId")
+            "SELECT * FROM c WHERE c.credentialId = @credentialId AND c.isActive = true")
             .WithParameter("@credentialId", base64CredentialId);
 
         var results = await QueryAsync(query, cancellationToken: cancellationToken);
@@ -49,10 +51,12 @@ public sealed class CredentialRepository : CosmosRepositoryBase<Credential>, ICr
         byte[] userHandle,
         CancellationToken cancellationToken = default)
     {
+        // byte[] properties are serialized as Base64 strings in CosmosDB,
+        // but the property name remains 'userHandle' (camelCase)
         var base64UserHandle = Convert.ToBase64String(userHandle);
 
         var query = new QueryDefinition(
-            "SELECT * FROM c WHERE c.userHandleBase64 = @userHandle")
+            "SELECT * FROM c WHERE c.userHandle = @userHandle AND c.isActive = true")
             .WithParameter("@userHandle", base64UserHandle);
 
         var results = await QueryAsync(query, cancellationToken: cancellationToken);
@@ -63,10 +67,12 @@ public sealed class CredentialRepository : CosmosRepositoryBase<Credential>, ICr
         byte[] credentialId,
         CancellationToken cancellationToken = default)
     {
+        // byte[] properties are serialized as Base64 strings in CosmosDB,
+        // but the property name remains 'credentialId' (camelCase)
         var base64CredentialId = Convert.ToBase64String(credentialId);
 
         var query = new QueryDefinition(
-            "SELECT VALUE COUNT(1) FROM c WHERE c.credentialIdBase64 = @credentialId")
+            "SELECT VALUE COUNT(1) FROM c WHERE c.credentialId = @credentialId")
             .WithParameter("@credentialId", base64CredentialId);
 
         var container = await GetContainerAsync(cancellationToken);
