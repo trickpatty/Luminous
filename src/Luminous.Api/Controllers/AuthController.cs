@@ -543,14 +543,14 @@ public sealed record PasskeyRegisterCompleteRequest
     {
         return new AuthenticatorAttestationRawResponse
         {
-            Id = Base64UrlDecode(AttestationResponse.Id),
+            Id = AttestationResponse.Id, // Id is already a base64url string
             RawId = Base64UrlDecode(AttestationResponse.RawId),
             Type = Fido2NetLib.Objects.PublicKeyCredentialType.PublicKey,
-            Response = new AuthenticatorAttestationRawResponse.ResponseData
+            Response = new AuthenticatorAttestationRawResponse.AttestationResponse
             {
                 ClientDataJson = Base64UrlDecode(AttestationResponse.Response.ClientDataJSON),
                 AttestationObject = Base64UrlDecode(AttestationResponse.Response.AttestationObject),
-                Transports = AttestationResponse.Response.Transports?.Select(t => Enum.TryParse<Fido2NetLib.Objects.AuthenticatorTransport>(t, true, out var result) ? result : Fido2NetLib.Objects.AuthenticatorTransport.Internal).ToArray()
+                Transports = AttestationResponse.Response.Transports?.Select(t => Enum.TryParse<Fido2NetLib.Objects.AuthenticatorTransport>(t, true, out var result) ? result : Fido2NetLib.Objects.AuthenticatorTransport.Internal).ToArray() ?? []
             }
         };
     }
@@ -649,7 +649,7 @@ public sealed record PasskeyAuthenticateCompleteRequest
     {
         return new AuthenticatorAssertionRawResponse
         {
-            Id = Base64UrlDecode(AssertionResponse.Id),
+            Id = AssertionResponse.Id, // Id is already a base64url string
             RawId = Base64UrlDecode(AssertionResponse.RawId),
             Type = Fido2NetLib.Objects.PublicKeyCredentialType.PublicKey,
             Response = new AuthenticatorAssertionRawResponse.AssertionResponse

@@ -1,4 +1,3 @@
-using System.Text.Json;
 using FluentValidation;
 using Luminous.Application.Common.Interfaces;
 using Luminous.Application.DTOs;
@@ -103,7 +102,8 @@ public sealed class PasskeyRegisterStartCommandHandler : IRequestHandler<Passkey
 
         return new PasskeyRegisterStartResultDto
         {
-            Options = JsonSerializer.Serialize(options),
+            // Use Fido2NetLib's ToJson() for WebAuthn-compliant serialization
+            Options = options.ToJson(),
             SessionId = sessionId
         };
     }
