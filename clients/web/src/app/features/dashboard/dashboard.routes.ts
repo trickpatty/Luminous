@@ -42,6 +42,22 @@ export const DASHBOARD_ROUTES: Routes = [
           ),
         title: 'Settings - Luminous',
       },
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./components/profile/profile.component').then(
+            (m) => m.ProfileComponent
+          ),
+        title: 'My Profile - Luminous',
+      },
+      {
+        path: 'profile/:id',
+        loadComponent: () =>
+          import('./components/profile/profile.component').then(
+            (m) => m.ProfileComponent
+          ),
+        title: 'Profile - Luminous',
+      },
     ],
   },
 ];

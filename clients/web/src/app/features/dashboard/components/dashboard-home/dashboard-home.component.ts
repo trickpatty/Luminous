@@ -20,7 +20,7 @@ import { CardComponent, AvatarComponent, ButtonComponent, SpinnerComponent } fro
       <!-- Welcome section -->
       <div class="mb-8">
         <h2 class="text-2xl sm:text-3xl font-semibold text-gray-900">
-          Welcome{{ user() ? ', ' + user()!.displayName : '' }}!
+          Welcome{{ user()?.displayName ? ', ' + user()!.displayName : '' }}!
         </h2>
         <p class="mt-1 text-gray-600">
           Your family command center is ready.
@@ -29,18 +29,24 @@ import { CardComponent, AvatarComponent, ButtonComponent, SpinnerComponent } fro
 
       <!-- Stats cards -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div class="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
+        <a
+          routerLink="/dashboard/members"
+          class="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 hover:border-primary-300 hover:shadow-sm transition-all cursor-pointer"
+        >
           <p class="text-sm font-medium text-gray-500">Family Members</p>
           <p class="mt-2 text-2xl sm:text-3xl font-bold text-gray-900">
             {{ familyService.memberCount() }}
           </p>
-        </div>
-        <div class="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
+        </a>
+        <a
+          routerLink="/dashboard/devices"
+          class="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 hover:border-primary-300 hover:shadow-sm transition-all cursor-pointer"
+        >
           <p class="text-sm font-medium text-gray-500">Linked Devices</p>
           <p class="mt-2 text-2xl sm:text-3xl font-bold text-gray-900">
             {{ familyService.deviceCount() }}
           </p>
-        </div>
+        </a>
         <div class="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
           <p class="text-sm font-medium text-gray-500">Today's Events</p>
           <p class="mt-2 text-2xl sm:text-3xl font-bold text-gray-900">0</p>
@@ -76,7 +82,12 @@ import { CardComponent, AvatarComponent, ButtonComponent, SpinnerComponent } fro
         </app-card>
 
         <!-- Family Members Preview -->
-        <app-card title="Family Members" size="lg">
+        <app-card size="lg">
+          <div class="mb-4">
+            <a routerLink="/dashboard/members" class="text-lg font-semibold text-gray-900 hover:text-primary-600 transition-colors">
+              Family Members
+            </a>
+          </div>
           @if (userService.loading()) {
             <div class="flex justify-center py-8">
               <app-spinner size="md" />
@@ -92,7 +103,10 @@ import { CardComponent, AvatarComponent, ButtonComponent, SpinnerComponent } fro
           } @else {
             <div class="space-y-3">
               @for (member of userService.members().slice(0, 5); track member.id) {
-                <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
+                <a
+                  [routerLink]="['/dashboard/profile', member.id]"
+                  class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                >
                   <app-avatar [name]="member.displayName" [color]="member.profile.color" size="sm" />
                   <div class="flex-1 min-w-0">
                     <p class="text-sm font-medium text-gray-900 truncate">
@@ -100,7 +114,7 @@ import { CardComponent, AvatarComponent, ButtonComponent, SpinnerComponent } fro
                     </p>
                     <p class="text-xs text-gray-500">{{ member.role }}</p>
                   </div>
-                </div>
+                </a>
               }
               @if (userService.members().length > 5) {
                 <a

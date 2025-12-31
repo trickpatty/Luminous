@@ -67,7 +67,7 @@ interface NavItem {
           <!-- User menu -->
           <div class="p-4 border-t border-gray-200">
             @if (user()) {
-              <div class="flex items-center gap-3">
+              <a routerLink="/dashboard/profile" class="flex items-center gap-3 p-2 -m-2 rounded-lg hover:bg-gray-50 transition-colors">
                 <app-avatar [name]="user()!.displayName" size="sm" />
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-medium text-gray-900 truncate">
@@ -77,7 +77,7 @@ interface NavItem {
                     {{ user()!.email }}
                   </p>
                 </div>
-              </div>
+              </a>
               <app-button
                 variant="ghost"
                 size="sm"
@@ -108,7 +108,9 @@ interface NavItem {
             </button>
             <h1 class="text-lg font-semibold text-primary-600">Luminous</h1>
             @if (user()) {
-              <app-avatar [name]="user()!.displayName" size="sm" />
+              <a routerLink="/dashboard/profile" class="block">
+                <app-avatar [name]="user()!.displayName" size="sm" />
+              </a>
             }
           </div>
         </header>
