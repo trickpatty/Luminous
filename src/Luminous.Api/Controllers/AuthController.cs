@@ -220,21 +220,43 @@ public class AuthController : ApiControllerBase
     public async Task<ActionResult<ApiResponse<PasskeyRegisterCompleteResultDto>>> CompletePasskeyRegistration(
         [FromBody] PasskeyRegisterCompleteRequest request)
     {
-        var command = new PasskeyRegisterCompleteCommand
+        // Validate required fields
+        if (request.AttestationResponse == null)
         {
-            SessionId = request.SessionId,
-            AttestationResponse = request.AttestationResponse,
-            DisplayName = request.DisplayName
-        };
-
-        var result = await Mediator.Send(command);
-
-        if (!result.Success)
-        {
-            return BadRequest(ApiResponse<PasskeyRegisterCompleteResultDto>.Fail("REGISTRATION_FAILED", result.Error ?? "Registration failed"));
+            return BadRequest(ApiResponse<PasskeyRegisterCompleteResultDto>.Fail("INVALID_REQUEST", "Attestation response is required"));
         }
 
-        return OkResponse(result);
+        if (string.IsNullOrEmpty(request.AttestationResponse.Id) ||
+            string.IsNullOrEmpty(request.AttestationResponse.RawId) ||
+            request.AttestationResponse.Response == null ||
+            string.IsNullOrEmpty(request.AttestationResponse.Response.ClientDataJSON) ||
+            string.IsNullOrEmpty(request.AttestationResponse.Response.AttestationObject))
+        {
+            return BadRequest(ApiResponse<PasskeyRegisterCompleteResultDto>.Fail("INVALID_REQUEST", "Attestation response is incomplete"));
+        }
+
+        try
+        {
+            var command = new PasskeyRegisterCompleteCommand
+            {
+                SessionId = request.SessionId,
+                AttestationResponse = request.ToFido2Response(),
+                DisplayName = request.DisplayName
+            };
+
+            var result = await Mediator.Send(command);
+
+            if (!result.Success)
+            {
+                return BadRequest(ApiResponse<PasskeyRegisterCompleteResultDto>.Fail("REGISTRATION_FAILED", result.Error ?? "Registration failed"));
+            }
+
+            return OkResponse(result);
+        }
+        catch (FormatException ex)
+        {
+            return BadRequest(ApiResponse<PasskeyRegisterCompleteResultDto>.Fail("INVALID_FORMAT", $"Invalid base64url encoding: {ex.Message}"));
+        }
     }
 
     #endregion
@@ -274,22 +296,45 @@ public class AuthController : ApiControllerBase
     public async Task<ActionResult<ApiResponse<PasskeyAuthenticateCompleteResultDto>>> CompletePasskeyAuthentication(
         [FromBody] PasskeyAuthenticateCompleteRequest request)
     {
-        var command = new PasskeyAuthenticateCompleteCommand
+        // Validate required fields
+        if (request.AssertionResponse == null)
         {
-            SessionId = request.SessionId,
-            AssertionResponse = request.AssertionResponse,
-            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
-            UserAgent = Request.Headers.UserAgent.ToString()
-        };
-
-        var result = await Mediator.Send(command);
-
-        if (!result.Success)
-        {
-            return Unauthorized(ApiResponse<PasskeyAuthenticateCompleteResultDto>.Fail("AUTHENTICATION_FAILED", result.Error ?? "Authentication failed"));
+            return BadRequest(ApiResponse<PasskeyAuthenticateCompleteResultDto>.Fail("INVALID_REQUEST", "Assertion response is required"));
         }
 
-        return OkResponse(result);
+        if (string.IsNullOrEmpty(request.AssertionResponse.Id) ||
+            string.IsNullOrEmpty(request.AssertionResponse.RawId) ||
+            request.AssertionResponse.Response == null ||
+            string.IsNullOrEmpty(request.AssertionResponse.Response.ClientDataJSON) ||
+            string.IsNullOrEmpty(request.AssertionResponse.Response.AuthenticatorData) ||
+            string.IsNullOrEmpty(request.AssertionResponse.Response.Signature))
+        {
+            return BadRequest(ApiResponse<PasskeyAuthenticateCompleteResultDto>.Fail("INVALID_REQUEST", "Assertion response is incomplete"));
+        }
+
+        try
+        {
+            var command = new PasskeyAuthenticateCompleteCommand
+            {
+                SessionId = request.SessionId,
+                AssertionResponse = request.ToFido2Response(),
+                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                UserAgent = Request.Headers.UserAgent.ToString()
+            };
+
+            var result = await Mediator.Send(command);
+
+            if (!result.Success)
+            {
+                return Unauthorized(ApiResponse<PasskeyAuthenticateCompleteResultDto>.Fail("AUTHENTICATION_FAILED", result.Error ?? "Authentication failed"));
+            }
+
+            return OkResponse(result);
+        }
+        catch (FormatException ex)
+        {
+            return BadRequest(ApiResponse<PasskeyAuthenticateCompleteResultDto>.Fail("INVALID_FORMAT", $"Invalid base64url encoding: {ex.Message}"));
+        }
     }
 
     #endregion
@@ -472,6 +517,7 @@ public sealed record PasskeyRegisterRequest
 
 /// <summary>
 /// Request to complete passkey registration.
+/// Uses custom DTO to properly deserialize WebAuthn response from client.
 /// </summary>
 public sealed record PasskeyRegisterCompleteRequest
 {
@@ -483,12 +529,90 @@ public sealed record PasskeyRegisterCompleteRequest
     /// <summary>
     /// The attestation response from the authenticator.
     /// </summary>
-    public AuthenticatorAttestationRawResponse AttestationResponse { get; init; } = null!;
+    public AttestationResponseDto AttestationResponse { get; init; } = null!;
 
     /// <summary>
     /// Optional display name for the passkey.
     /// </summary>
     public string? DisplayName { get; init; }
+
+    /// <summary>
+    /// Converts the DTO to Fido2NetLib's AuthenticatorAttestationRawResponse.
+    /// </summary>
+    public AuthenticatorAttestationRawResponse ToFido2Response()
+    {
+        return new AuthenticatorAttestationRawResponse
+        {
+            Id = Base64UrlDecode(AttestationResponse.Id),
+            RawId = Base64UrlDecode(AttestationResponse.RawId),
+            Type = Fido2NetLib.Objects.PublicKeyCredentialType.PublicKey,
+            Response = new AuthenticatorAttestationRawResponse.ResponseData
+            {
+                ClientDataJson = Base64UrlDecode(AttestationResponse.Response.ClientDataJSON),
+                AttestationObject = Base64UrlDecode(AttestationResponse.Response.AttestationObject),
+                Transports = AttestationResponse.Response.Transports?.Select(t => Enum.TryParse<Fido2NetLib.Objects.AuthenticatorTransport>(t, true, out var result) ? result : Fido2NetLib.Objects.AuthenticatorTransport.Internal).ToArray()
+            }
+        };
+    }
+
+    private static byte[] Base64UrlDecode(string input)
+    {
+        // Add padding if needed
+        var base64 = input.Replace('-', '+').Replace('_', '/');
+        switch (base64.Length % 4)
+        {
+            case 2: base64 += "=="; break;
+            case 3: base64 += "="; break;
+        }
+        return Convert.FromBase64String(base64);
+    }
+}
+
+/// <summary>
+/// DTO for WebAuthn attestation response from client.
+/// </summary>
+public sealed record AttestationResponseDto
+{
+    /// <summary>
+    /// Base64URL encoded credential ID.
+    /// </summary>
+    public string Id { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Base64URL encoded raw credential ID.
+    /// </summary>
+    public string RawId { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Credential type (always "public-key").
+    /// </summary>
+    public string Type { get; init; } = "public-key";
+
+    /// <summary>
+    /// The attestation response data.
+    /// </summary>
+    public AttestationResponseDataDto Response { get; init; } = null!;
+}
+
+/// <summary>
+/// DTO for WebAuthn attestation response data.
+/// </summary>
+public sealed record AttestationResponseDataDto
+{
+    /// <summary>
+    /// Base64URL encoded client data JSON.
+    /// </summary>
+    public string ClientDataJSON { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Base64URL encoded attestation object.
+    /// </summary>
+    public string AttestationObject { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Optional list of transports supported by the authenticator.
+    /// </summary>
+    public string[]? Transports { get; init; }
 }
 
 /// <summary>
@@ -504,6 +628,7 @@ public sealed record PasskeyAuthenticateStartRequest
 
 /// <summary>
 /// Request to complete passkey authentication.
+/// Uses custom DTO to properly deserialize WebAuthn response from client.
 /// </summary>
 public sealed record PasskeyAuthenticateCompleteRequest
 {
@@ -515,7 +640,93 @@ public sealed record PasskeyAuthenticateCompleteRequest
     /// <summary>
     /// The assertion response from the authenticator.
     /// </summary>
-    public AuthenticatorAssertionRawResponse AssertionResponse { get; init; } = null!;
+    public AssertionResponseDto AssertionResponse { get; init; } = null!;
+
+    /// <summary>
+    /// Converts the DTO to Fido2NetLib's AuthenticatorAssertionRawResponse.
+    /// </summary>
+    public AuthenticatorAssertionRawResponse ToFido2Response()
+    {
+        return new AuthenticatorAssertionRawResponse
+        {
+            Id = Base64UrlDecode(AssertionResponse.Id),
+            RawId = Base64UrlDecode(AssertionResponse.RawId),
+            Type = Fido2NetLib.Objects.PublicKeyCredentialType.PublicKey,
+            Response = new AuthenticatorAssertionRawResponse.AssertionResponse
+            {
+                ClientDataJson = Base64UrlDecode(AssertionResponse.Response.ClientDataJSON),
+                AuthenticatorData = Base64UrlDecode(AssertionResponse.Response.AuthenticatorData),
+                Signature = Base64UrlDecode(AssertionResponse.Response.Signature),
+                UserHandle = string.IsNullOrEmpty(AssertionResponse.Response.UserHandle)
+                    ? null
+                    : Base64UrlDecode(AssertionResponse.Response.UserHandle)
+            }
+        };
+    }
+
+    private static byte[] Base64UrlDecode(string input)
+    {
+        // Add padding if needed
+        var base64 = input.Replace('-', '+').Replace('_', '/');
+        switch (base64.Length % 4)
+        {
+            case 2: base64 += "=="; break;
+            case 3: base64 += "="; break;
+        }
+        return Convert.FromBase64String(base64);
+    }
+}
+
+/// <summary>
+/// DTO for WebAuthn assertion response from client.
+/// </summary>
+public sealed record AssertionResponseDto
+{
+    /// <summary>
+    /// Base64URL encoded credential ID.
+    /// </summary>
+    public string Id { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Base64URL encoded raw credential ID.
+    /// </summary>
+    public string RawId { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Credential type (always "public-key").
+    /// </summary>
+    public string Type { get; init; } = "public-key";
+
+    /// <summary>
+    /// The assertion response data.
+    /// </summary>
+    public AssertionResponseDataDto Response { get; init; } = null!;
+}
+
+/// <summary>
+/// DTO for WebAuthn assertion response data.
+/// </summary>
+public sealed record AssertionResponseDataDto
+{
+    /// <summary>
+    /// Base64URL encoded client data JSON.
+    /// </summary>
+    public string ClientDataJSON { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Base64URL encoded authenticator data.
+    /// </summary>
+    public string AuthenticatorData { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Base64URL encoded signature.
+    /// </summary>
+    public string Signature { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Base64URL encoded user handle (optional).
+    /// </summary>
+    public string? UserHandle { get; init; }
 }
 
 /// <summary>
