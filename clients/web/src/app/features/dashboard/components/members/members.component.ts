@@ -156,9 +156,21 @@ import { User, UserRole, Invitation, InvitationStatus } from '../../../../models
             <div class="divide-y divide-gray-100">
               @for (invitation of pendingInvitations(); track invitation.id) {
                 <div class="flex items-center justify-between py-4">
-                  <div>
+                  <div class="flex-1 min-w-0">
                     <p class="text-sm font-medium text-gray-900">{{ invitation.email }}</p>
-                    <p class="text-xs text-gray-500">
+                    <div class="flex items-center gap-2 mt-1">
+                      <code class="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded">
+                        {{ invitation.code }}
+                      </code>
+                      <button
+                        type="button"
+                        (click)="copyCode(invitation.code)"
+                        class="text-xs text-primary-600 hover:text-primary-700"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">
                       Invited as {{ invitation.role }} &middot;
                       Expires {{ formatDate(invitation.expiresAt) }}
                     </p>
@@ -313,6 +325,105 @@ import { User, UserRole, Invitation, InvitationStatus } from '../../../../models
           </div>
         </div>
       }
+
+      <!-- Access Code Modal -->
+      @if (showCodeModal() && lastCreatedInvitation()) {
+        <div class="fixed inset-0 z-50 overflow-y-auto">
+          <div class="flex min-h-full items-center justify-center p-4">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75" (click)="closeCodeModal()"></div>
+            <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+              <div class="text-center mb-6">
+                <div class="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                  <svg class="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900">Invitation Sent!</h3>
+                <p class="text-sm text-gray-600 mt-1">
+                  An invitation has been sent to <strong>{{ lastCreatedInvitation()!.email }}</strong>
+                </p>
+              </div>
+
+              <div class="space-y-4">
+                <!-- Access Code -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Access Code
+                  </label>
+                  <div class="flex items-center gap-2">
+                    <code class="flex-1 px-4 py-3 bg-gray-100 rounded-lg font-mono text-lg text-center tracking-wider">
+                      {{ lastCreatedInvitation()!.code }}
+                    </code>
+                    <button
+                      type="button"
+                      (click)="copyCode(lastCreatedInvitation()!.code)"
+                      class="p-3 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                      [title]="codeCopied() ? 'Copied!' : 'Copy code'"
+                    >
+                      @if (codeCopied()) {
+                        <svg class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                      } @else {
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                      }
+                    </button>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-1">
+                    Share this code with {{ lastCreatedInvitation()!.email }} to let them join your family.
+                  </p>
+                </div>
+
+                <!-- Invite Link -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Or share invite link
+                  </label>
+                  <div class="flex items-center gap-2">
+                    <input
+                      type="text"
+                      readonly
+                      [value]="getInviteUrl(lastCreatedInvitation()!.code)"
+                      class="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-600"
+                    />
+                    <button
+                      type="button"
+                      (click)="copyInviteUrl(lastCreatedInvitation()!.code)"
+                      class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                      title="Copy link"
+                    >
+                      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Expiration notice -->
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                  <div class="flex items-start gap-2">
+                    <svg class="w-5 h-5 text-yellow-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div class="text-sm text-yellow-800">
+                      <p class="font-medium">This invitation expires on {{ formatDate(lastCreatedInvitation()!.expiresAt) }}</p>
+                      <p class="text-yellow-700 mt-0.5">The invitee will need to create their account before then.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex justify-end mt-6">
+                <app-button variant="primary" (onClick)="closeCodeModal()">
+                  Done
+                </app-button>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `,
 })
@@ -327,11 +438,14 @@ export class MembersComponent implements OnInit {
   showInviteModal = signal(false);
   showRoleModal = signal(false);
   showRemoveModal = signal(false);
+  showCodeModal = signal(false);
   sendingInvite = signal(false);
   updatingRole = signal(false);
   removingMember = signal(false);
   openMemberMenu = signal<string | null>(null);
   selectedMember = signal<User | null>(null);
+  lastCreatedInvitation = signal<Invitation | null>(null);
+  codeCopied = signal(false);
 
   // Form fields
   inviteEmail = '';
@@ -422,16 +536,49 @@ export class MembersComponent implements OnInit {
         message: this.inviteMessage || undefined,
       })
       .subscribe({
-        next: () => {
+        next: (invitation) => {
           this.sendingInvite.set(false);
           this.closeInviteModal();
-          this.successMessage.set('Invitation sent successfully!');
+          this.lastCreatedInvitation.set(invitation);
+          this.showCodeModal.set(true);
         },
         error: (err) => {
           this.sendingInvite.set(false);
           this.error.set(err.message || 'Failed to send invitation');
         },
       });
+  }
+
+  getInviteUrl(code: string): string {
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/auth/join/${code}`;
+  }
+
+  async copyCode(code: string): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(code);
+      this.codeCopied.set(true);
+      setTimeout(() => this.codeCopied.set(false), 2000);
+    } catch {
+      this.error.set('Failed to copy code');
+    }
+  }
+
+  async copyInviteUrl(code: string): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(this.getInviteUrl(code));
+      this.codeCopied.set(true);
+      setTimeout(() => this.codeCopied.set(false), 2000);
+    } catch {
+      this.error.set('Failed to copy link');
+    }
+  }
+
+  closeCodeModal(): void {
+    this.showCodeModal.set(false);
+    this.lastCreatedInvitation.set(null);
+    this.codeCopied.set(false);
+    this.successMessage.set('Invitation sent successfully!');
   }
 
   revokeInvitation(invitation: Invitation): void {

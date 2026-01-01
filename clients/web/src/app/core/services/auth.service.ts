@@ -417,12 +417,19 @@ export class AuthService {
       const payload = token.split('.')[1];
       const decoded = JSON.parse(atob(payload));
 
+      // JWT claims use different naming conventions:
+      // - Standard claims: 'sub', 'email'
+      // - .NET ClaimTypes become full URIs: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name
+      // - Custom claims: 'display_name', 'family_id'
+      const nameClaimUri = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';
+      const roleClaimUri = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role';
+
       return {
         id: decoded.sub,
         email: decoded.email,
-        displayName: decoded.name || decoded.displayName,
+        displayName: decoded.display_name || decoded[nameClaimUri] || decoded.name || decoded.displayName,
         familyId: decoded.family_id || decoded.familyId,
-        role: decoded.role,
+        role: decoded[roleClaimUri] || decoded.role,
         authMethod: decoded.auth_method || decoded.authMethod,
         mfaVerified: decoded.mfa_verified || decoded.mfaVerified || false,
       };
