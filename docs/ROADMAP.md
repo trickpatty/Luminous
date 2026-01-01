@@ -625,12 +625,22 @@ Complete the household coordination features including profiles, meal planning, 
 - [ ] **5.4.3** Read-only calendar view
 - [ ] **5.4.4** Caregiver info display
 
+#### 5.5 Family Join Codes
+
+- [ ] **5.5.1** Generate shareable family join code (configurable by owner/admin)
+- [ ] **5.5.2** Set default role for join code users (e.g., Adult, Teen, Child)
+- [ ] **5.5.3** Join request queue with approval workflow
+- [ ] **5.5.4** Owner/admin approval UI with role assignment
+- [ ] **5.5.5** Expiration settings for join codes (optional time limit, usage limit)
+- [ ] **5.5.6** Revoke/regenerate join code capability
+
 ### Exit Criteria
 
 - Complete profile management across all platforms
 - Meal planning with recipe storage
 - Lists usable for grocery and custom purposes
 - Caregivers can access via web link
+- Family join codes with approval workflow operational
 
 ---
 
