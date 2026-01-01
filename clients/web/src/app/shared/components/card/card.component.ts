@@ -8,6 +8,9 @@ export type CardSize = 'sm' | 'md' | 'lg';
   selector: 'app-card',
   standalone: true,
   imports: [CommonModule],
+  host: {
+    'style': 'display: block;'
+  },
   template: `
     <div [class]="cardClasses" [style]="cardStyles">
       @if (title || subtitle) {
