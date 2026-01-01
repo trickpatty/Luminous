@@ -10,7 +10,7 @@ import {
   AvatarComponent,
   SpinnerComponent,
 } from '../../../../shared';
-import { User, UserRole, UpdateUserProfileRequest, PasskeyCredential } from '../../../../models';
+import { User, UserRole, UpdateUserProfileRequest, PasskeyCredential, PasskeyRegistrationOptions } from '../../../../models';
 
 @Component({
   selector: 'app-profile',
@@ -671,9 +671,15 @@ export class ProfileComponent implements OnInit {
 
     try {
       // Step 1: Get registration options from server
-      const { options, sessionId } = await this.authService
+      const startData = await this.authService
         .startPasskeyRegistration(email)
-        .toPromise() as { options: PublicKeyCredentialCreationOptions; sessionId: string };
+        .toPromise();
+
+      if (!startData) {
+        throw new Error('Failed to get registration options');
+      }
+
+      const { options, sessionId } = startData;
 
       // Step 2: Create credential using browser WebAuthn API
       const credential = await navigator.credentials.create({
@@ -775,19 +781,15 @@ export class ProfileComponent implements OnInit {
   }
 
   // WebAuthn helpers
-  private preparePublicKeyOptions(options: PublicKeyCredentialCreationOptions): PublicKeyCredentialCreationOptions {
+  private preparePublicKeyOptions(options: PasskeyRegistrationOptions): PublicKeyCredentialCreationOptions {
     // Convert base64url strings to ArrayBuffers where needed
     return {
       ...options,
-      challenge: this.base64UrlToArrayBuffer(options.challenge as unknown as string),
+      challenge: this.base64UrlToArrayBuffer(options.challenge),
       user: {
         ...options.user,
-        id: this.base64UrlToArrayBuffer(options.user.id as unknown as string),
+        id: this.base64UrlToArrayBuffer(options.user.id),
       },
-      excludeCredentials: options.excludeCredentials?.map((cred) => ({
-        ...cred,
-        id: this.base64UrlToArrayBuffer(cred.id as unknown as string),
-      })),
     };
   }
 
