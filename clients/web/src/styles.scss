@@ -191,9 +191,21 @@
 
   /* Primary button */
   .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    font-weight: 500;
+    border-radius: var(--radius-md);
+    height: 44px;
+    padding: 0 var(--space-5);
     background: var(--accent-600);
     color: var(--text-inverse);
     border: none;
+    cursor: pointer;
+    transition: background-color var(--duration-quick) var(--ease-out),
+                box-shadow var(--duration-quick) var(--ease-out),
+                transform var(--duration-quick) var(--ease-out);
   }
 
   .btn-primary:hover:not(:disabled) {
@@ -210,9 +222,19 @@
 
   /* Secondary button */
   .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    font-weight: 500;
+    border-radius: var(--radius-md);
+    height: 44px;
+    padding: 0 var(--space-5);
     background: var(--surface-pressed);
     color: var(--text-primary);
     border: none;
+    cursor: pointer;
+    transition: background-color var(--duration-quick) var(--ease-out);
   }
 
   .btn-secondary:hover:not(:disabled) {
@@ -719,13 +741,13 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: 56px;
     background: var(--surface-primary);
     border-top: 1px solid var(--border-color-light);
     display: flex;
-    align-items: center;
+    align-items: stretch;
     justify-content: space-around;
-    padding-bottom: env(safe-area-inset-bottom);
+    /* Use padding-bottom for safe area, with min-height ensuring consistent layout */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     z-index: var(--z-fixed);
   }
 
@@ -734,25 +756,43 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    flex: 1;
     min-width: var(--touch-min);
-    min-height: var(--touch-min);
-    padding: var(--space-1);
-    gap: 2px;
-    color: var(--text-secondary);
-    font-size: 10px;
+    /* Fixed height for the interactive area, separate from safe area */
+    height: 56px;
+    padding: var(--space-1) var(--space-2);
+    gap: 4px;
+    color: var(--text-tertiary);
+    font-size: 11px;
     font-weight: 500;
     text-decoration: none;
-    transition: color var(--duration-quick) var(--ease-out);
+    border-radius: var(--radius-lg);
+    margin: 4px 2px;
+    transition: color var(--duration-quick) var(--ease-out),
+                background-color var(--duration-quick) var(--ease-out);
   }
 
-  .tab-bar-item:hover,
+  .tab-bar-item:hover {
+    color: var(--text-secondary);
+    background: var(--surface-interactive);
+  }
+
   .tab-bar-item-active {
     color: var(--accent-600);
+    background: var(--accent-50);
+  }
+
+  .tab-bar-item-active:hover {
+    background: var(--accent-100);
   }
 
   .tab-bar-item svg {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
+  }
+
+  .tab-bar-item-active svg {
+    stroke-width: 2;
   }
 }
 
