@@ -107,6 +107,25 @@ jobs:
       - name: Build Angular app
         run: npm run build:prod
 
+      - name: Generate placeholder icons
+        run: |
+          # Create icons directory
+          mkdir -p build/icons
+          mkdir -p assets
+
+          # Generate a simple placeholder icon using ImageMagick
+          # Create a 512x512 blue gradient icon with "L" text
+          convert -size 512x512 xc:'#3B82F6' \
+            -fill '#1E40AF' -draw "rectangle 0,256 512,512" \
+            -fill white -font DejaVu-Sans-Bold -pointsize 280 \
+            -gravity center -draw "text 0,0 'L'" \
+            build/icons/icon.png
+
+          # Create multiple sizes for Linux
+          for size in 16 32 48 64 128 256 512; do
+            convert build/icons/icon.png -resize ${size}x${size} build/icons/${size}x${size}.png
+          done
+
       - name: Build Electron (Linux)
         run: npx electron-builder build --linux --publish never
         env:
@@ -152,6 +171,33 @@ jobs:
       - name: Build Angular app
         run: npm run build:prod
 
+      - name: Generate placeholder icons
+        shell: pwsh
+        run: |
+          # Create directories
+          New-Item -ItemType Directory -Force -Path build/icons
+          New-Item -ItemType Directory -Force -Path assets
+
+          # Install ImageMagick if not present
+          choco install imagemagick.app -y --no-progress
+
+          # Generate a simple placeholder icon
+          & "C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\magick.exe" -size 512x512 xc:"#3B82F6" `
+            -fill "#1E40AF" -draw "rectangle 0,256 512,512" `
+            -fill white -font Arial-Bold -pointsize 280 `
+            -gravity center -draw "text 0,0 'L'" `
+            build/icons/icon.png
+
+          # Generate multiple sizes and create ICO
+          $sizes = @(16, 32, 48, 64, 128, 256)
+          $icoInputs = @()
+          foreach ($size in $sizes) {
+            & "C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\magick.exe" build/icons/icon.png -resize "${size}x${size}" "build/icons/${size}x${size}.png"
+            $icoInputs += "build/icons/${size}x${size}.png"
+          }
+          # Create ICO file
+          & "C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\magick.exe" $icoInputs build/icon.ico
+
       - name: Build Electron (Windows)
         run: npx electron-builder build --win --publish never
         env:
@@ -172,7 +218,7 @@ jobs:
   # ===========================================================================
   build-macos-intel:
     name: Build macOS (Intel)
-    runs-on: macos-13  # Intel runner
+    runs-on: macos-15  # Intel runner (macos-13 deprecated)
     needs: build-and-test
     if: github.event_name == 'push' || github.event.inputs.create_release == 'true'
 
@@ -195,6 +241,39 @@ jobs:
 
       - name: Build Angular app
         run: npm run build:prod
+
+      - name: Generate placeholder icons
+        run: |
+          # Create directories
+          mkdir -p build/icons
+          mkdir -p assets
+
+          # Generate a simple placeholder icon using sips (built into macOS)
+          # First create a base PNG with ImageMagick (available via Homebrew on runners)
+          brew install imagemagick --quiet || true
+
+          magick -size 512x512 xc:'#3B82F6' \
+            -fill '#1E40AF' -draw "rectangle 0,256 512,512" \
+            -fill white -font Helvetica-Bold -pointsize 280 \
+            -gravity center -draw "text 0,0 'L'" \
+            build/icons/icon.png
+
+          # Create iconset directory for macOS
+          mkdir -p build/icon.iconset
+
+          # Generate all required sizes for macOS
+          for size in 16 32 64 128 256 512; do
+            magick build/icons/icon.png -resize ${size}x${size} build/icon.iconset/icon_${size}x${size}.png
+            magick build/icons/icon.png -resize $((size*2))x$((size*2)) build/icon.iconset/icon_${size}x${size}@2x.png
+          done
+
+          # Create ICNS file using iconutil
+          iconutil -c icns build/icon.iconset -o build/icon.icns
+
+          # Also create icons in the icons folder for Linux compatibility
+          for size in 16 32 48 64 128 256 512; do
+            magick build/icons/icon.png -resize ${size}x${size} build/icons/${size}x${size}.png
+          done
 
       - name: Build Electron (macOS Intel)
         run: npx electron-builder build --mac --x64 --publish never
@@ -246,6 +325,39 @@ jobs:
 
       - name: Build Angular app
         run: npm run build:prod
+
+      - name: Generate placeholder icons
+        run: |
+          # Create directories
+          mkdir -p build/icons
+          mkdir -p assets
+
+          # Generate a simple placeholder icon using sips (built into macOS)
+          # First create a base PNG with ImageMagick (available via Homebrew on runners)
+          brew install imagemagick --quiet || true
+
+          magick -size 512x512 xc:'#3B82F6' \
+            -fill '#1E40AF' -draw "rectangle 0,256 512,512" \
+            -fill white -font Helvetica-Bold -pointsize 280 \
+            -gravity center -draw "text 0,0 'L'" \
+            build/icons/icon.png
+
+          # Create iconset directory for macOS
+          mkdir -p build/icon.iconset
+
+          # Generate all required sizes for macOS
+          for size in 16 32 64 128 256 512; do
+            magick build/icons/icon.png -resize ${size}x${size} build/icon.iconset/icon_${size}x${size}.png
+            magick build/icons/icon.png -resize $((size*2))x$((size*2)) build/icon.iconset/icon_${size}x${size}@2x.png
+          done
+
+          # Create ICNS file using iconutil
+          iconutil -c icns build/icon.iconset -o build/icon.icns
+
+          # Also create icons in the icons folder for Linux compatibility
+          for size in 16 32 48 64 128 256 512; do
+            magick build/icons/icon.png -resize ${size}x${size} build/icons/${size}x${size}.png
+          done
 
       - name: Build Electron (macOS Apple Silicon)
         run: npx electron-builder build --mac --arm64 --publish never
