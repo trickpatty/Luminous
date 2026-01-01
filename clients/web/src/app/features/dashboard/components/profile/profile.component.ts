@@ -10,7 +10,7 @@ import {
   AvatarComponent,
   SpinnerComponent,
 } from '../../../../shared';
-import { User, UserRole, UpdateUserProfileRequest } from '../../../../models';
+import { User, UserRole, UpdateUserProfileRequest, PasskeyCredential } from '../../../../models';
 
 @Component({
   selector: 'app-profile',
@@ -216,7 +216,180 @@ import { User, UserRole, UpdateUserProfileRequest } from '../../../../models';
               }
             </div>
           </app-card>
+
+          <!-- Passkey Management (only for own profile) -->
+          @if (isOwnProfile()) {
+            <app-card title="Passkeys" subtitle="Manage your passkeys for secure, passwordless login">
+              @if (loadingPasskeys()) {
+                <div class="flex justify-center py-6">
+                  <app-spinner size="md" label="Loading passkeys..." />
+                </div>
+              } @else {
+                <div class="space-y-4">
+                  <!-- Passkey List -->
+                  @if (passkeys().length === 0) {
+                    <div class="text-center py-6 text-gray-500">
+                      <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                      </svg>
+                      <p class="font-medium">No passkeys registered</p>
+                      <p class="text-sm mt-1">Add a passkey for faster, more secure sign-in</p>
+                    </div>
+                  } @else {
+                    <div class="divide-y divide-gray-100">
+                      @for (passkey of passkeys(); track passkey.id) {
+                        <div class="flex items-center justify-between py-3">
+                          <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-primary-50 rounded-lg flex items-center justify-center">
+                              <svg class="w-5 h-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <p class="text-sm font-medium text-gray-900">{{ passkey.name || 'Passkey' }}</p>
+                              <p class="text-xs text-gray-500">
+                                Added {{ formatDate(passkey.createdAt) }}
+                                @if (passkey.lastUsedAt) {
+                                  &middot; Last used {{ formatRelativeDate(passkey.lastUsedAt) }}
+                                }
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            (click)="confirmRemovePasskey(passkey)"
+                            class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Remove passkey"
+                            [disabled]="removingPasskey()"
+                          >
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  }
+
+                  <!-- Add Passkey Button -->
+                  @if (passkeySupported()) {
+                    <div class="pt-4 border-t border-gray-100">
+                      <app-button
+                        variant="secondary"
+                        [loading]="addingPasskey()"
+                        (onClick)="showAddPasskeyModal.set(true)"
+                      >
+                        <svg class="w-5 h-5 mr-2 -ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        Add Passkey
+                      </app-button>
+                    </div>
+                  } @else {
+                    <div class="pt-4 border-t border-gray-100">
+                      <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                        <div class="flex items-start gap-2">
+                          <svg class="w-5 h-5 text-yellow-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                          </svg>
+                          <p class="text-sm text-yellow-800">
+                            Your browser doesn't support passkeys. Try using a modern browser like Chrome, Safari, or Edge.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </app-card>
+          }
         </div>
+
+        <!-- Add Passkey Modal -->
+        @if (showAddPasskeyModal()) {
+          <div class="fixed inset-0 z-50 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4">
+              <div class="fixed inset-0 bg-gray-500 bg-opacity-75" (click)="closeAddPasskeyModal()"></div>
+              <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Add a Passkey</h3>
+                <p class="text-sm text-gray-600 mb-4">
+                  Passkeys let you sign in securely without a password using your device's built-in authentication (Face ID, Touch ID, Windows Hello, etc.).
+                </p>
+
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      Passkey Name (optional)
+                    </label>
+                    <input
+                      type="text"
+                      [(ngModel)]="newPasskeyName"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      placeholder="e.g., MacBook Pro, iPhone 15"
+                    />
+                    <p class="text-xs text-gray-500 mt-1">
+                      Give this passkey a name to help you identify it later
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex justify-end gap-3 mt-6">
+                  <app-button variant="secondary" (onClick)="closeAddPasskeyModal()">
+                    Cancel
+                  </app-button>
+                  <app-button
+                    variant="primary"
+                    [loading]="addingPasskey()"
+                    (onClick)="addPasskey()"
+                  >
+                    Continue
+                  </app-button>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Remove Passkey Confirmation Modal -->
+        @if (showRemovePasskeyModal()) {
+          <div class="fixed inset-0 z-50 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4">
+              <div class="fixed inset-0 bg-gray-500 bg-opacity-75" (click)="closeRemovePasskeyModal()"></div>
+              <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Remove Passkey</h3>
+                <p class="text-sm text-gray-600 mb-4">
+                  Are you sure you want to remove the passkey <strong>"{{ passkeyToRemove()?.name || 'Passkey' }}"</strong>?
+                  You won't be able to use it to sign in anymore.
+                </p>
+                @if (passkeys().length === 1) {
+                  <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                    <div class="flex items-start gap-2">
+                      <svg class="w-5 h-5 text-yellow-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <p class="text-sm text-yellow-800">
+                        This is your only passkey. After removing it, you'll need to use email verification to sign in.
+                      </p>
+                    </div>
+                  </div>
+                }
+
+                <div class="flex justify-end gap-3">
+                  <app-button variant="secondary" (onClick)="closeRemovePasskeyModal()">
+                    Cancel
+                  </app-button>
+                  <app-button
+                    variant="danger"
+                    [loading]="removingPasskey()"
+                    (onClick)="removePasskey()"
+                  >
+                    Remove Passkey
+                  </app-button>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
       } @else {
         <app-card>
           <div class="text-center py-8 text-gray-500">
@@ -243,11 +416,22 @@ export class ProfileComponent implements OnInit {
   error = signal<string | null>(null);
   successMessage = signal<string | null>(null);
 
+  // Passkey state
+  passkeys = signal<PasskeyCredential[]>([]);
+  loadingPasskeys = signal(false);
+  addingPasskey = signal(false);
+  removingPasskey = signal(false);
+  showAddPasskeyModal = signal(false);
+  showRemovePasskeyModal = signal(false);
+  passkeyToRemove = signal<PasskeyCredential | null>(null);
+  passkeySupported = signal(false);
+
   // Form fields
   displayName = '';
   nickname = '';
   profileColor = '#4F46E5';
   birthDate = '';
+  newPasskeyName = '';
 
   // Available profile colors
   availableColors = [
@@ -277,6 +461,9 @@ export class ProfileComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    // Check if browser supports passkeys
+    this.passkeySupported.set(this.authService.isPasskeySupported());
+
     this.route.paramMap.subscribe((params) => {
       const userId = params.get('id');
       if (userId) {
@@ -296,6 +483,7 @@ export class ProfileComponent implements OnInit {
     this.error.set(null);
 
     const familyId = this.authService.user()?.familyId;
+    const currentUserId = this.authService.user()?.id;
     if (!familyId) {
       this.error.set('No family ID found');
       this.loading.set(false);
@@ -307,6 +495,11 @@ export class ProfileComponent implements OnInit {
         this.user.set(user);
         this.initializeForm(user);
         this.loading.set(false);
+
+        // Load passkeys if viewing own profile
+        if (userId === currentUserId) {
+          this.loadPasskeys();
+        }
       },
       error: (err) => {
         this.error.set(err.message || 'Failed to load profile');
@@ -440,5 +633,181 @@ export class ProfileComponent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/dashboard']);
+  }
+
+  // ============================================
+  // Passkey Management
+  // ============================================
+
+  private loadPasskeys(): void {
+    this.loadingPasskeys.set(true);
+
+    this.authService.getPasskeys().subscribe({
+      next: (passkeys) => {
+        this.passkeys.set(passkeys);
+        this.loadingPasskeys.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to load passkeys:', err);
+        this.loadingPasskeys.set(false);
+      },
+    });
+  }
+
+  closeAddPasskeyModal(): void {
+    this.showAddPasskeyModal.set(false);
+    this.newPasskeyName = '';
+  }
+
+  async addPasskey(): Promise<void> {
+    const email = this.authService.user()?.email;
+    if (!email) {
+      this.error.set('User email not found');
+      return;
+    }
+
+    this.addingPasskey.set(true);
+    this.error.set(null);
+
+    try {
+      // Step 1: Get registration options from server
+      const { options, sessionId } = await this.authService
+        .startPasskeyRegistration(email)
+        .toPromise() as { options: PublicKeyCredentialCreationOptions; sessionId: string };
+
+      // Step 2: Create credential using browser WebAuthn API
+      const credential = await navigator.credentials.create({
+        publicKey: this.preparePublicKeyOptions(options),
+      }) as PublicKeyCredential;
+
+      if (!credential) {
+        throw new Error('Failed to create passkey');
+      }
+
+      // Step 3: Prepare the response for the server
+      const attestationResponse = credential.response as AuthenticatorAttestationResponse;
+      const passkeyResponse = {
+        id: credential.id,
+        rawId: this.arrayBufferToBase64Url(credential.rawId),
+        type: 'public-key' as const,
+        response: {
+          clientDataJSON: this.arrayBufferToBase64Url(attestationResponse.clientDataJSON),
+          attestationObject: this.arrayBufferToBase64Url(attestationResponse.attestationObject),
+          transports: attestationResponse.getTransports?.() as AuthenticatorTransport[] | undefined,
+        },
+      };
+
+      // Step 4: Complete registration on server
+      const result = await this.authService
+        .completePasskeyRegistration(sessionId, passkeyResponse, this.newPasskeyName || undefined)
+        .toPromise();
+
+      if (result?.success) {
+        this.addingPasskey.set(false);
+        this.closeAddPasskeyModal();
+        this.successMessage.set('Passkey added successfully!');
+        this.loadPasskeys();
+      } else {
+        throw new Error(result?.error || 'Failed to register passkey');
+      }
+    } catch (err: unknown) {
+      this.addingPasskey.set(false);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to add passkey';
+
+      // Handle user cancellation gracefully
+      if (err instanceof DOMException && err.name === 'NotAllowedError') {
+        this.error.set('Passkey creation was cancelled');
+      } else {
+        this.error.set(errorMessage);
+      }
+    }
+  }
+
+  confirmRemovePasskey(passkey: PasskeyCredential): void {
+    this.passkeyToRemove.set(passkey);
+    this.showRemovePasskeyModal.set(true);
+  }
+
+  closeRemovePasskeyModal(): void {
+    this.showRemovePasskeyModal.set(false);
+    this.passkeyToRemove.set(null);
+  }
+
+  removePasskey(): void {
+    const passkey = this.passkeyToRemove();
+    if (!passkey) return;
+
+    this.removingPasskey.set(true);
+    this.error.set(null);
+
+    this.authService.deletePasskey(passkey.id).subscribe({
+      next: () => {
+        this.removingPasskey.set(false);
+        this.closeRemovePasskeyModal();
+        this.successMessage.set('Passkey removed successfully');
+        this.passkeys.update((list) => list.filter((p) => p.id !== passkey.id));
+      },
+      error: (err) => {
+        this.removingPasskey.set(false);
+        this.error.set(err.message || 'Failed to remove passkey');
+      },
+    });
+  }
+
+  formatRelativeDate(dateStr: string): string {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      if (diffHours === 0) {
+        const diffMinutes = Math.floor(diffMs / (1000 * 60));
+        return diffMinutes <= 1 ? 'just now' : `${diffMinutes} minutes ago`;
+      }
+      return diffHours === 1 ? '1 hour ago' : `${diffHours} hours ago`;
+    }
+    if (diffDays === 1) return 'yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    return this.formatDate(dateStr);
+  }
+
+  // WebAuthn helpers
+  private preparePublicKeyOptions(options: PublicKeyCredentialCreationOptions): PublicKeyCredentialCreationOptions {
+    // Convert base64url strings to ArrayBuffers where needed
+    return {
+      ...options,
+      challenge: this.base64UrlToArrayBuffer(options.challenge as unknown as string),
+      user: {
+        ...options.user,
+        id: this.base64UrlToArrayBuffer(options.user.id as unknown as string),
+      },
+      excludeCredentials: options.excludeCredentials?.map((cred) => ({
+        ...cred,
+        id: this.base64UrlToArrayBuffer(cred.id as unknown as string),
+      })),
+    };
+  }
+
+  private base64UrlToArrayBuffer(base64url: string): ArrayBuffer {
+    const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+    const padding = '='.repeat((4 - (base64.length % 4)) % 4);
+    const binary = atob(base64 + padding);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
+
+  private arrayBufferToBase64Url(buffer: ArrayBuffer): string {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
   }
 }
