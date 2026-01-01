@@ -53,3 +53,13 @@ public sealed record SubscriptionDto
     public DateTime? ExpiresAt { get; init; }
     public bool IsActive { get; init; }
 }
+
+/// <summary>
+/// Request DTO for updating family settings.
+/// </summary>
+public sealed record UpdateFamilySettingsRequestDto
+{
+    public string? Name { get; init; }
+    public string? Timezone { get; init; }
+    public FamilySettingsDto? Settings { get; init; }
+}

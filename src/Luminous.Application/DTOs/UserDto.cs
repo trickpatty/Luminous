@@ -49,6 +49,15 @@ public sealed record CaregiverInfoDto
 }
 
 /// <summary>
+/// Request DTO for updating user profile.
+/// </summary>
+public sealed record UpdateUserProfileRequestDto
+{
+    public string? DisplayName { get; init; }
+    public UserProfileDto? Profile { get; init; }
+}
+
+/// <summary>
 /// Simplified user reference DTO.
 /// </summary>
 public sealed record UserRefDto
