@@ -24,9 +24,14 @@ public sealed record UpdateUserProfileCommand : IRequest<UserDto>
     public string FamilyId { get; init; } = string.Empty;
 
     /// <summary>
-    /// The updated profile information.
+    /// The updated display name (optional).
     /// </summary>
-    public UserProfileDto Profile { get; init; } = new();
+    public string? DisplayName { get; init; }
+
+    /// <summary>
+    /// The updated profile information (optional).
+    /// </summary>
+    public UserProfileDto? Profile { get; init; }
 }
 
 /// <summary>
@@ -42,13 +47,17 @@ public sealed class UpdateUserProfileCommandValidator : AbstractValidator<Update
         RuleFor(x => x.FamilyId)
             .NotEmpty().WithMessage("Family ID is required.");
 
-        RuleFor(x => x.Profile.Nickname)
-            .MaximumLength(50).WithMessage("Nickname must not exceed 50 characters.")
-            .When(x => x.Profile.Nickname != null);
+        RuleFor(x => x.DisplayName)
+            .MaximumLength(100).WithMessage("Display name must not exceed 100 characters.")
+            .When(x => x.DisplayName != null);
 
-        RuleFor(x => x.Profile.Color)
+        RuleFor(x => x.Profile!.Nickname)
+            .MaximumLength(50).WithMessage("Nickname must not exceed 50 characters.")
+            .When(x => x.Profile?.Nickname != null);
+
+        RuleFor(x => x.Profile!.Color)
             .Matches(@"^#[0-9A-Fa-f]{6}$").WithMessage("Color must be a valid hex color code.")
-            .When(x => !string.IsNullOrEmpty(x.Profile.Color));
+            .When(x => !string.IsNullOrEmpty(x.Profile?.Color));
     }
 }
 
@@ -94,17 +103,33 @@ public sealed class UpdateUserProfileCommandHandler : IRequestHandler<UpdateUser
             throw new ForbiddenAccessException("You do not have permission to update this profile.");
         }
 
-        // Update the profile
-        var profile = new UserProfile
+        // Update display name if provided
+        if (!string.IsNullOrWhiteSpace(request.DisplayName))
         {
-            AvatarUrl = request.Profile.AvatarUrl,
-            Color = request.Profile.Color,
-            Birthday = request.Profile.Birthday != null ? DateOnly.Parse(request.Profile.Birthday) : null,
-            Nickname = request.Profile.Nickname,
-            ShowAge = request.Profile.ShowAge
-        };
+            user.DisplayName = request.DisplayName.Trim();
+        }
 
-        user.UpdateProfile(profile, _currentUserService.UserId ?? "system");
+        // Update the profile if provided (merge with existing values)
+        if (request.Profile != null)
+        {
+            var existingProfile = user.Profile ?? new UserProfile();
+            var profile = new UserProfile
+            {
+                AvatarUrl = request.Profile.AvatarUrl ?? existingProfile.AvatarUrl,
+                Color = !string.IsNullOrEmpty(request.Profile.Color) ? request.Profile.Color : existingProfile.Color,
+                Birthday = request.Profile.Birthday != null
+                    ? DateOnly.Parse(request.Profile.Birthday)
+                    : existingProfile.Birthday,
+                Nickname = request.Profile.Nickname ?? existingProfile.Nickname,
+                ShowAge = request.Profile.ShowAge
+            };
+
+            user.UpdateProfile(profile, _currentUserService.UserId ?? "system");
+        }
+
+        user.ModifiedAt = DateTime.UtcNow;
+        user.ModifiedBy = _currentUserService.UserId ?? "system";
+
         await _unitOfWork.Users.UpdateAsync(user, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

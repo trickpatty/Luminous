@@ -49,7 +49,7 @@ public class UsersController : ApiControllerBase
     /// </summary>
     /// <param name="familyId">The family ID.</param>
     /// <param name="userId">The user ID.</param>
-    /// <param name="profile">The updated profile information.</param>
+    /// <param name="request">The updated profile information.</param>
     /// <returns>The updated user.</returns>
     [HttpPut("family/{familyId}/{userId}/profile")]
     [ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status200OK)]
@@ -59,13 +59,14 @@ public class UsersController : ApiControllerBase
     public async Task<ActionResult<ApiResponse<UserDto>>> UpdateProfile(
         string familyId,
         string userId,
-        [FromBody] UserProfileDto profile)
+        [FromBody] UpdateUserProfileRequestDto request)
     {
         var command = new UpdateUserProfileCommand
         {
             FamilyId = familyId,
             UserId = userId,
-            Profile = profile
+            DisplayName = request.DisplayName,
+            Profile = request.Profile
         };
         var result = await Mediator.Send(command);
         return OkResponse(result);
