@@ -6,6 +6,7 @@ import { map, tap, catchError, switchMap } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { StorageService } from './storage.service';
 import { environment } from '../../../environments/environment';
+import { User, UserProfile } from '../../models';
 import {
   TokenPair,
   AuthState,
@@ -263,11 +264,30 @@ export class AuthService {
   }
 
   /**
+   * Get list of registered passkeys for a specific user (admin only)
+   * @param familyId Family ID
+   * @param userId User ID to fetch passkeys for
+   */
+  getPasskeysForUser(familyId: string, userId: string): Observable<PasskeyCredential[]> {
+    return this.api.get<PasskeyCredential[]>(`users/family/${familyId}/${userId}/passkeys`);
+  }
+
+  /**
    * Delete a passkey
    * @param credentialId Passkey credential ID
    */
   deletePasskey(credentialId: string): Observable<void> {
     return this.api.delete<void>(`auth/passkey/${credentialId}`);
+  }
+
+  /**
+   * Delete a passkey for a specific user (admin only)
+   * @param familyId Family ID
+   * @param userId User ID
+   * @param credentialId Passkey credential ID
+   */
+  deletePasskeyForUser(familyId: string, userId: string, credentialId: string): Observable<void> {
+    return this.api.delete<void>(`users/family/${familyId}/${userId}/passkeys/${credentialId}`);
   }
 
   // ============================================
@@ -375,6 +395,53 @@ export class AuthService {
     this.router.navigate(['/auth/login']);
   }
 
+  /**
+   * Fetch the current user's full profile and update the user signal
+   * This is useful after login to get profile data like color and avatar
+   */
+  loadUserProfile(): Observable<User | null> {
+    const currentUser = this._user();
+    if (!currentUser?.familyId || !currentUser?.id) {
+      return of(null);
+    }
+
+    return this.api.get<User>(`users/family/${currentUser.familyId}/${currentUser.id}`).pipe(
+      tap((fullUser) => {
+        if (fullUser) {
+          // Update the user signal with profile data
+          this._user.update((user) => {
+            if (user) {
+              return {
+                ...user,
+                profile: fullUser.profile,
+              };
+            }
+            return user;
+          });
+        }
+      }),
+      catchError((error) => {
+        console.error('Failed to load user profile:', error);
+        return of(null);
+      })
+    );
+  }
+
+  /**
+   * Update the user profile in the current user signal
+   */
+  updateUserProfile(profile: UserProfile): void {
+    this._user.update((user) => {
+      if (user) {
+        return {
+          ...user,
+          profile,
+        };
+      }
+      return user;
+    });
+  }
+
   // ============================================
   // Private Helper Methods
   // ============================================
@@ -424,6 +491,14 @@ export class AuthService {
       const nameClaimUri = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';
       const roleClaimUri = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role';
 
+      // Extract profile data if included in token
+      const profile = decoded.profile_color || decoded.profileColor
+        ? {
+            color: decoded.profile_color || decoded.profileColor,
+            avatarUrl: decoded.profile_avatar_url || decoded.avatarUrl,
+          }
+        : undefined;
+
       return {
         id: decoded.sub,
         email: decoded.email,
@@ -432,6 +507,7 @@ export class AuthService {
         role: decoded[roleClaimUri] || decoded.role,
         authMethod: decoded.auth_method || decoded.authMethod,
         mfaVerified: decoded.mfa_verified || decoded.mfaVerified || false,
+        profile,
       };
     } catch {
       return null;

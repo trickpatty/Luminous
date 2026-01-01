@@ -1,4 +1,4 @@
-import { AuthMethod } from './user.model';
+import { AuthMethod, UserProfile } from './user.model';
 
 /**
  * JWT token pair
@@ -32,6 +32,7 @@ export interface AuthUserInfo {
   role: string;
   authMethod: AuthMethod;
   mfaVerified: boolean;
+  profile?: UserProfile;
 }
 
 /**

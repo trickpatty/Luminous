@@ -114,7 +114,7 @@ import { User, UserRole, UpdateUserProfileRequest, PasskeyCredential, PasskeyReg
             </div>
           </app-card>
 
-          <!-- Edit Profile Section -->
+          <!-- Edit Profile Section (for users with edit permission) -->
           @if (isOwnProfile() || canEdit()) {
             <app-card title="Edit Profile" subtitle="Update your personal information">
               <div class="space-y-4">
@@ -187,6 +187,48 @@ import { User, UserRole, UpdateUserProfileRequest, PasskeyCredential, PasskeyReg
                 </div>
               </div>
             </app-card>
+          } @else {
+            <!-- Read-only Profile Section (for users without edit permission) -->
+            <app-card title="Profile Details" subtitle="Personal information">
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-500 mb-1">
+                    Display Name
+                  </label>
+                  <p class="text-gray-900">{{ user()!.displayName }}</p>
+                </div>
+
+                @if (user()!.profile?.nickname) {
+                  <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">
+                      Nickname
+                    </label>
+                    <p class="text-gray-900">{{ user()!.profile.nickname }}</p>
+                  </div>
+                }
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-500 mb-1">
+                    Profile Color
+                  </label>
+                  <div class="flex items-center gap-2">
+                    <span
+                      class="w-8 h-8 rounded-full border-2 border-gray-200"
+                      [style.backgroundColor]="user()!.profile?.color || '#4F46E5'"
+                    ></span>
+                  </div>
+                </div>
+
+                @if (user()!.profile?.birthDate) {
+                  <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">
+                      Birth Date
+                    </label>
+                    <p class="text-gray-900">{{ formatDate(user()!.profile.birthDate!) }}</p>
+                  </div>
+                }
+              </div>
+            </app-card>
           }
 
           <!-- Account Info (read-only) -->
@@ -217,9 +259,12 @@ import { User, UserRole, UpdateUserProfileRequest, PasskeyCredential, PasskeyReg
             </div>
           </app-card>
 
-          <!-- Passkey Management (only for own profile) -->
-          @if (isOwnProfile()) {
-            <app-card title="Passkeys" subtitle="Manage your passkeys for secure, passwordless login">
+          <!-- Passkey Management (for own profile, or admins/owners viewing other profiles) -->
+          @if (isOwnProfile() || canEdit()) {
+            <app-card
+              [title]="isOwnProfile() ? 'Passkeys' : 'Passkeys'"
+              [subtitle]="isOwnProfile() ? 'Manage your passkeys for secure, passwordless login' : 'Registered passkeys for this account'"
+            >
               @if (loadingPasskeys()) {
                 <div class="flex justify-center py-6">
                   <app-spinner size="md" label="Loading passkeys..." />
@@ -233,7 +278,11 @@ import { User, UserRole, UpdateUserProfileRequest, PasskeyCredential, PasskeyReg
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                       </svg>
                       <p class="font-medium">No passkeys registered</p>
-                      <p class="text-sm mt-1">Add a passkey for faster, more secure sign-in</p>
+                      @if (isOwnProfile()) {
+                        <p class="text-sm mt-1">Add a passkey for faster, more secure sign-in</p>
+                      } @else {
+                        <p class="text-sm mt-1">This user has not registered any passkeys</p>
+                      }
                     </div>
                   } @else {
                     <div class="divide-y divide-gray-100">
@@ -255,6 +304,7 @@ import { User, UserRole, UpdateUserProfileRequest, PasskeyCredential, PasskeyReg
                               </p>
                             </div>
                           </div>
+                          <!-- Remove button (visible for own profile, OR for admins/owners managing other profiles) -->
                           <button
                             type="button"
                             (click)="confirmRemovePasskey(passkey)"
@@ -271,33 +321,35 @@ import { User, UserRole, UpdateUserProfileRequest, PasskeyCredential, PasskeyReg
                     </div>
                   }
 
-                  <!-- Add Passkey Button -->
-                  @if (passkeySupported()) {
-                    <div class="pt-4 border-t border-gray-100">
-                      <app-button
-                        variant="secondary"
-                        [loading]="addingPasskey()"
-                        (onClick)="showAddPasskeyModal.set(true)"
-                      >
-                        <svg class="w-5 h-5 mr-2 -ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                        Add Passkey
-                      </app-button>
-                    </div>
-                  } @else {
-                    <div class="pt-4 border-t border-gray-100">
-                      <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                        <div class="flex items-start gap-2">
-                          <svg class="w-5 h-5 text-yellow-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  <!-- Add Passkey Button (only for own profile) -->
+                  @if (isOwnProfile()) {
+                    @if (passkeySupported()) {
+                      <div class="pt-4 border-t border-gray-100">
+                        <app-button
+                          variant="secondary"
+                          [loading]="addingPasskey()"
+                          (onClick)="showAddPasskeyModal.set(true)"
+                        >
+                          <svg class="w-5 h-5 mr-2 -ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                           </svg>
-                          <p class="text-sm text-yellow-800">
-                            Your browser doesn't support passkeys. Try using a modern browser like Chrome, Safari, or Edge.
-                          </p>
+                          Add Passkey
+                        </app-button>
+                      </div>
+                    } @else {
+                      <div class="pt-4 border-t border-gray-100">
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                          <div class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-yellow-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <p class="text-sm text-yellow-800">
+                              Your browser doesn't support passkeys. Try using a modern browser like Chrome, Safari, or Edge.
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    }
                   }
                 </div>
               }
@@ -496,9 +548,11 @@ export class ProfileComponent implements OnInit {
         this.initializeForm(user);
         this.loading.set(false);
 
-        // Load passkeys if viewing own profile
-        if (userId === currentUserId) {
-          this.loadPasskeys();
+        // Load passkeys if viewing own profile OR if current user is admin/owner
+        const currentRole = this.authService.user()?.role;
+        const isAdminOrOwner = currentRole === 'Owner' || currentRole === 'Admin';
+        if (userId === currentUserId || isAdminOrOwner) {
+          this.loadPasskeys(userId);
         }
       },
       error: (err) => {
@@ -639,10 +693,23 @@ export class ProfileComponent implements OnInit {
   // Passkey Management
   // ============================================
 
-  private loadPasskeys(): void {
+  private loadPasskeys(userId?: string): void {
     this.loadingPasskeys.set(true);
+    const familyId = this.authService.user()?.familyId;
+    const currentUserId = this.authService.user()?.id;
+    const targetUserId = userId || currentUserId;
 
-    this.authService.getPasskeys().subscribe({
+    if (!familyId || !targetUserId) {
+      this.loadingPasskeys.set(false);
+      return;
+    }
+
+    // Use appropriate method based on whether viewing own profile or another user's
+    const passkeys$ = targetUserId === currentUserId
+      ? this.authService.getPasskeys()
+      : this.authService.getPasskeysForUser(familyId, targetUserId);
+
+    passkeys$.subscribe({
       next: (passkeys) => {
         this.passkeys.set(passkeys);
         this.loadingPasskeys.set(false);
@@ -746,7 +813,18 @@ export class ProfileComponent implements OnInit {
     this.removingPasskey.set(true);
     this.error.set(null);
 
-    this.authService.deletePasskey(passkey.id).subscribe({
+    const familyId = this.authService.user()?.familyId;
+    const profileUserId = this.user()?.id;
+    const currentUserId = this.authService.user()?.id;
+
+    // Use appropriate method based on whether deleting from own profile or another user's
+    const delete$ = profileUserId === currentUserId
+      ? this.authService.deletePasskey(passkey.id)
+      : (familyId && profileUserId
+          ? this.authService.deletePasskeyForUser(familyId, profileUserId, passkey.id)
+          : this.authService.deletePasskey(passkey.id));
+
+    delete$.subscribe({
       next: () => {
         this.removingPasskey.set(false);
         this.closeRemovePasskeyModal();
