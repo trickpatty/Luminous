@@ -178,7 +178,7 @@ export interface CreateFamilyRequest {
 }
 
 /**
- * Passkey credential info
+ * Passkey credential info (frontend format)
  */
 export interface PasskeyCredential {
   id: string;
@@ -186,6 +186,28 @@ export interface PasskeyCredential {
   createdAt: string;
   lastUsedAt?: string;
   transports?: AuthenticatorTransport[];
+}
+
+/**
+ * Passkey DTO from API (backend format)
+ */
+export interface PasskeyDto {
+  id: string;
+  credentialId: string;
+  displayName?: string;
+  registeredAt: string;
+  lastUsedAt?: string;
+  aaGuid: string;
+  transports: string[];
+  isActive: boolean;
+}
+
+/**
+ * API response for passkey list endpoint
+ */
+export interface PasskeyListResponse {
+  passkeys: PasskeyDto[];
+  totalCount: number;
 }
 
 /**
