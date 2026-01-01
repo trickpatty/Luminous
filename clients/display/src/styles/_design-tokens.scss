@@ -1,0 +1,234 @@
+/**
+ * Luminous Display Design System Tokens
+ * Version 1.0.0
+ *
+ * Extended tokens for display-specific typography and layouts.
+ * Inherits core tokens from the shared design system.
+ */
+
+:root {
+  /* ============================================
+   * CANVAS COLORS (Time-Adaptive)
+   * ============================================ */
+
+  /* Base canvas - dynamically updated by CanvasService */
+  --canvas: #FDFCFA;
+
+  /* Static references for each time period */
+  --canvas-dawn: #FFFCF7;      /* 5:00-7:00 */
+  --canvas-morning: #FEFDFB;   /* 7:00-12:00 */
+  --canvas-afternoon: #FDFCFA; /* 12:00-17:00 */
+  --canvas-evening: #FDF9F3;   /* 17:00-21:00 */
+  --canvas-night: #FAF7F2;     /* 21:00-5:00 */
+
+  /* ============================================
+   * SURFACE COLORS
+   * ============================================ */
+
+  --surface-primary: #FFFFFF;
+  --surface-secondary: #FAFAFA;
+  --surface-elevated: #FFFFFF;
+  --surface-interactive: #F9FAFB;
+  --surface-pressed: #F3F4F6;
+
+  /* ============================================
+   * TEXT COLORS
+   * ============================================ */
+
+  --text-primary: #111827;
+  --text-secondary: #6B7280;
+  --text-tertiary: #9CA3AF;
+  --text-inverse: #FFFFFF;
+  --text-on-color: #FFFFFF;
+
+  /* ============================================
+   * BORDER COLORS
+   * ============================================ */
+
+  --border-color: #E5E7EB;
+  --border-color-light: #F3F4F6;
+  --border-color-strong: #D1D5DB;
+
+  /* ============================================
+   * BRAND ACCENT COLORS
+   * ============================================ */
+
+  --accent-50: #F0F9FF;
+  --accent-100: #E0F2FE;
+  --accent-200: #BAE6FD;
+  --accent-300: #7DD3FC;
+  --accent-400: #38BDF8;
+  --accent-500: #0EA5E9;
+  --accent-600: #0284C7;
+  --accent-700: #0369A1;
+  --accent-800: #075985;
+  --accent-900: #0C4A6E;
+
+  /* ============================================
+   * SEMANTIC COLORS
+   * ============================================ */
+
+  --success: #16A34A;
+  --success-light: #DCFCE7;
+  --success-dark: #166534;
+
+  --warning: #D97706;
+  --warning-light: #FEF3C7;
+  --warning-dark: #B45309;
+
+  --danger: #DC2626;
+  --danger-light: #FEE2E2;
+  --danger-dark: #B91C1C;
+
+  --info: #0284C7;
+  --info-light: #E0F2FE;
+  --info-dark: #075985;
+
+  /* ============================================
+   * FAMILY MEMBER COLORS
+   * ============================================ */
+
+  --member-sky: #0EA5E9;
+  --member-emerald: #10B981;
+  --member-amber: #F59E0B;
+  --member-orange: #F97316;
+  --member-rose: #F43F5E;
+  --member-violet: #8B5CF6;
+  --member-pink: #EC4899;
+  --member-teal: #14B8A6;
+
+  /* Light variants (12% opacity) */
+  --member-sky-light: rgba(14, 165, 233, 0.12);
+  --member-emerald-light: rgba(16, 185, 129, 0.12);
+  --member-amber-light: rgba(245, 158, 11, 0.12);
+  --member-orange-light: rgba(249, 115, 22, 0.12);
+  --member-rose-light: rgba(244, 63, 94, 0.12);
+  --member-violet-light: rgba(139, 92, 246, 0.12);
+  --member-pink-light: rgba(236, 72, 153, 0.12);
+  --member-teal-light: rgba(20, 184, 166, 0.12);
+
+  /* ============================================
+   * SPACING SCALE (4px base)
+   * ============================================ */
+
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  /* ============================================
+   * DISPLAY-SPECIFIC SPACING
+   * ============================================ */
+
+  --display-safe-area: 48px;
+  --display-header-height: 200px;
+  --display-footer-height: 120px;
+
+  /* ============================================
+   * TOUCH TARGETS (Larger for display)
+   * ============================================ */
+
+  --touch-min: 44px;
+  --touch-md: 48px;
+  --touch-lg: 56px;
+  --touch-xl: 64px;
+  --touch-display: 72px; /* Extra large for display */
+
+  /* ============================================
+   * BORDER RADIUS
+   * ============================================ */
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* ============================================
+   * SHADOWS
+   * ============================================ */
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.06), 0 4px 6px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.08), 0 8px 10px rgba(0, 0, 0, 0.04);
+
+  /* ============================================
+   * TYPOGRAPHY
+   * ============================================ */
+
+  --font-family: system-ui, -apple-system, BlinkMacSystemFont,
+                 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  --font-family-mono: ui-monospace, SFMono-Regular, 'SF Mono',
+                      Menlo, Consolas, monospace;
+
+  /* ============================================
+   * DISPLAY TYPOGRAPHY SIZES
+   * ============================================ */
+
+  --font-display-xl: 4.5rem;    /* 72px - Time display */
+  --font-display-lg: 3.5rem;    /* 56px - Day/date header */
+  --font-display-md: 2.5rem;    /* 40px - Section headers */
+  --font-display-sm: 2rem;      /* 32px - Card titles */
+  --font-glanceable: 1.5rem;    /* 24px - Readable from afar */
+
+  /* ============================================
+   * ANIMATION
+   * ============================================ */
+
+  --duration-instant: 0ms;
+  --duration-quick: 100ms;
+  --duration-standard: 200ms;
+  --duration-moderate: 300ms;
+  --duration-slow: 400ms;
+  --duration-deliberate: 600ms;
+
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-default: var(--ease-out);
+
+  /* ============================================
+   * Z-INDEX SCALE
+   * ============================================ */
+
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-fixed: 300;
+  --z-modal-backdrop: 400;
+  --z-modal: 500;
+  --z-popover: 600;
+  --z-tooltip: 700;
+  --z-toast: 800;
+}
+
+/* Night Display Mode */
+[data-theme="night"] {
+  --canvas: #18181B;
+  --surface-primary: #27272A;
+  --surface-secondary: #1F1F23;
+  --surface-elevated: #3F3F46;
+  --surface-interactive: #3F3F46;
+  --surface-pressed: #52525B;
+
+  --text-primary: #FAFAFA;
+  --text-secondary: #A1A1AA;
+  --text-tertiary: #71717A;
+  --text-inverse: #18181B;
+
+  --border-color: #3F3F46;
+  --border-color-light: #27272A;
+  --border-color-strong: #52525B;
+}

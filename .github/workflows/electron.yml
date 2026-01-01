@@ -1,0 +1,405 @@
+# =============================================================================
+# Luminous - Electron Display App Build and Release Workflow
+# =============================================================================
+# Builds the Electron display application for Windows, macOS (Intel & Apple
+# Silicon), and Linux. Creates GitHub releases with downloadable installers.
+#
+# Phase 2.1: Display Application CI/CD
+# TOGAF Principle: TP-4 - Infrastructure as Code
+# =============================================================================
+
+name: Electron Display Build and Release
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'clients/display/**'
+      - '.github/workflows/electron.yml'
+    tags:
+      - 'display-v*'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'clients/display/**'
+      - '.github/workflows/electron.yml'
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: 'Create a GitHub release'
+        required: false
+        type: boolean
+        default: false
+      version:
+        description: 'Version number (e.g., 0.1.0)'
+        required: false
+        type: string
+
+env:
+  NODE_VERSION: '20.x'
+  WORKING_DIRECTORY: ./clients/display
+
+defaults:
+  run:
+    working-directory: ./clients/display
+
+jobs:
+  # ===========================================================================
+  # Build and Test (all PRs and pushes)
+  # ===========================================================================
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting
+        run: npm run lint --if-present
+        continue-on-error: true
+
+      - name: Run type checking
+        run: npm run typecheck
+
+      - name: Build Angular app
+        run: npm run build:prod
+
+  # ===========================================================================
+  # Build Linux (Ubuntu)
+  # ===========================================================================
+  build-linux:
+    name: Build Linux
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.event_name == 'push' || github.event.inputs.create_release == 'true'
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Angular app
+        run: npm run build:prod
+
+      - name: Build Electron (Linux)
+        run: npx electron-builder build --linux --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-build
+          path: |
+            clients/display/release/*.AppImage
+            clients/display/release/*.deb
+            clients/display/release/*.tar.gz
+          retention-days: 7
+          if-no-files-found: warn
+
+  # ===========================================================================
+  # Build Windows
+  # ===========================================================================
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+    needs: build-and-test
+    if: github.event_name == 'push' || github.event.inputs.create_release == 'true'
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Angular app
+        run: npm run build:prod
+
+      - name: Build Electron (Windows)
+        run: npx electron-builder build --win --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: |
+            clients/display/release/*.exe
+            clients/display/release/*.msi
+          retention-days: 7
+          if-no-files-found: warn
+
+  # ===========================================================================
+  # Build macOS (Intel x64)
+  # ===========================================================================
+  build-macos-intel:
+    name: Build macOS (Intel)
+    runs-on: macos-13  # Intel runner
+    needs: build-and-test
+    if: github.event_name == 'push' || github.event.inputs.create_release == 'true'
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Angular app
+        run: npm run build:prod
+
+      - name: Build Electron (macOS Intel)
+        run: npx electron-builder build --mac --x64 --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # For signed builds, add:
+          # CSC_LINK: ${{ secrets.MAC_CERTS }}
+          # CSC_KEY_PASSWORD: ${{ secrets.MAC_CERTS_PASSWORD }}
+          # APPLE_ID: ${{ secrets.APPLE_ID }}
+          # APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+      - name: Upload macOS Intel artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-intel-build
+          path: |
+            clients/display/release/*-x64.dmg
+            clients/display/release/*-x64.zip
+            clients/display/release/*-x64-mac.zip
+          retention-days: 7
+          if-no-files-found: warn
+
+  # ===========================================================================
+  # Build macOS (Apple Silicon arm64)
+  # ===========================================================================
+  build-macos-arm:
+    name: Build macOS (Apple Silicon)
+    runs-on: macos-14  # Apple Silicon runner
+    needs: build-and-test
+    if: github.event_name == 'push' || github.event.inputs.create_release == 'true'
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Angular app
+        run: npm run build:prod
+
+      - name: Build Electron (macOS Apple Silicon)
+        run: npx electron-builder build --mac --arm64 --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # For signed builds, add:
+          # CSC_LINK: ${{ secrets.MAC_CERTS }}
+          # CSC_KEY_PASSWORD: ${{ secrets.MAC_CERTS_PASSWORD }}
+          # APPLE_ID: ${{ secrets.APPLE_ID }}
+          # APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+      - name: Upload macOS ARM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-arm-build
+          path: |
+            clients/display/release/*-arm64.dmg
+            clients/display/release/*-arm64.zip
+            clients/display/release/*-arm64-mac.zip
+          retention-days: 7
+          if-no-files-found: warn
+
+  # ===========================================================================
+  # Create GitHub Release
+  # ===========================================================================
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [build-linux, build-windows, build-macos-intel, build-macos-arm]
+    if: startsWith(github.ref, 'refs/tags/display-v') || github.event.inputs.create_release == 'true'
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Display structure of downloaded files
+        run: ls -R artifacts
+
+      - name: Determine version
+        id: version
+        run: |
+          if [[ "${{ github.event.inputs.version }}" != "" ]]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == refs/tags/display-v* ]]; then
+            echo "version=${GITHUB_REF#refs/tags/display-v}" >> $GITHUB_OUTPUT
+          else
+            echo "version=$(date +'%Y%m%d')-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Luminous Display v${{ steps.version.outputs.version }}
+          tag_name: display-v${{ steps.version.outputs.version }}
+          draft: ${{ github.event.inputs.create_release == 'true' }}
+          prerelease: ${{ contains(steps.version.outputs.version, 'beta') || contains(steps.version.outputs.version, 'alpha') }}
+          generate_release_notes: true
+          files: |
+            artifacts/linux-build/*
+            artifacts/windows-build/*
+            artifacts/macos-intel-build/*
+            artifacts/macos-arm-build/*
+          body: |
+            ## Luminous Display v${{ steps.version.outputs.version }}
+
+            ### Downloads
+
+            | Platform | Architecture | Download |
+            |----------|--------------|----------|
+            | **Windows** | x64 | `.exe` installer |
+            | **macOS** | Apple Silicon (M1/M2/M3) | `-arm64.dmg` |
+            | **macOS** | Intel | `-x64.dmg` |
+            | **Linux** | x64 | `.AppImage` or `.deb` |
+
+            ### Installation
+
+            #### Windows
+            1. Download the `.exe` installer
+            2. Run the installer and follow the prompts
+            3. Launch Luminous Display from the Start Menu
+
+            #### macOS
+            1. Download the appropriate `.dmg` for your Mac:
+               - Apple Silicon (M1/M2/M3): `*-arm64.dmg`
+               - Intel: `*-x64.dmg`
+            2. Open the DMG and drag Luminous Display to Applications
+            3. Launch from Applications folder
+
+            #### Linux
+            **AppImage (recommended):**
+            ```bash
+            chmod +x Luminous-Display-*.AppImage
+            ./Luminous-Display-*.AppImage
+            ```
+
+            **Debian/Ubuntu:**
+            ```bash
+            sudo dpkg -i luminous-display_*.deb
+            ```
+
+            ### Kiosk Mode
+
+            To run in kiosk mode (fullscreen, locked):
+            ```bash
+            LUMINOUS_KIOSK=true ./Luminous-Display
+            ```
+
+            For auto-start configuration, see the [deployment documentation](https://github.com/${{ github.repository }}/blob/main/clients/display/README.md).
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ===========================================================================
+  # Security Audit
+  # ===========================================================================
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+
+      - name: Run npm audit
+        run: |
+          npm audit --audit-level=high 2>&1 | tee npm-audit.txt || true
+          if grep -q "high\|critical" npm-audit.txt; then
+            echo "::warning::Security vulnerabilities detected in display app. Review npm-audit.txt for details."
+          fi
+        continue-on-error: true
+
+      - name: Upload audit results
+        uses: actions/upload-artifact@v4
+        with:
+          name: display-npm-audit-results
+          path: ${{ env.WORKING_DIRECTORY }}/npm-audit.txt
+          retention-days: 30
