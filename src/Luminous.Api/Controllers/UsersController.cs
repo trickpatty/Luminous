@@ -45,6 +45,55 @@ public class UsersController : ApiControllerBase
     }
 
     /// <summary>
+    /// Gets the passkeys registered for a specific user (admin only).
+    /// </summary>
+    /// <param name="familyId">The family ID.</param>
+    /// <param name="userId">The user ID.</param>
+    /// <returns>The list of passkeys for the user.</returns>
+    [HttpGet("family/{familyId}/{userId}/passkeys")]
+    [Authorize(Policy = "FamilyAdmin")]
+    [ProducesResponseType(typeof(ApiResponse<PasskeyListResultDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<PasskeyListResultDto>>> ListUserPasskeys(
+        string familyId,
+        string userId)
+    {
+        var result = await Mediator.Send(new ListUserPasskeysQuery
+        {
+            FamilyId = familyId,
+            UserId = userId
+        });
+        return OkResponse(result);
+    }
+
+    /// <summary>
+    /// Deletes a passkey for a specific user (admin only).
+    /// </summary>
+    /// <param name="familyId">The family ID.</param>
+    /// <param name="userId">The user ID.</param>
+    /// <param name="credentialId">The passkey credential ID to delete.</param>
+    /// <returns>No content on success.</returns>
+    [HttpDelete("family/{familyId}/{userId}/passkeys/{credentialId}")]
+    [Authorize(Policy = "FamilyAdmin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteUserPasskey(
+        string familyId,
+        string userId,
+        string credentialId)
+    {
+        await Mediator.Send(new DeleteUserPasskeyCommand
+        {
+            FamilyId = familyId,
+            UserId = userId,
+            PasskeyId = credentialId
+        });
+        return NoContent();
+    }
+
+    /// <summary>
     /// Updates a user's profile.
     /// </summary>
     /// <param name="familyId">The family ID.</param>
