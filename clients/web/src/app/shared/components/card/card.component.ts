@@ -1,6 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
+export type CardVariant = 'default' | 'elevated' | 'interactive' | 'outlined' | 'personal';
 export type CardSize = 'sm' | 'md' | 'lg';
 
 @Component({
@@ -8,14 +9,14 @@ export type CardSize = 'sm' | 'md' | 'lg';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div [class]="cardClasses">
+    <div [class]="cardClasses" [style]="cardStyles">
       @if (title || subtitle) {
         <div class="mb-4">
           @if (title) {
-            <h3 class="text-lg font-semibold text-gray-900">{{ title }}</h3>
+            <h3 class="text-title-md text-text-primary">{{ title }}</h3>
           }
           @if (subtitle) {
-            <p class="text-sm text-gray-600 mt-1">{{ subtitle }}</p>
+            <p class="text-body-sm text-text-secondary mt-1">{{ subtitle }}</p>
           }
         </div>
       }
@@ -26,22 +27,41 @@ export type CardSize = 'sm' | 'md' | 'lg';
 export class CardComponent {
   @Input() title?: string;
   @Input() subtitle?: string;
+  @Input() variant: CardVariant = 'default';
   @Input() size: CardSize = 'md';
+  /** @deprecated Use variant='interactive' instead */
   @Input() hoverable = false;
+  /** Member color for personal cards (hex color) */
+  @Input() memberColor?: string;
 
   get cardClasses(): string {
-    const base = 'bg-white rounded-xl shadow-sm border border-gray-100';
+    // Handle legacy hoverable prop
+    const effectiveVariant = this.hoverable ? 'interactive' : this.variant;
+
+    const variants: Record<CardVariant, string> = {
+      default: 'card',
+      elevated: 'card-elevated',
+      interactive: 'card-interactive',
+      outlined: 'card-outlined',
+      personal: 'card-personal',
+    };
 
     const sizes: Record<CardSize, string> = {
       sm: 'p-4',
-      md: 'p-5',
-      lg: 'p-6 rounded-2xl shadow-md',
+      md: '', // Default padding handled by CSS
+      lg: 'p-6 rounded-2xl',
     };
 
-    const hover = this.hoverable
-      ? 'hover:shadow-md hover:border-gray-200 transition-shadow cursor-pointer'
-      : '';
+    return `${variants[effectiveVariant]} ${sizes[this.size]}`.trim();
+  }
 
-    return `${base} ${sizes[this.size]} ${hover}`;
+  get cardStyles(): Record<string, string> {
+    if (this.variant === 'personal' && this.memberColor) {
+      return {
+        '--member-color': this.memberColor,
+        '--member-color-light': `${this.memberColor}1F`, // 12% opacity
+      };
+    }
+    return {};
   }
 }

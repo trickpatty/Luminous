@@ -2,6 +2,8 @@ import { Component, Input, forwardRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 
+export type InputSize = 'sm' | 'md' | 'lg';
+
 @Component({
   selector: 'app-input',
   standalone: true,
@@ -16,17 +18,17 @@ import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/f
   template: `
     <div class="w-full">
       @if (label) {
-        <label [for]="inputId" class="block text-sm font-medium text-gray-700 mb-1.5">
+        <label [for]="inputId" class="label">
           {{ label }}
           @if (required) {
-            <span class="text-red-500">*</span>
+            <span class="text-danger">*</span>
           }
         </label>
       }
 
       <div class="relative">
         @if (prefixIcon) {
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-text-secondary">
             <ng-content select="[prefix]"></ng-content>
           </div>
         }
@@ -39,24 +41,26 @@ import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/f
           [readonly]="readonly"
           [autocomplete]="autocomplete"
           [class]="inputClasses"
+          [attr.aria-invalid]="error ? 'true' : null"
+          [attr.aria-describedby]="error ? inputId + '-error' : hint ? inputId + '-hint' : null"
           [value]="value"
           (input)="onInput($event)"
           (blur)="onTouched()"
         />
 
         @if (suffixIcon) {
-          <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+          <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-text-secondary">
             <ng-content select="[suffix]"></ng-content>
           </div>
         }
       </div>
 
       @if (hint && !error) {
-        <p class="mt-1 text-sm text-gray-500">{{ hint }}</p>
+        <p [id]="inputId + '-hint'" class="mt-2 text-body-sm text-text-secondary">{{ hint }}</p>
       }
 
       @if (error) {
-        <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+        <p [id]="inputId + '-error'" class="mt-2 text-body-sm text-danger" role="alert">{{ error }}</p>
       }
     </div>
   `,
@@ -64,7 +68,8 @@ import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/f
 export class InputComponent implements ControlValueAccessor {
   @Input() label?: string;
   @Input() placeholder = '';
-  @Input() type: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' = 'text';
+  @Input() type: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' = 'text';
+  @Input() size: InputSize = 'md';
   @Input() hint?: string;
   @Input() error?: string;
   @Input() disabled = false;
@@ -78,21 +83,27 @@ export class InputComponent implements ControlValueAccessor {
   onChange: (value: string) => void = () => {};
   onTouched: () => void = () => {};
 
+  private static counter = 0;
+  private uniqueId = ++InputComponent.counter;
+
   get inputId(): string {
-    return `input-${this.label?.toLowerCase().replace(/\s+/g, '-') || Math.random().toString(36).slice(2)}`;
+    const labelPart = this.label?.toLowerCase().replace(/\s+/g, '-') || 'field';
+    return `input-${labelPart}-${this.uniqueId}`;
   }
 
   get inputClasses(): string {
-    const base = 'block w-full px-4 py-3 rounded-lg transition-colors min-h-touch';
-    const border = this.error
-      ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-      : 'border-gray-300 focus:border-primary-500 focus:ring-primary-500';
-    const state = this.disabled
-      ? 'bg-gray-50 text-gray-500 cursor-not-allowed'
-      : 'bg-white';
-    const padding = this.prefixIcon ? 'pl-10' : this.suffixIcon ? 'pr-10' : '';
+    const base = 'input';
 
-    return `${base} border ${border} ${state} ${padding} focus:ring-2 placeholder:text-gray-400`;
+    const sizes: Record<InputSize, string> = {
+      sm: 'input-sm',
+      md: '',
+      lg: 'input-lg',
+    };
+
+    const errorClass = this.error ? 'input-error' : '';
+    const padding = this.prefixIcon ? 'pl-12' : this.suffixIcon ? 'pr-12' : '';
+
+    return `${base} ${sizes[this.size]} ${errorClass} ${padding}`.trim();
   }
 
   onInput(event: Event): void {
