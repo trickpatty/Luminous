@@ -1,156 +1,163 @@
-<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-  <div class="max-w-md w-full space-y-8">
-    <!-- Header -->
-    <div class="text-center">
-      <h1 class="text-3xl font-bold text-primary-600">Luminous</h1>
-      <h2 class="mt-4 text-2xl font-semibold text-gray-900">Welcome back</h2>
-      <p class="mt-2 text-gray-600">Sign in to your family hub</p>
-    </div>
+<div class="auth-card">
+  <!-- Step Indicator -->
+  <div class="step-indicator">
+    <div class="step-dot" [class.active]="step() === 'email'" [class.completed]="step() === 'otp'"></div>
+    <div class="step-line" [class.active]="step() === 'otp'"></div>
+    <div class="step-dot" [class.active]="step() === 'otp'"></div>
+  </div>
 
-    <!-- Error Alert -->
-    @if (error()) {
-      <div class="rounded-lg bg-red-50 p-4 border border-red-200">
-        <div class="flex items-center">
-          <svg class="h-5 w-5 text-red-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+  <!-- Header -->
+  <div class="auth-header">
+    @if (step() === 'email') {
+      <h2 class="auth-title">Welcome back</h2>
+      <p class="auth-subtitle">Sign in to your family hub</p>
+    } @else {
+      <h2 class="auth-title">Check your email</h2>
+      <p class="auth-subtitle">We sent a code to <strong>{{ email }}</strong></p>
+    }
+  </div>
+
+  <!-- Error Alert -->
+  @if (error()) {
+    <div class="auth-error">
+      <div class="error-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 8v4M12 16h.01"/>
+        </svg>
+      </div>
+      <span>{{ error() }}</span>
+    </div>
+  }
+
+  <!-- Email Step -->
+  @if (step() === 'email') {
+    <form (ngSubmit)="requestOtp()" class="auth-form">
+      <div class="form-group">
+        <label for="email" class="form-label">Email address</label>
+        <div class="input-wrapper">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
           </svg>
-          <p class="text-sm text-red-700">{{ error() }}</p>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autocomplete="email webauthn"
+            required
+            [(ngModel)]="email"
+            class="auth-input"
+            placeholder="you@example.com"
+            [disabled]="isLoading()"
+          />
         </div>
       </div>
-    }
 
-    <div class="card-lg">
-      <!-- Email Step -->
-      @if (step() === 'email') {
-        <form (ngSubmit)="requestOtp()" class="space-y-6">
-          <div>
-            <label for="email" class="label">Email address</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autocomplete="email webauthn"
-              required
-              [(ngModel)]="email"
-              class="input"
-              placeholder="you@example.com"
-              [disabled]="isLoading()"
-            />
-          </div>
+      <button
+        type="submit"
+        class="auth-button primary"
+        [disabled]="isLoading() || !email"
+      >
+        @if (isLoading()) {
+          <span class="button-spinner"></span>
+          <span>Sending...</span>
+        } @else {
+          <span>Continue with Email</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        }
+      </button>
 
-          <div class="space-y-3">
-            <button
-              type="submit"
-              class="btn-primary w-full"
-              [disabled]="isLoading() || !email"
-            >
-              @if (isLoading()) {
-                <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Sending...
-              } @else {
-                Continue with Email
-              }
-            </button>
+      @if (passkeySupported()) {
+        <div class="auth-divider">
+          <span>or continue with</span>
+        </div>
 
-            @if (passkeySupported()) {
-              <div class="relative">
-                <div class="absolute inset-0 flex items-center">
-                  <div class="w-full border-t border-gray-200"></div>
-                </div>
-                <div class="relative flex justify-center text-sm">
-                  <span class="px-2 bg-white text-gray-500">or</span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                (click)="authenticateWithPasskey()"
-                class="btn-secondary w-full"
-                [disabled]="isLoading()"
-              >
-                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-                Sign in with Passkey
-              </button>
-            }
-          </div>
-        </form>
+        <button
+          type="button"
+          (click)="authenticateWithPasskey()"
+          class="auth-button passkey"
+          [disabled]="isLoading()"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0110 0v4"/>
+            <circle cx="12" cy="16" r="1"/>
+          </svg>
+          <span>Sign in with Passkey</span>
+        </button>
       }
+    </form>
+  }
 
-      <!-- OTP Step -->
-      @if (step() === 'otp') {
-        <form (ngSubmit)="verifyOtp()" class="space-y-6">
-          <div class="text-center mb-4">
-            <p class="text-sm text-gray-600">
-              We sent a verification code to
-            </p>
-            <p class="font-medium text-gray-900">{{ email }}</p>
-          </div>
+  <!-- OTP Step -->
+  @if (step() === 'otp') {
+    <form (ngSubmit)="verifyOtp()" class="auth-form">
+      <div class="form-group">
+        <label for="otp" class="form-label">Verification code</label>
+        <div class="otp-input-wrapper">
+          <input
+            id="otp"
+            name="otp"
+            type="text"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            required
+            [(ngModel)]="otpCode"
+            class="otp-input"
+            placeholder="000000"
+            maxlength="6"
+            [disabled]="isLoading()"
+          />
+        </div>
+      </div>
 
-          <div>
-            <label for="otp" class="label">Verification code</label>
-            <input
-              id="otp"
-              name="otp"
-              type="text"
-              inputmode="numeric"
-              autocomplete="one-time-code"
-              required
-              [(ngModel)]="otpCode"
-              class="input text-center text-2xl tracking-widest"
-              placeholder="000000"
-              maxlength="6"
-              [disabled]="isLoading()"
-            />
-          </div>
+      <button
+        type="submit"
+        class="auth-button primary"
+        [disabled]="isLoading() || otpCode.length < 6"
+      >
+        @if (isLoading()) {
+          <span class="button-spinner"></span>
+          <span>Verifying...</span>
+        } @else {
+          <span>Verify Code</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 13l4 4L19 7"/>
+          </svg>
+        }
+      </button>
 
-          <button
-            type="submit"
-            class="btn-primary w-full"
-            [disabled]="isLoading() || otpCode.length < 6"
-          >
-            @if (isLoading()) {
-              <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Verifying...
-            } @else {
-              Verify Code
-            }
-          </button>
+      <div class="auth-links">
+        <button
+          type="button"
+          (click)="backToEmail()"
+          class="link-button"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+          <span>Use different email</span>
+        </button>
+        <button
+          type="button"
+          (click)="resendOtp()"
+          class="link-button accent"
+          [disabled]="isLoading()"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 2v6h-6M3 12a9 9 0 0115.4-6.6L21 8M3 22v-6h6M21 12a9 9 0 01-15.4 6.6L3 16"/>
+          </svg>
+          <span>Resend code</span>
+        </button>
+      </div>
+    </form>
+  }
 
-          <div class="flex items-center justify-between text-sm">
-            <button
-              type="button"
-              (click)="backToEmail()"
-              class="text-gray-600 hover:text-gray-900"
-            >
-              Use different email
-            </button>
-            <button
-              type="button"
-              (click)="resendOtp()"
-              class="text-primary-600 hover:text-primary-700"
-              [disabled]="isLoading()"
-            >
-              Resend code
-            </button>
-          </div>
-        </form>
-      }
-    </div>
-
-    <!-- Register Link -->
-    <p class="text-center text-sm text-gray-600">
-      New to Luminous?
-      <a routerLink="/auth/register" class="font-medium text-primary-600 hover:text-primary-500">
-        Create an account
-      </a>
-    </p>
+  <!-- Register Link -->
+  <div class="auth-footer">
+    <span>New to Luminous?</span>
+    <a routerLink="/auth/register" class="footer-link">Create an account</a>
   </div>
 </div>
