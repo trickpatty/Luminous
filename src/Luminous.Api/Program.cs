@@ -172,6 +172,8 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
         // Allow case-insensitive matching for incoming JSON
         options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+        // Serialize enums as strings (e.g., UserRole.Owner → "Owner" instead of 0)
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
         // Add Fido2's Base64UrlConverter for proper WebAuthn response deserialization
         options.JsonSerializerOptions.Converters.Add(new Fido2NetLib.Base64UrlConverter());
     });

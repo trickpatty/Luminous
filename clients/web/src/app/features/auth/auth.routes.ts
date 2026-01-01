@@ -21,4 +21,11 @@ export const AUTH_ROUTES: Routes = [
     canActivate: [guestGuard],
     title: 'Create Account - Luminous',
   },
+  {
+    path: 'join/:code',
+    loadComponent: () =>
+      import('./components/join/join.component').then((m) => m.JoinComponent),
+    canActivate: [guestGuard],
+    title: 'Join Family - Luminous',
+  },
 ];
