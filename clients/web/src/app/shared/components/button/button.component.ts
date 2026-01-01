@@ -1,8 +1,8 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
-export type ButtonSize = 'sm' | 'md' | 'lg';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'outline' | 'danger';
+export type ButtonSize = 'sm' | 'md' | 'lg' | 'xl';
 
 @Component({
   selector: 'app-button',
@@ -13,13 +13,16 @@ export type ButtonSize = 'sm' | 'md' | 'lg';
       [type]="type"
       [disabled]="disabled || loading"
       [class]="buttonClasses"
+      [attr.aria-busy]="loading"
       (click)="onClick.emit($event)"
     >
       @if (loading) {
         <svg
-          class="animate-spin -ml-1 mr-2 h-5 w-5"
+          class="animate-spin h-5 w-5"
+          [class.mr-2]="!iconOnly"
           fill="none"
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <circle
             class="opacity-25"
@@ -47,27 +50,31 @@ export class ButtonComponent {
   @Input() disabled = false;
   @Input() loading = false;
   @Input() fullWidth = false;
+  @Input() iconOnly = false;
 
   @Output() onClick = new EventEmitter<MouseEvent>();
 
   get buttonClasses(): string {
-    const base = 'inline-flex items-center justify-center font-medium rounded-lg transition-colors duration-150 ease-in-out focus:ring-4';
+    const base = 'btn';
 
     const variants: Record<ButtonVariant, string> = {
-      primary: 'bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-200 disabled:bg-primary-300',
-      secondary: 'bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-100 disabled:bg-gray-50 disabled:text-gray-400',
-      ghost: 'bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-gray-100',
-      danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-200 disabled:bg-red-300',
+      primary: 'btn-primary',
+      secondary: 'btn-secondary',
+      ghost: 'btn-ghost',
+      outline: 'btn-outline',
+      danger: 'btn-danger',
     };
 
     const sizes: Record<ButtonSize, string> = {
-      sm: 'px-4 py-2 text-sm min-h-[36px]',
-      md: 'px-6 py-3 text-base min-h-touch',
-      lg: 'px-8 py-4 text-lg min-h-touch-lg',
+      sm: 'btn-sm',
+      md: 'btn-md',
+      lg: 'btn-lg',
+      xl: 'btn-xl',
     };
 
     const width = this.fullWidth ? 'w-full' : '';
+    const iconOnlyClass = this.iconOnly ? 'p-0 min-w-0' : '';
 
-    return `${base} ${variants[this.variant]} ${sizes[this.size]} ${width}`;
+    return `${base} ${variants[this.variant]} ${sizes[this.size]} ${width} ${iconOnlyClass}`.trim();
   }
 }

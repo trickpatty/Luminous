@@ -1,0 +1,281 @@
+/**
+ * Luminous Design System Animations
+ * Version 1.0.0
+ *
+ * Standard animations and keyframes for consistent motion throughout the app.
+ */
+
+/* ============================================
+ * KEYFRAME ANIMATIONS
+ * ============================================ */
+
+/* Fade In/Out */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Slide Up (Modal, Drawer) */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+/* Scale (Popover, Dropdown) */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes scaleOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+/* Task Completion Celebration */
+@keyframes taskComplete {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Checkmark Draw Animation */
+@keyframes checkDraw {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Shimmer for Skeletons */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Spinner */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Pulse */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Bounce (subtle) */
+@keyframes bounceSubtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* Toast Enter (from bottom-right) */
+@keyframes toastEnter {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes toastExit {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+/* ============================================
+ * ANIMATION UTILITY CLASSES
+ * ============================================ */
+
+.animate-fade-in {
+  animation: fadeIn var(--duration-standard) var(--ease-out);
+}
+
+.animate-fade-out {
+  animation: fadeOut var(--duration-quick) var(--ease-in);
+}
+
+.animate-slide-up {
+  animation: slideUp var(--duration-moderate) var(--ease-out);
+}
+
+.animate-slide-down {
+  animation: slideDown var(--duration-standard) var(--ease-in);
+}
+
+.animate-scale-in {
+  animation: scaleIn var(--duration-standard) var(--ease-out);
+}
+
+.animate-scale-out {
+  animation: scaleOut var(--duration-quick) var(--ease-in);
+}
+
+.animate-task-complete {
+  animation: taskComplete var(--duration-slow) var(--ease-spring);
+}
+
+.animate-check-draw {
+  stroke-dasharray: 24;
+  animation: checkDraw var(--duration-moderate) var(--ease-out) forwards;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--surface-secondary) 25%,
+    var(--surface-interactive) 50%,
+    var(--surface-secondary) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.animate-spin {
+  animation: spin 800ms linear infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-toast-enter {
+  animation: toastEnter var(--duration-moderate) var(--ease-spring);
+}
+
+.animate-toast-exit {
+  animation: toastExit var(--duration-standard) var(--ease-in);
+}
+
+/* ============================================
+ * REDUCED MOTION
+ * ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================
+ * TRANSITION UTILITIES
+ * ============================================ */
+
+.transition-default {
+  transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+  transition-duration: var(--duration-standard);
+  transition-timing-function: var(--ease-out);
+}
+
+.transition-quick {
+  transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+  transition-duration: var(--duration-quick);
+  transition-timing-function: var(--ease-out);
+}
+
+.transition-moderate {
+  transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+  transition-duration: var(--duration-moderate);
+  transition-timing-function: var(--ease-out);
+}
+
+/* Button-specific transition */
+.transition-button {
+  transition: background-color var(--duration-quick) var(--ease-out),
+              border-color var(--duration-quick) var(--ease-out),
+              color var(--duration-quick) var(--ease-out),
+              box-shadow var(--duration-quick) var(--ease-out),
+              transform var(--duration-quick) var(--ease-out);
+}
+
+/* Card-specific transition */
+.transition-card {
+  transition: box-shadow var(--duration-standard) var(--ease-out),
+              border-color var(--duration-standard) var(--ease-out),
+              transform var(--duration-standard) var(--ease-out);
+}
+
+/* Input-specific transition */
+.transition-input {
+  transition: border-color var(--duration-quick) var(--ease-out),
+              box-shadow var(--duration-quick) var(--ease-out);
+}
