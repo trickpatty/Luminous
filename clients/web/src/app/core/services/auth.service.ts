@@ -23,6 +23,7 @@ import {
   PasskeyRegistrationResponse,
   PasskeyAuthenticationResponse,
   PasskeyCredential,
+  PasskeyListResponse,
   PasskeyRegisterStartResult,
   PasskeyRegistrationStartData,
   PasskeyAuthenticateStartResult,
@@ -260,7 +261,9 @@ export class AuthService {
    * Get list of registered passkeys for current user
    */
   getPasskeys(): Observable<PasskeyCredential[]> {
-    return this.api.get<PasskeyCredential[]>('auth/passkey/list');
+    return this.api.get<PasskeyListResponse>('auth/passkey/list').pipe(
+      map((response) => this.mapPasskeyResponse(response))
+    );
   }
 
   /**
@@ -269,7 +272,25 @@ export class AuthService {
    * @param userId User ID to fetch passkeys for
    */
   getPasskeysForUser(familyId: string, userId: string): Observable<PasskeyCredential[]> {
-    return this.api.get<PasskeyCredential[]>(`users/family/${familyId}/${userId}/passkeys`);
+    return this.api.get<PasskeyListResponse>(`users/family/${familyId}/${userId}/passkeys`).pipe(
+      map((response) => this.mapPasskeyResponse(response))
+    );
+  }
+
+  /**
+   * Maps the API passkey list response to frontend PasskeyCredential format
+   */
+  private mapPasskeyResponse(response: PasskeyListResponse): PasskeyCredential[] {
+    if (!response?.passkeys) {
+      return [];
+    }
+    return response.passkeys.map((p) => ({
+      id: p.id,
+      name: p.displayName || 'Passkey',
+      createdAt: p.registeredAt,
+      lastUsedAt: p.lastUsedAt,
+      transports: p.transports as AuthenticatorTransport[] | undefined,
+    }));
   }
 
   /**
