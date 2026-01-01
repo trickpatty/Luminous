@@ -11,6 +11,7 @@ type AuthStep = 'email' | 'otp' | 'passkey';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './login.component.html',
+  styleUrl: './login.component.scss',
 })
 export class LoginComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);

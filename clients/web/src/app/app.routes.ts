@@ -3,8 +3,9 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'dashboard',
-    pathMatch: 'full',
+    loadComponent: () =>
+      import('./features/landing/landing.component').then((m) => m.LandingComponent),
+    title: 'Luminous - The Calm Center of Family Life',
   },
   {
     path: 'auth',
@@ -19,7 +20,9 @@ export const routes: Routes = [
   {
     path: 'unauthorized',
     loadComponent: () =>
-      import('./features/unauthorized/unauthorized.component').then((m) => m.UnauthorizedComponent),
+      import('./features/unauthorized/unauthorized.component').then(
+        (m) => m.UnauthorizedComponent
+      ),
     title: 'Unauthorized - Luminous',
   },
   {

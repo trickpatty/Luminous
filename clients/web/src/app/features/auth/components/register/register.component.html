@@ -1,261 +1,299 @@
-<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-  <div class="max-w-md w-full space-y-8">
-    <!-- Header -->
-    <div class="text-center">
-      <h1 class="text-3xl font-bold text-primary-600">Luminous</h1>
-      @if (step() === 'details') {
-        <h2 class="mt-4 text-2xl font-semibold text-gray-900">Create your account</h2>
-        <p class="mt-2 text-gray-600">Start organizing your family life</p>
-      } @else if (step() === 'verify') {
-        <h2 class="mt-4 text-2xl font-semibold text-gray-900">Verify your email</h2>
-        <p class="mt-2 text-gray-600">We sent a code to {{ maskedEmail }}</p>
-      } @else if (step() === 'passkey') {
-        <h2 class="mt-4 text-2xl font-semibold text-gray-900">Secure your account</h2>
-        <p class="mt-2 text-gray-600">Set up passwordless login</p>
-      } @else {
-        <h2 class="mt-4 text-2xl font-semibold text-gray-900">Welcome!</h2>
-        <p class="mt-2 text-gray-600">Your account is ready</p>
-      }
-    </div>
+<div class="auth-card">
+  <!-- Step Indicator -->
+  <div class="step-indicator">
+    <div class="step-dot" [class.active]="step() === 'details'" [class.completed]="step() !== 'details'"></div>
+    <div class="step-line" [class.active]="step() !== 'details'"></div>
+    <div class="step-dot" [class.active]="step() === 'verify'" [class.completed]="step() === 'passkey' || step() === 'complete'"></div>
+    <div class="step-line" [class.active]="step() === 'passkey' || step() === 'complete'"></div>
+    <div class="step-dot" [class.active]="step() === 'passkey'" [class.completed]="step() === 'complete'"></div>
+    <div class="step-line" [class.active]="step() === 'complete'"></div>
+    <div class="step-dot" [class.active]="step() === 'complete'"></div>
+  </div>
 
-    <!-- Error Alert -->
-    @if (error()) {
-      <div class="rounded-lg bg-red-50 p-4 border border-red-200">
-        <div class="flex items-center">
-          <svg class="h-5 w-5 text-red-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+  <!-- Header -->
+  <div class="auth-header">
+    @if (step() === 'details') {
+      <h2 class="auth-title">Create your account</h2>
+      <p class="auth-subtitle">Start organizing your family life</p>
+    } @else if (step() === 'verify') {
+      <h2 class="auth-title">Verify your email</h2>
+      <p class="auth-subtitle">We sent a code to <strong>{{ maskedEmail }}</strong></p>
+    } @else if (step() === 'passkey') {
+      <h2 class="auth-title">Secure your account</h2>
+      <p class="auth-subtitle">Set up passwordless login</p>
+    } @else {
+      <div class="success-animation">
+        <div class="success-circle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 13l4 4L19 7"/>
           </svg>
-          <p class="text-sm text-red-700">{{ error() }}</p>
         </div>
       </div>
-    }
-
-    <div class="card-lg">
-      <!-- Details Step -->
-      @if (step() === 'details') {
-        <form (ngSubmit)="startRegistration()" class="space-y-6">
-          <div>
-            <label for="displayName" class="label">Your name</label>
-            <input
-              id="displayName"
-              name="displayName"
-              type="text"
-              autocomplete="name"
-              required
-              [(ngModel)]="displayName"
-              class="input"
-              placeholder="Alex Smith"
-              [disabled]="isLoading()"
-            />
-          </div>
-
-          <div>
-            <label for="email" class="label">Email address</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autocomplete="email"
-              required
-              [(ngModel)]="email"
-              class="input"
-              placeholder="you@example.com"
-              [disabled]="isLoading()"
-            />
-            <p class="mt-1 text-xs text-gray-500">
-              We'll send a verification code to this email
-            </p>
-          </div>
-
-          <div>
-            <label for="familyName" class="label">Family name</label>
-            <input
-              id="familyName"
-              name="familyName"
-              type="text"
-              required
-              [(ngModel)]="familyName"
-              class="input"
-              placeholder="The Smith Family"
-              [disabled]="isLoading()"
-            />
-          </div>
-
-          <button
-            type="submit"
-            class="btn-primary w-full"
-            [disabled]="isLoading() || !email || !displayName || !familyName"
-          >
-            @if (isLoading()) {
-              <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Sending verification...
-            } @else {
-              Continue
-            }
-          </button>
-        </form>
-      }
-
-      <!-- Verify Step -->
-      @if (step() === 'verify') {
-        <form (ngSubmit)="verifyEmail()" class="space-y-6">
-          <div class="text-center">
-            <div class="mx-auto w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mb-4">
-              <svg class="h-8 w-8 text-primary-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <p class="text-sm text-gray-600">
-              Enter the 6-digit code we sent to your email
-            </p>
-          </div>
-
-          <div>
-            <label for="verificationCode" class="label">Verification code</label>
-            <input
-              id="verificationCode"
-              name="verificationCode"
-              type="text"
-              inputmode="numeric"
-              pattern="[0-9]*"
-              maxlength="6"
-              required
-              [(ngModel)]="verificationCode"
-              class="input text-center text-2xl tracking-widest"
-              placeholder="000000"
-              [disabled]="isLoading()"
-              autocomplete="one-time-code"
-            />
-            @if (remainingAttempts() !== null && remainingAttempts()! > 0) {
-              <p class="mt-1 text-xs text-amber-600">
-                {{ remainingAttempts() }} attempts remaining
-              </p>
-            }
-          </div>
-
-          <button
-            type="submit"
-            class="btn-primary w-full"
-            [disabled]="isLoading() || verificationCode.length !== 6"
-          >
-            @if (isLoading()) {
-              <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Verifying...
-            } @else {
-              Verify Email
-            }
-          </button>
-
-          <div class="flex items-center justify-between text-sm">
-            <button
-              type="button"
-              (click)="backToDetails()"
-              class="text-gray-600 hover:text-gray-900"
-              [disabled]="isLoading()"
-            >
-              &larr; Back
-            </button>
-
-            <button
-              type="button"
-              (click)="resendCode()"
-              class="text-primary-600 hover:text-primary-700 disabled:text-gray-400"
-              [disabled]="!canResend() || isLoading()"
-            >
-              @if (resendCountdown() > 0) {
-                Resend in {{ resendCountdown() }}s
-              } @else {
-                Resend code
-              }
-            </button>
-          </div>
-        </form>
-      }
-
-      <!-- Passkey Setup Step -->
-      @if (step() === 'passkey') {
-        <div class="text-center space-y-6">
-          <div class="mx-auto w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center">
-            <svg class="h-8 w-8 text-primary-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-          </div>
-
-          <div>
-            <h3 class="text-lg font-semibold text-gray-900">Set up passwordless login</h3>
-            <p class="mt-2 text-sm text-gray-600">
-              Use Face ID, Touch ID, or Windows Hello to sign in securely without a password.
-            </p>
-          </div>
-
-          <div class="space-y-3">
-            <button
-              (click)="setupPasskey()"
-              class="btn-primary w-full"
-              [disabled]="isLoading()"
-            >
-              @if (isLoading()) {
-                <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Setting up...
-              } @else {
-                Set Up Passkey
-              }
-            </button>
-
-            <button
-              (click)="skipPasskey()"
-              class="btn-ghost w-full"
-              [disabled]="isLoading()"
-            >
-              Skip for now
-            </button>
-          </div>
-        </div>
-      }
-
-      <!-- Complete Step -->
-      @if (step() === 'complete') {
-        <div class="text-center space-y-6">
-          <div class="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-            <svg class="h-8 w-8 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-
-          <div>
-            <h3 class="text-lg font-semibold text-gray-900">You're all set!</h3>
-            <p class="mt-2 text-sm text-gray-600">
-              Welcome to Luminous. Let's set up your family hub.
-            </p>
-          </div>
-
-          <button
-            (click)="continueToDashboard()"
-            class="btn-primary w-full"
-          >
-            Go to Dashboard
-          </button>
-        </div>
-      }
-    </div>
-
-    <!-- Login Link -->
-    @if (step() === 'details' || step() === 'verify') {
-      <p class="text-center text-sm text-gray-600">
-        Already have an account?
-        <a routerLink="/auth/login" class="font-medium text-primary-600 hover:text-primary-500">
-          Sign in
-        </a>
-      </p>
+      <h2 class="auth-title">You're all set!</h2>
+      <p class="auth-subtitle">Welcome to Luminous. Let's set up your family hub.</p>
     }
   </div>
+
+  <!-- Error Alert -->
+  @if (error()) {
+    <div class="auth-error">
+      <div class="error-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 8v4M12 16h.01"/>
+        </svg>
+      </div>
+      <span>{{ error() }}</span>
+    </div>
+  }
+
+  <!-- Details Step -->
+  @if (step() === 'details') {
+    <form (ngSubmit)="startRegistration()" class="auth-form">
+      <div class="form-group">
+        <label for="displayName" class="form-label">Your name</label>
+        <div class="input-wrapper">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          <input
+            id="displayName"
+            name="displayName"
+            type="text"
+            autocomplete="name"
+            required
+            [(ngModel)]="displayName"
+            class="auth-input"
+            placeholder="Alex Smith"
+            [disabled]="isLoading()"
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email" class="form-label">Email address</label>
+        <div class="input-wrapper">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autocomplete="email"
+            required
+            [(ngModel)]="email"
+            class="auth-input"
+            placeholder="you@example.com"
+            [disabled]="isLoading()"
+          />
+        </div>
+        <p class="form-hint">We'll send a verification code to this email</p>
+      </div>
+
+      <div class="form-group">
+        <label for="familyName" class="form-label">Family name</label>
+        <div class="input-wrapper">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+            <polyline points="9,22 9,12 15,12 15,22"/>
+          </svg>
+          <input
+            id="familyName"
+            name="familyName"
+            type="text"
+            required
+            [(ngModel)]="familyName"
+            class="auth-input"
+            placeholder="The Smith Family"
+            [disabled]="isLoading()"
+          />
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        class="auth-button primary"
+        [disabled]="isLoading() || !email || !displayName || !familyName"
+      >
+        @if (isLoading()) {
+          <span class="button-spinner"></span>
+          <span>Creating account...</span>
+        } @else {
+          <span>Continue</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        }
+      </button>
+    </form>
+  }
+
+  <!-- Verify Step -->
+  @if (step() === 'verify') {
+    <form (ngSubmit)="verifyEmail()" class="auth-form">
+      <div class="verify-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+        </svg>
+      </div>
+
+      <div class="form-group">
+        <label for="verificationCode" class="form-label">Verification code</label>
+        <div class="otp-input-wrapper">
+          <input
+            id="verificationCode"
+            name="verificationCode"
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            maxlength="6"
+            required
+            [(ngModel)]="verificationCode"
+            class="otp-input"
+            placeholder="000000"
+            [disabled]="isLoading()"
+            autocomplete="one-time-code"
+          />
+        </div>
+        @if (remainingAttempts() !== null && remainingAttempts()! > 0) {
+          <p class="attempts-warning">{{ remainingAttempts() }} attempts remaining</p>
+        }
+      </div>
+
+      <button
+        type="submit"
+        class="auth-button primary"
+        [disabled]="isLoading() || verificationCode.length !== 6"
+      >
+        @if (isLoading()) {
+          <span class="button-spinner"></span>
+          <span>Verifying...</span>
+        } @else {
+          <span>Verify Email</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 13l4 4L19 7"/>
+          </svg>
+        }
+      </button>
+
+      <div class="auth-links">
+        <button
+          type="button"
+          (click)="backToDetails()"
+          class="link-button"
+          [disabled]="isLoading()"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+          <span>Back</span>
+        </button>
+        <button
+          type="button"
+          (click)="resendCode()"
+          class="link-button accent"
+          [disabled]="!canResend() || isLoading()"
+        >
+          @if (resendCountdown() > 0) {
+            <span>Resend in {{ resendCountdown() }}s</span>
+          } @else {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 2v6h-6M3 12a9 9 0 0115.4-6.6L21 8M3 22v-6h6M21 12a9 9 0 01-15.4 6.6L3 16"/>
+            </svg>
+            <span>Resend code</span>
+          }
+        </button>
+      </div>
+    </form>
+  }
+
+  <!-- Passkey Setup Step -->
+  @if (step() === 'passkey') {
+    <div class="passkey-setup">
+      <div class="passkey-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0110 0v4"/>
+          <circle cx="12" cy="16" r="1"/>
+        </svg>
+      </div>
+
+      <div class="passkey-info">
+        <p>Use <strong>Face ID</strong>, <strong>Touch ID</strong>, or <strong>Windows Hello</strong> to sign in securely without a password.</p>
+      </div>
+
+      <div class="passkey-benefits">
+        <div class="benefit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="M9 12l2 2 4-4"/>
+          </svg>
+          <span>Phishing resistant</span>
+        </div>
+        <div class="benefit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+          <span>Instant login</span>
+        </div>
+        <div class="benefit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2"/>
+            <circle cx="12" cy="16" r="1"/>
+          </svg>
+          <span>No passwords</span>
+        </div>
+      </div>
+
+      <button
+        (click)="setupPasskey()"
+        class="auth-button primary"
+        [disabled]="isLoading()"
+      >
+        @if (isLoading()) {
+          <span class="button-spinner"></span>
+          <span>Setting up...</span>
+        } @else {
+          <span>Set Up Passkey</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <rect x="3" y="11" width="18" height="11" rx="2"/>
+            <path d="M7 11V7a5 5 0 0110 0v4"/>
+          </svg>
+        }
+      </button>
+
+      <button
+        (click)="skipPasskey()"
+        class="auth-button ghost"
+        [disabled]="isLoading()"
+      >
+        Skip for now
+      </button>
+    </div>
+  }
+
+  <!-- Complete Step -->
+  @if (step() === 'complete') {
+    <div class="complete-step">
+      <button
+        (click)="continueToDashboard()"
+        class="auth-button primary"
+      >
+        <span>Go to Dashboard</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </button>
+    </div>
+  }
+
+  <!-- Login Link -->
+  @if (step() === 'details' || step() === 'verify') {
+    <div class="auth-footer">
+      <span>Already have an account?</span>
+      <a routerLink="/auth/login" class="footer-link">Sign in</a>
+    </div>
+  }
 </div>

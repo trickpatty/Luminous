@@ -1,0 +1,372 @@
+<div class="landing-page">
+  <!-- Animated Background Orbs -->
+  <div class="orbs-container" aria-hidden="true">
+    @for (orb of orbs; track orb.color) {
+      <div
+        class="orb orb-{{ orb.color }}"
+        [style.width.px]="orb.size"
+        [style.height.px]="orb.size"
+        [style.left.%]="orb.x"
+        [style.top.%]="orb.y"
+        [style.animation-delay.s]="orb.delay"
+        [style.animation-duration.s]="orb.duration"
+      ></div>
+    }
+  </div>
+
+  <!-- Navigation -->
+  <nav class="nav-bar">
+    <div class="nav-content">
+      <div class="nav-brand">
+        <div class="brand-glow"></div>
+        <span class="brand-text">Luminous</span>
+      </div>
+      <div class="nav-actions">
+        <a routerLink="/auth/login" class="nav-link">Sign in</a>
+        <a routerLink="/auth/register" class="nav-cta">
+          <span>Get Started</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <!-- Hero Badge -->
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        <span>The calm center of family life</span>
+      </div>
+
+      <!-- Hero Title with Gradient -->
+      <h1 class="hero-title">
+        <span class="title-line">Family coordination</span>
+        <span class="title-line gradient-text">without the chaos</span>
+      </h1>
+
+      <!-- Hero Description -->
+      <p class="hero-description">
+        A wall-mounted command center that brings schedules, chores, and meals into one
+        calm, glanceable view. Designed for real families, not productivity junkies.
+      </p>
+
+      <!-- CTA Buttons -->
+      <div class="hero-actions">
+        <a routerLink="/auth/register" class="cta-primary">
+          <span>Start for free</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </a>
+        <a href="#features" class="cta-secondary">
+          <span>See how it works</span>
+        </a>
+      </div>
+
+      <!-- Social Proof Mini -->
+      <div class="hero-proof">
+        <div class="proof-avatars">
+          <div class="proof-avatar" style="background: var(--member-sky);">S</div>
+          <div class="proof-avatar" style="background: var(--member-emerald);">M</div>
+          <div class="proof-avatar" style="background: var(--member-rose);">J</div>
+          <div class="proof-avatar" style="background: var(--member-violet);">A</div>
+          <div class="proof-avatar proof-more">+</div>
+        </div>
+        <p class="proof-text">
+          Trusted by <strong>500+</strong> families organizing their lives
+        </p>
+      </div>
+    </div>
+
+    <!-- Hero Visual - Display Mockup -->
+    <div class="hero-visual">
+      <div class="display-frame">
+        <div class="display-screen">
+          <!-- Mini Clock Display -->
+          <div class="mini-header">
+            <div class="mini-time">{{ currentTime() }}</div>
+            <div class="mini-date">{{ currentDate() }}</div>
+          </div>
+
+          <!-- Mini Schedule -->
+          <div class="mini-schedule">
+            <div class="mini-card sky">
+              <span class="mini-dot"></span>
+              <span class="mini-text">8:30 School drop-off</span>
+            </div>
+            <div class="mini-card emerald">
+              <span class="mini-dot"></span>
+              <span class="mini-text">3:30 Soccer practice</span>
+            </div>
+            <div class="mini-card violet">
+              <span class="mini-dot"></span>
+              <span class="mini-text">6:00 Family dinner</span>
+            </div>
+          </div>
+
+          <!-- Mini Tasks -->
+          <div class="mini-tasks">
+            <div class="mini-task">
+              <span class="task-check checked">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <path d="M5 13l4 4L19 7"/>
+                </svg>
+              </span>
+              <span class="task-text done">Make beds</span>
+              <span class="task-avatar" style="background: var(--member-amber);">E</span>
+            </div>
+            <div class="mini-task">
+              <span class="task-check"></span>
+              <span class="task-text">Empty dishwasher</span>
+              <span class="task-avatar" style="background: var(--member-sky);">L</span>
+            </div>
+          </div>
+        </div>
+        <div class="display-base"></div>
+      </div>
+
+      <!-- Floating Feature Tags -->
+      <div class="floating-tag tag-1">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 13l4 4L19 7"/>
+        </svg>
+        <span>Chores done!</span>
+      </div>
+      <div class="floating-tag tag-2">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2z"/>
+        </svg>
+        <span>+5 stars earned</span>
+      </div>
+      <div class="floating-tag tag-3">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 6v6l4 2"/>
+        </svg>
+        <span>Soccer in 2 hours</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="features-section">
+    <div class="section-header">
+      <span class="section-label">Features</span>
+      <h2 class="section-title">Everything your family needs</h2>
+      <p class="section-subtitle">
+        Six powerful features working together to bring calm to your household
+      </p>
+    </div>
+
+    <div class="features-grid">
+      @for (feature of features; track feature.title; let i = $index) {
+        <div class="feature-card" [style.--feature-delay]="i * 100 + 'ms'">
+          <div class="feature-icon" [style.background]="feature.colorLight" [style.color]="feature.color">
+            @switch (feature.icon) {
+              @case ('calendar') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="4" width="18" height="18" rx="2"/>
+                  <path d="M16 2v4M8 2v4M3 10h18"/>
+                  <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>
+                </svg>
+              }
+              @case ('tasks') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M9 11l3 3L22 4"/>
+                  <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+                </svg>
+              }
+              @case ('star') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2z"/>
+                </svg>
+              }
+              @case ('meals') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/>
+                  <path d="M6 1v3M10 1v3M14 1v3"/>
+                </svg>
+              }
+              @case ('lists') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
+                </svg>
+              }
+              @case ('magic') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8L19 13M17.8 6.2L19 5M3 21l9-9"/>
+                  <path d="M12.2 6.2L11 5"/>
+                </svg>
+              }
+            }
+          </div>
+          <h3 class="feature-title">{{ feature.title }}</h3>
+          <p class="feature-description">{{ feature.description }}</p>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section class="how-section">
+    <div class="section-header">
+      <span class="section-label">How it works</span>
+      <h2 class="section-title">Three steps to a calmer home</h2>
+    </div>
+
+    <div class="steps-container">
+      <div class="step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <h3>Mount your display</h3>
+          <p>Use any tablet or touchscreen in portrait mode. We recommend a dedicated device in a central location.</p>
+        </div>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <h3>Add your family</h3>
+          <p>Create profiles with unique colors. Connect calendars, set up routines, and assign chores.</p>
+        </div>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <h3>Live organized</h3>
+          <p>Everyone checks the display, completes tasks, and stays in sync. Peace of mind, always visible.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials Section -->
+  <section class="testimonials-section">
+    <div class="section-header">
+      <span class="section-label">Testimonials</span>
+      <h2 class="section-title">Loved by busy families</h2>
+    </div>
+
+    <div class="testimonials-grid">
+      @for (testimonial of testimonials; track testimonial.author) {
+        <div class="testimonial-card">
+          <div class="testimonial-stars">
+            @for (star of [1,2,3,4,5]; track star) {
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--member-amber)" stroke="var(--member-amber)" stroke-width="1">
+                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2z"/>
+              </svg>
+            }
+          </div>
+          <blockquote class="testimonial-quote">{{ testimonial.quote }}</blockquote>
+          <div class="testimonial-author">
+            <div class="author-avatar">{{ testimonial.author[0] }}</div>
+            <div class="author-info">
+              <span class="author-name">{{ testimonial.author }}</span>
+              <span class="author-role">{{ testimonial.role }}</span>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Zero Distraction Section -->
+  <section class="distraction-section">
+    <div class="distraction-content">
+      <div class="distraction-badge">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M4.93 4.93l14.14 14.14"/>
+        </svg>
+        <span>Zero Distraction Guarantee</span>
+      </div>
+      <h2 class="distraction-title">What we intentionally leave out</h2>
+      <p class="distraction-subtitle">
+        Luminous is different because of what it doesn't do. No web browser, no apps,
+        no video, no social media. Just family coordination, beautifully focused.
+      </p>
+      <div class="distraction-list">
+        <div class="distraction-item">
+          <span class="distraction-no">No</span>
+          <span>Web browsing</span>
+        </div>
+        <div class="distraction-item">
+          <span class="distraction-no">No</span>
+          <span>Video streaming</span>
+        </div>
+        <div class="distraction-item">
+          <span class="distraction-no">No</span>
+          <span>Social media</span>
+        </div>
+        <div class="distraction-item">
+          <span class="distraction-no">No</span>
+          <span>Games</span>
+        </div>
+        <div class="distraction-item">
+          <span class="distraction-no">No</span>
+          <span>App store</span>
+        </div>
+        <div class="distraction-item">
+          <span class="distraction-no">No</span>
+          <span>Advertising</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA Section -->
+  <section class="cta-section">
+    <div class="cta-glow"></div>
+    <div class="cta-content">
+      <h2 class="cta-title">Ready for a calmer home?</h2>
+      <p class="cta-subtitle">
+        Join hundreds of families already using Luminous to bring peace to their daily routine.
+      </p>
+      <a routerLink="/auth/register" class="cta-button">
+        <span>Get started free</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </a>
+      <p class="cta-note">No credit card required. Free for families up to 6 members.</p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <span class="brand-text">Luminous</span>
+        <p>The calm center of family life.</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-column">
+          <h4>Product</h4>
+          <a href="#features">Features</a>
+          <a href="#">Pricing</a>
+          <a href="#">Hardware Guide</a>
+        </div>
+        <div class="footer-column">
+          <h4>Company</h4>
+          <a href="#">About</a>
+          <a href="#">Blog</a>
+          <a href="#">Careers</a>
+        </div>
+        <div class="footer-column">
+          <h4>Legal</h4>
+          <a href="#">Privacy</a>
+          <a href="#">Terms</a>
+          <a href="#">License</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>Made with care for families everywhere.</p>
+    </div>
+  </footer>
+</div>

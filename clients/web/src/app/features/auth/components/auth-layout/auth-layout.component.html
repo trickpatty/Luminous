@@ -1,0 +1,128 @@
+<div class="auth-layout">
+  <!-- Animated mesh gradient background -->
+  <div class="auth-background" aria-hidden="true">
+    <div class="gradient-orb orb-1"></div>
+    <div class="gradient-orb orb-2"></div>
+    <div class="gradient-orb orb-3"></div>
+    <div class="mesh-overlay"></div>
+  </div>
+
+  <!-- Floating decorative icons -->
+  <div class="floating-icons" aria-hidden="true">
+    @for (item of floatingItems; track item.icon) {
+      <div
+        class="floating-icon icon-{{ item.color }}"
+        [style.left.%]="item.x"
+        [style.top.%]="item.y"
+        [style.animation-delay.s]="item.delay"
+      >
+        @switch (item.icon) {
+          @case ('calendar') {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="4" width="18" height="18" rx="2"/>
+              <path d="M16 2v4M8 2v4M3 10h18"/>
+            </svg>
+          }
+          @case ('check') {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 13l4 4L19 7"/>
+            </svg>
+          }
+          @case ('star') {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2z"/>
+            </svg>
+          }
+          @case ('heart') {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+            </svg>
+          }
+          @case ('users') {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+            </svg>
+          }
+          @case ('list') {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
+            </svg>
+          }
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Side decoration panel (visible on large screens) -->
+  <div class="auth-decoration">
+    <div class="decoration-content">
+      <!-- Mini display mockup -->
+      <div class="mini-display">
+        <div class="display-header">
+          <span class="display-time">{{ currentTime() }}</span>
+          <span class="display-label">Today</span>
+        </div>
+        <div class="display-items">
+          <div class="display-item item-sky">
+            <span class="item-dot"></span>
+            <span class="item-text">School drop-off</span>
+          </div>
+          <div class="display-item item-emerald">
+            <span class="item-dot"></span>
+            <span class="item-text">Soccer practice</span>
+          </div>
+          <div class="display-item item-violet">
+            <span class="item-dot"></span>
+            <span class="item-text">Family dinner</span>
+          </div>
+        </div>
+        <div class="display-footer">
+          <div class="footer-task">
+            <span class="task-check checked">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <path d="M5 13l4 4L19 7"/>
+              </svg>
+            </span>
+            <span class="task-label">Chores done</span>
+          </div>
+          <div class="footer-stars">
+            <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0.5">
+              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2z"/>
+            </svg>
+            <span>+5</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tagline -->
+      <div class="decoration-tagline">
+        <h2>The calm center of family life</h2>
+        <p>Schedules, chores, and meals in one beautiful view</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auth form container -->
+  <div class="auth-container">
+    <!-- Back to home link -->
+    <a routerLink="/" class="back-home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      <span>Home</span>
+    </a>
+
+    <!-- Brand -->
+    <div class="auth-brand">
+      <div class="brand-glow"></div>
+      <span class="brand-text">Luminous</span>
+    </div>
+
+    <!-- Auth form content (router outlet) -->
+    <div class="auth-form-wrapper">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>
