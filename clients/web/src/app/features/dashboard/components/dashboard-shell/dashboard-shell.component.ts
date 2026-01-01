@@ -28,7 +28,7 @@ interface NavItem {
 
       <!-- Sidebar -->
       <aside
-        class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:z-auto"
+        class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:sticky lg:top-0 lg:z-auto lg:h-screen"
         [class.translate-x-0]="mobileMenuOpen()"
         [class.-translate-x-full]="!mobileMenuOpen()"
       >
@@ -64,11 +64,11 @@ interface NavItem {
             }
           </nav>
 
-          <!-- User menu -->
-          <div class="p-4 border-t border-gray-200">
+          <!-- User menu (pinned to bottom) -->
+          <div class="flex-shrink-0 p-4 border-t border-gray-200">
             @if (user()) {
               <a routerLink="/dashboard/profile" class="flex items-center gap-3 p-2 -m-2 rounded-lg hover:bg-gray-50 transition-colors">
-                <app-avatar [name]="user()!.displayName" size="sm" />
+                <app-avatar [name]="user()!.displayName" [color]="user()!.profile?.color" [src]="user()!.profile?.avatarUrl" size="sm" />
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-medium text-gray-900 truncate">
                     {{ user()!.displayName }}
@@ -109,7 +109,7 @@ interface NavItem {
             <h1 class="text-lg font-semibold text-primary-600">Luminous</h1>
             @if (user()) {
               <a routerLink="/dashboard/profile" class="block">
-                <app-avatar [name]="user()!.displayName" size="sm" />
+                <app-avatar [name]="user()!.displayName" [color]="user()!.profile?.color" [src]="user()!.profile?.avatarUrl" size="sm" />
               </a>
             }
           </div>
@@ -144,6 +144,9 @@ export class DashboardShellComponent implements OnInit {
     if (familyId) {
       this.familyService.getFamily(familyId).subscribe();
     }
+
+    // Load user profile to get profile color and avatar
+    this.authService.loadUserProfile().subscribe();
 
     // Close mobile menu on navigation
     this.router.events
