@@ -46,21 +46,23 @@ public class FamiliesController : ApiControllerBase
     /// Updates family settings.
     /// </summary>
     /// <param name="id">The family ID.</param>
-    /// <param name="settings">The updated settings.</param>
-    /// <returns>The updated settings.</returns>
+    /// <param name="request">The update request.</param>
+    /// <returns>The updated family.</returns>
     [HttpPut("{id}/settings")]
     [Authorize]
-    [ProducesResponseType(typeof(ApiResponse<FamilySettingsDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<FamilyDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<FamilySettingsDto>>> UpdateSettings(
+    public async Task<ActionResult<ApiResponse<FamilyDto>>> UpdateSettings(
         string id,
-        [FromBody] FamilySettingsDto settings)
+        [FromBody] UpdateFamilySettingsRequestDto request)
     {
         var command = new UpdateFamilySettingsCommand
         {
             FamilyId = id,
-            Settings = settings
+            Name = request.Name,
+            Timezone = request.Timezone,
+            Settings = request.Settings
         };
         var result = await Mediator.Send(command);
         return OkResponse(result);
