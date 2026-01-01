@@ -5,6 +5,11 @@
   "author": "Luminous Team",
   "license": "AGPL-3.0",
   "main": "electron/main.js",
+  "homepage": "https://github.com/luminous-app/luminous",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/luminous-app/luminous.git"
+  },
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -22,7 +27,12 @@
     "electron:build": "npm run build:prod && electron-builder build",
     "electron:build:linux": "npm run build:prod && electron-builder build --linux",
     "electron:build:win": "npm run build:prod && electron-builder build --win",
-    "electron:build:mac": "npm run build:prod && electron-builder build --mac"
+    "electron:build:mac": "npm run build:prod && electron-builder build --mac",
+    "electron:build:mac-intel": "npm run build:prod && electron-builder build --mac --x64",
+    "electron:build:mac-arm": "npm run build:prod && electron-builder build --mac --arm64",
+    "electron:build:mac-universal": "npm run build:prod && electron-builder build --mac --universal",
+    "electron:build:all": "npm run build:prod && electron-builder build --linux --win --mac",
+    "electron:publish": "npm run build:prod && electron-builder build --publish always"
   },
   "private": true,
   "dependencies": {
@@ -61,8 +71,10 @@
   "build": {
     "appId": "com.luminous.display",
     "productName": "Luminous Display",
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "directories": {
-      "output": "release"
+      "output": "release",
+      "buildResources": "build"
     },
     "files": [
       "dist/display/**/*",
@@ -77,19 +89,47 @@
       }
     ],
     "linux": {
-      "target": ["AppImage", "deb"],
-      "icon": "assets/icons/icon.png",
+      "target": [
+        { "target": "AppImage", "arch": ["x64", "arm64"] },
+        { "target": "deb", "arch": ["x64", "arm64"] },
+        { "target": "tar.gz", "arch": ["x64", "arm64"] }
+      ],
+      "icon": "build/icons",
       "category": "Utility",
-      "maintainer": "Luminous Team"
+      "maintainer": "Luminous Team <team@luminous.app>",
+      "synopsis": "Family Command Center Display",
+      "description": "Wall-mounted family command center display application for viewing schedules, tasks, and household information."
     },
     "win": {
-      "target": ["nsis", "portable"],
-      "icon": "assets/icons/icon.ico"
+      "target": [
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ],
+      "icon": "build/icon.ico",
+      "publisherName": "Luminous Team"
     },
     "mac": {
-      "target": ["dmg", "zip"],
-      "icon": "assets/icons/icon.icns",
-      "category": "public.app-category.utilities"
+      "target": [
+        { "target": "dmg", "arch": ["x64", "arm64"] },
+        { "target": "zip", "arch": ["x64", "arm64"] }
+      ],
+      "icon": "build/icon.icns",
+      "category": "public.app-category.utilities",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "notarize": false
+    },
+    "dmg": {
+      "contents": [
+        { "x": 130, "y": 220 },
+        { "x": 410, "y": 220, "type": "link", "path": "/Applications" }
+      ],
+      "window": {
+        "width": 540,
+        "height": 380
+      }
     },
     "nsis": {
       "oneClick": false,
@@ -97,7 +137,16 @@
       "allowToChangeInstallationDirectory": false,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "runAfterFinish": true
+      "runAfterFinish": true,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "license": "../../LICENSE"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "luminous-app",
+      "repo": "luminous",
+      "releaseType": "release"
     }
   }
 }

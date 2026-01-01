@@ -45,7 +45,59 @@ npm run electron:build
 npm run electron:build:linux
 npm run electron:build:win
 npm run electron:build:mac
+
+# macOS architecture-specific builds
+npm run electron:build:mac-intel    # Intel x64
+npm run electron:build:mac-arm      # Apple Silicon arm64
+npm run electron:build:mac-universal # Universal binary
+
+# Build all platforms
+npm run electron:build:all
 ```
+
+## CI/CD
+
+The display app uses GitHub Actions for automated builds and releases.
+
+### Automatic Builds
+
+Builds are triggered on:
+- Push to `main` or `develop` branches (when `clients/display/` changes)
+- Pull requests to `main` or `develop`
+- Git tags matching `display-v*`
+- Manual workflow dispatch
+
+### Creating a Release
+
+1. **Via Git Tag** (recommended):
+   ```bash
+   git tag display-v0.1.0
+   git push origin display-v0.1.0
+   ```
+
+2. **Via Manual Dispatch**:
+   - Go to Actions → "Electron Display Build and Release"
+   - Click "Run workflow"
+   - Check "Create a GitHub release"
+   - Enter version number (e.g., `0.1.0`)
+
+### Build Artifacts
+
+| Platform | Architecture | Artifact |
+|----------|--------------|----------|
+| Windows | x64 | `.exe` installer, `.exe` portable |
+| macOS | Intel (x64) | `.dmg`, `.zip` |
+| macOS | Apple Silicon (arm64) | `.dmg`, `.zip` |
+| Linux | x64, arm64 | `.AppImage`, `.deb`, `.tar.gz` |
+
+### Code Signing (Optional)
+
+For signed macOS builds, configure these repository secrets:
+- `MAC_CERTS`: Base64-encoded p12 certificate
+- `MAC_CERTS_PASSWORD`: Certificate password
+- `APPLE_ID`: Apple Developer ID email
+- `APPLE_APP_SPECIFIC_PASSWORD`: App-specific password
+- `APPLE_TEAM_ID`: Apple Developer Team ID
 
 ## Environment Variables
 
