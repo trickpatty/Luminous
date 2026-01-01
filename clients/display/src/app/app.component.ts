@@ -42,7 +42,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.canvasService.startAdaptation();
 
     // Listen for exit dialog trigger from Electron
-    if (this.electronService.isElectron) {
+    if (this.electronService.isElectron()) {
       this.exitDialogCleanup = this.electronService.onShowExitDialog(() => {
         this.showExitDialog = true;
       });
@@ -55,7 +55,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   exitApp(pin: string): void {
-    if (this.electronService.isElectron) {
+    if (this.electronService.isElectron()) {
       this.electronService.verifyExitPin(pin).then((success) => {
         if (!success) {
           // PIN incorrect - dialog will show error
