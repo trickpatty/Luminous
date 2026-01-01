@@ -1,7 +1,7 @@
 # Luminous Development Roadmap
 
-> **Document Version:** 3.1.0
-> **Last Updated:** 2025-12-27
+> **Document Version:** 3.3.0
+> **Last Updated:** 2026-01-01
 > **Status:** Active
 > **TOGAF Phase:** Phase E/F (Opportunities, Solutions & Migration Planning)
 
@@ -104,7 +104,7 @@ Phase 6: Intelligence & Ecosystem
 |-------|------|-------|------------------|--------|
 | **0** | Foundation | Infrastructure | Azure IaC, .NET solution, Angular shell, Passwordless Auth, Local Dev, CI/CD, Docs | ✅ Complete |
 | **1** | Core Platform | Multi-tenancy | Family sign-up, device linking, CosmosDB, web MVP | ✅ Complete |
-| **2** | Display & Calendar | Calendar visibility | Display app, calendar integration, SignalR sync | ⬜ Not Started |
+| **2** | Display & Calendar | Calendar visibility | Display app, calendar integration, SignalR sync | 🔄 In Progress |
 | **3** | Native Mobile | Mobile apps | iOS (Swift), Android (Kotlin), push notifications | ⬜ Not Started |
 | **4** | Task Management | Chores and routines | Task creation, completion tracking, rewards | ⬜ Not Started |
 | **5** | Household Features | Expanded features | Profiles, meals, lists, caregiver portal | ⬜ Not Started |
@@ -432,14 +432,46 @@ Deliver the display application with calendar integration, real-time sync, and g
 
 ### Scope
 
-#### 2.1 Display Application (Angular + Electron)
+#### 2.1 Display Application (Angular + Electron) ✅ COMPLETED
 
-- [ ] **2.1.1** Create Angular Electron project structure
-- [ ] **2.1.2** Implement kiosk mode (fullscreen, no escape)
-- [ ] **2.1.3** Auto-start on system boot
-- [ ] **2.1.4** Watchdog for crash recovery
-- [ ] **2.1.5** Device token authentication
-- [ ] **2.1.6** Local caching for offline capability
+- [x] **2.1.1** Create Angular Electron project structure
+  - *Implemented: clients/display/ with Angular 19 + Electron 33*
+  - *Structure: core services, feature modules, shared components*
+  - *Build: electron-builder for Linux/Windows/macOS packaging*
+- [x] **2.1.2** Implement kiosk mode (fullscreen, no escape)
+  - *Implemented: electron/main.js with kiosk and fullscreen options*
+  - *Features: Always-on-top, no frame, prevent close, power save blocker*
+  - *Admin exit: Ctrl+Shift+Q triggers PIN dialog for authorized exit*
+- [x] **2.1.3** Auto-start on system boot
+  - *Implemented: scripts/install-autostart.sh (Linux systemd + XDG)*
+  - *Implemented: scripts/install-autostart.ps1 (Windows scheduled task)*
+  - *Implemented: scripts/kiosk-setup.sh (Raspberry Pi/Linux kiosk mode)*
+- [x] **2.1.4** Watchdog for crash recovery
+  - *Implemented: Watchdog interval checks window health*
+  - *Features: Auto-recreate window on crash, crash count limit*
+  - *Crash logging: Local crash-log.json for diagnostics*
+  - *Process recovery: Handles renderer crashes and unresponsive states*
+- [x] **2.1.5** Device token authentication
+  - *Implemented: DeviceAuthService with 6-digit code flow*
+  - *Implemented: ElectronService for secure IPC token storage*
+  - *Features: Polling for link status, heartbeat validation*
+  - *Auth interceptor: Adds X-Device-Token to API requests*
+- [x] **2.1.6** Local caching for offline capability
+  - *Implemented: CacheService with IndexedDB (idb library)*
+  - *Stores: schedule, tasks, family, members with TTL expiration*
+  - *Features: Automatic cache cleanup, offline detection, cache stats*
+
+**Additional deliverables:**
+- [x] ClockWidgetComponent with time-adaptive display
+- [x] ScheduleViewComponent for daily schedule
+- [x] TasksViewComponent with progress tracking
+- [x] LinkingComponent for device pairing flow
+- [x] SettingsComponent for display configuration
+- [x] ExitDialogComponent with PIN verification
+- [x] CanvasService for time-based canvas color adaptation
+- [x] Display-optimized design tokens and typography
+- [x] Tailwind CSS configuration for display sizes
+- [x] README.md with deployment documentation
 
 #### 2.2 Calendar Integration
 
@@ -826,3 +858,4 @@ These can be developed in parallel after Phase 0:
 | 3.0.0 | 2025-12-24 | Luminous Team | Phase 1.4 Web Dashboard MVP completed; Phase 1 complete |
 | 3.1.0 | 2025-12-27 | Luminous Team | Phase 1.3.5 Authentication Endpoints completed (OTP, Passkey, Token Refresh) |
 | 3.2.0 | 2025-12-27 | Luminous Team | Added email services (Azure ACS, Handlebars templates, config-based service selection) |
+| 3.3.0 | 2026-01-01 | Luminous Team | Phase 2.1 Display Application (Angular + Electron) completed |

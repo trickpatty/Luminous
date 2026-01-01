@@ -1,0 +1,103 @@
+{
+  "name": "@luminous/display",
+  "version": "0.1.0",
+  "description": "Luminous Display Application - Family Command Center for Wall-Mounted Displays",
+  "author": "Luminous Team",
+  "license": "AGPL-3.0",
+  "main": "electron/main.js",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "start:dev": "ng serve --configuration dev",
+    "build": "ng build",
+    "build:dev": "ng build --configuration dev",
+    "build:prod": "ng build --configuration production",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test",
+    "test:ci": "ng test --no-watch --no-progress --browsers=ChromeHeadless",
+    "lint": "ng lint",
+    "typecheck": "tsc --noEmit",
+    "electron:dev": "npm run build:dev && electron .",
+    "electron:start": "electron .",
+    "electron:build": "npm run build:prod && electron-builder build",
+    "electron:build:linux": "npm run build:prod && electron-builder build --linux",
+    "electron:build:win": "npm run build:prod && electron-builder build --win",
+    "electron:build:mac": "npm run build:prod && electron-builder build --mac"
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/common": "^19.2.0",
+    "@angular/compiler": "^19.2.0",
+    "@angular/core": "^19.2.0",
+    "@angular/forms": "^19.2.0",
+    "@angular/platform-browser": "^19.2.0",
+    "@angular/platform-browser-dynamic": "^19.2.0",
+    "@angular/router": "^19.2.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0",
+    "zone.js": "~0.15.0",
+    "idb": "^8.0.0"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^19.2.19",
+    "@angular/cli": "^19.2.19",
+    "@angular/compiler-cli": "^19.2.0",
+    "@tailwindcss/forms": "^0.5.11",
+    "@tailwindcss/typography": "^0.5.19",
+    "@types/jasmine": "~5.1.0",
+    "autoprefixer": "^10.4.23",
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8",
+    "jasmine-core": "~5.13.0",
+    "karma": "~6.4.0",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.0",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.1.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.19",
+    "typescript": "~5.7.2"
+  },
+  "build": {
+    "appId": "com.luminous.display",
+    "productName": "Luminous Display",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/display/**/*",
+      "electron/**/*",
+      "!**/*.map"
+    ],
+    "extraResources": [
+      {
+        "from": "assets/",
+        "to": "assets/",
+        "filter": ["**/*"]
+      }
+    ],
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "icon": "assets/icons/icon.png",
+      "category": "Utility",
+      "maintainer": "Luminous Team"
+    },
+    "win": {
+      "target": ["nsis", "portable"],
+      "icon": "assets/icons/icon.ico"
+    },
+    "mac": {
+      "target": ["dmg", "zip"],
+      "icon": "assets/icons/icon.icns",
+      "category": "public.app-category.utilities"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "runAfterFinish": true
+    }
+  }
+}

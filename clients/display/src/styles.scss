@@ -1,0 +1,482 @@
+/**
+ * Luminous Display Global Styles
+ * Version 1.0.0
+ *
+ * Styles optimized for wall-mounted display with kiosk mode.
+ */
+
+/* Design System Imports */
+@import 'styles/design-tokens';
+@import 'styles/animations';
+@import 'styles/typography';
+
+/* Tailwind Layers */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+ * BASE LAYER
+ * ============================================ */
+
+@layer base {
+  html {
+    font-family: var(--font-family);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--canvas);
+    color: var(--text-primary);
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    transition: background-color var(--duration-slow) var(--ease-in-out);
+  }
+
+  /* Kiosk mode: prevent all text selection and context menus */
+  * {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  /* Allow selection only in inputs */
+  input, textarea {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+  }
+
+  /* Display-optimized touch targets (larger than web) */
+  button,
+  [role="button"],
+  input[type="submit"],
+  input[type="button"] {
+    min-height: var(--touch-lg);
+    min-width: var(--touch-lg);
+  }
+
+  /* Focus styles */
+  :focus-visible {
+    outline: 3px solid var(--accent-500);
+    outline-offset: 3px;
+  }
+
+  /* Remove margins */
+  h1, h2, h3, h4, h5, h6, p {
+    margin: 0;
+  }
+}
+
+/* ============================================
+ * DISPLAY LAYOUT
+ * ============================================ */
+
+@layer components {
+  /* Main display container */
+  .display-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding: var(--display-safe-area);
+    gap: var(--space-6);
+  }
+
+  /* Header zone */
+  .display-header {
+    flex-shrink: 0;
+    height: var(--display-header-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--space-4);
+  }
+
+  /* Main content area */
+  .display-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    overflow: hidden;
+  }
+
+  /* Footer zone */
+  .display-footer {
+    flex-shrink: 0;
+    height: var(--display-footer-height);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Card for display */
+  .display-card {
+    background: var(--surface-primary);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-md);
+    padding: var(--space-8);
+  }
+
+  .display-card-lg {
+    background: var(--surface-primary);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-10);
+  }
+
+  /* Personal card with member color */
+  .display-card-personal {
+    background: var(--member-color-light, var(--surface-secondary));
+    border-left: 6px solid var(--member-color, var(--accent-500));
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+  }
+
+  /* Event item for schedule */
+  .display-event {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-4);
+    padding: var(--space-4) 0;
+    border-bottom: 1px solid var(--border-color-light);
+  }
+
+  .display-event:last-child {
+    border-bottom: none;
+  }
+
+  .display-event-time {
+    font-size: var(--font-glanceable);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    min-width: 100px;
+    color: var(--text-secondary);
+  }
+
+  .display-event-content {
+    flex: 1;
+  }
+
+  .display-event-title {
+    font-size: var(--font-glanceable);
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .display-event-location {
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+    margin-top: var(--space-1);
+  }
+
+  /* Task item */
+  .display-task {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    background: var(--surface-secondary);
+    border-radius: var(--radius-xl);
+  }
+
+  .display-task-checkbox {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border-color-strong);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .display-task-checkbox[data-checked="true"] {
+    background: var(--member-color, var(--success));
+    border-color: var(--member-color, var(--success));
+    color: white;
+  }
+
+  .display-task-title {
+    font-size: 1.25rem;
+    font-weight: 500;
+  }
+
+  .display-task[data-completed="true"] .display-task-title {
+    text-decoration: line-through;
+    color: var(--text-tertiary);
+  }
+
+  /* Button for display (larger touch targets) */
+  .display-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    min-height: var(--touch-xl);
+    padding: var(--space-4) var(--space-8);
+    font-size: 1.25rem;
+    font-weight: 500;
+    border-radius: var(--radius-xl);
+    border: none;
+    cursor: pointer;
+    transition: all var(--duration-quick) var(--ease-out);
+  }
+
+  .display-btn-primary {
+    background: var(--accent-600);
+    color: var(--text-inverse);
+  }
+
+  .display-btn-primary:active {
+    background: var(--accent-700);
+    transform: scale(0.98);
+  }
+
+  .display-btn-secondary {
+    background: var(--surface-pressed);
+    color: var(--text-primary);
+  }
+
+  .display-btn-secondary:active {
+    background: var(--border-color);
+  }
+
+  /* Avatar for display */
+  .display-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    flex-shrink: 0;
+    font-weight: 600;
+    color: var(--text-on-color);
+    background: var(--accent-500);
+  }
+
+  .display-avatar-md {
+    width: 56px;
+    height: 56px;
+    font-size: 1.25rem;
+  }
+
+  .display-avatar-lg {
+    width: 80px;
+    height: 80px;
+    font-size: 1.75rem;
+  }
+
+  .display-avatar-xl {
+    width: 120px;
+    height: 120px;
+    font-size: 2.5rem;
+  }
+
+  /* Progress indicator */
+  .display-progress {
+    height: 12px;
+    background: var(--surface-secondary);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+  }
+
+  .display-progress-fill {
+    height: 100%;
+    background: var(--accent-500);
+    border-radius: var(--radius-full);
+    transition: width var(--duration-moderate) var(--ease-out);
+  }
+
+  /* Link code display */
+  .display-link-code {
+    font-size: 4rem;
+    font-weight: 700;
+    letter-spacing: 0.5em;
+    font-family: var(--font-family-mono);
+    color: var(--text-primary);
+    text-align: center;
+    padding: var(--space-8);
+    background: var(--surface-secondary);
+    border-radius: var(--radius-2xl);
+  }
+
+  /* Spinner */
+  .display-spinner {
+    border: 4px solid var(--surface-secondary);
+    border-top-color: var(--accent-500);
+    border-radius: var(--radius-full);
+    animation: spin 1s linear infinite;
+  }
+
+  .display-spinner-md {
+    width: 40px;
+    height: 40px;
+  }
+
+  .display-spinner-lg {
+    width: 64px;
+    height: 64px;
+    border-width: 6px;
+  }
+
+  /* Empty state */
+  .display-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: var(--space-16);
+    gap: var(--space-6);
+  }
+
+  .display-empty-icon {
+    width: 80px;
+    height: 80px;
+    color: var(--text-tertiary);
+  }
+
+  .display-empty-title {
+    font-size: var(--font-display-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .display-empty-description {
+    font-size: var(--font-glanceable);
+    color: var(--text-secondary);
+    max-width: 400px;
+  }
+
+  /* Weather widget */
+  .display-weather {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  .display-weather-icon {
+    width: 64px;
+    height: 64px;
+  }
+
+  .display-weather-temp {
+    font-size: var(--font-display-md);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Widget card */
+  .display-widget {
+    background: var(--surface-primary);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-sm);
+    padding: var(--space-6);
+    flex: 1;
+  }
+
+  .display-widget-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--space-4);
+  }
+}
+
+/* ============================================
+ * INPUT FOR PIN ENTRY
+ * ============================================ */
+
+@layer components {
+  .display-pin-input {
+    display: flex;
+    gap: var(--space-4);
+    justify-content: center;
+  }
+
+  .display-pin-digit {
+    width: 80px;
+    height: 100px;
+    font-size: 3rem;
+    font-weight: 600;
+    text-align: center;
+    border: 3px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    background: var(--surface-primary);
+    color: var(--text-primary);
+    caret-color: var(--accent-500);
+  }
+
+  .display-pin-digit:focus {
+    outline: none;
+    border-color: var(--accent-500);
+    box-shadow: 0 0 0 4px var(--accent-100);
+  }
+
+  /* Numpad */
+  .display-numpad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-4);
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .display-numpad-key {
+    height: 80px;
+    font-size: 2rem;
+    font-weight: 600;
+    background: var(--surface-secondary);
+    border: none;
+    border-radius: var(--radius-xl);
+    cursor: pointer;
+    transition: all var(--duration-quick) var(--ease-out);
+  }
+
+  .display-numpad-key:active {
+    background: var(--surface-pressed);
+    transform: scale(0.95);
+  }
+
+  .display-numpad-key-action {
+    background: var(--accent-600);
+    color: var(--text-inverse);
+  }
+
+  .display-numpad-key-action:active {
+    background: var(--accent-700);
+  }
+}
+
+/* ============================================
+ * UTILITY LAYER
+ * ============================================ */
+
+@layer utilities {
+  .bg-canvas {
+    background-color: var(--canvas);
+  }
+
+  .bg-surface {
+    background-color: var(--surface-primary);
+  }
+
+  /* Hide scrollbar */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
