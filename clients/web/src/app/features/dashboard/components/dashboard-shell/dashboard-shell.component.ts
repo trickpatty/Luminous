@@ -1,6 +1,7 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { filter } from 'rxjs';
 import { AuthService, FamilyService } from '../../../../core';
 import { AvatarComponent, ButtonComponent, ToastContainerComponent } from '../../../../shared';
@@ -151,6 +152,7 @@ export class DashboardShellComponent implements OnInit {
   readonly familyService = inject(FamilyService);
   private readonly router = inject(Router);
   private readonly canvasService = inject(CanvasService);
+  private readonly sanitizer = inject(DomSanitizer);
 
   user = this.authService.user;
   mobileMenuOpen = signal(false);
@@ -199,7 +201,7 @@ export class DashboardShellComponent implements OnInit {
     this.familyService.clearState();
   }
 
-  getIcon(name: string): string {
+  getIcon(name: string): SafeHtml {
     const icons: Record<string, string> = {
       home: `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
         <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -218,6 +220,6 @@ export class DashboardShellComponent implements OnInit {
         <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
       </svg>`,
     };
-    return icons[name] || '';
+    return this.sanitizer.bypassSecurityTrustHtml(icons[name] || '');
   }
 }
