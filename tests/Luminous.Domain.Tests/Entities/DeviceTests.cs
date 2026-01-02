@@ -24,6 +24,18 @@ public class DeviceTests
     }
 
     [Fact]
+    public void CreateWithLinkCode_ShouldSetFamilyIdToDeviceId()
+    {
+        // Arrange & Act
+        var device = Device.CreateWithLinkCode(DeviceType.Display);
+
+        // Assert
+        // Unlinked devices use their own ID as the partition key (FamilyId)
+        // This is required for CosmosDB partition key consistency
+        device.FamilyId.Should().Be(device.Id);
+    }
+
+    [Fact]
     public void Link_ShouldLinkDeviceToFamily()
     {
         // Arrange

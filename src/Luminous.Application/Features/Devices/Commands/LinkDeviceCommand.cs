@@ -73,13 +73,17 @@ public sealed class LinkDeviceCommandHandler : IRequestHandler<LinkDeviceCommand
         var family = await _unitOfWork.Families.GetByIdAsync(request.FamilyId, cancellationToken)
             ?? throw new NotFoundException("Family", request.FamilyId);
 
-        // Link the device
+        // Store the old partition key (device ID for unlinked devices)
+        var oldPartitionKey = device.FamilyId;
+
+        // Link the device (this changes FamilyId to the actual family ID)
         device.Link(
             request.FamilyId,
             request.DeviceName,
             _currentUserService.UserId ?? "system");
 
-        await _unitOfWork.Devices.UpdateAsync(device, cancellationToken);
+        // Move device to new partition (CosmosDB doesn't allow changing partition keys in place)
+        await _unitOfWork.Devices.MoveToFamilyAsync(device, oldPartitionKey, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Generate device token

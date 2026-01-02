@@ -26,4 +26,13 @@ public interface IDeviceRepository : IRepository<Device>
     /// Gets all active devices that haven't been seen recently.
     /// </summary>
     Task<IReadOnlyList<Device>> GetInactiveDevicesAsync(TimeSpan inactivityThreshold, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Moves a device to a new partition (family). This is required when linking a device
+    /// because CosmosDB partition keys cannot be updated in place.
+    /// </summary>
+    /// <param name="device">The device to move.</param>
+    /// <param name="oldPartitionKey">The old partition key (device ID for unlinked devices).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task<Device> MoveToFamilyAsync(Device device, string oldPartitionKey, CancellationToken cancellationToken = default);
 }

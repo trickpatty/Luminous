@@ -55,6 +55,8 @@ public class LinkDeviceCommandTests
             .ReturnsAsync(device);
         _familyRepositoryMock.Setup(x => x.GetByIdAsync(family.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(family);
+        _deviceRepositoryMock.Setup(x => x.MoveToFamilyAsync(It.IsAny<Device>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(device);
         _tokenServiceMock.Setup(x => x.GenerateDeviceToken(It.IsAny<Device>(), It.IsAny<string>()))
             .Returns(new DTOs.AuthResultDto
             {
@@ -75,7 +77,7 @@ public class LinkDeviceCommandTests
         result.AccessToken.Should().Be("test-token");
         result.RefreshToken.Should().Be("refresh-token");
 
-        _deviceRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<Device>(), It.IsAny<CancellationToken>()), Times.Once);
+        _deviceRepositoryMock.Verify(x => x.MoveToFamilyAsync(It.IsAny<Device>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

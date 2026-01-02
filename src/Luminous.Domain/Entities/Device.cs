@@ -92,6 +92,10 @@ public sealed class Device : AggregateRoot
             LinkCodeExpiry = DateTime.UtcNow.AddMinutes(15)
         };
 
+        // Use device ID as partition key for unlinked devices
+        // This allows querying by device ID and satisfies CosmosDB partition key requirements
+        device.FamilyId = device.Id;
+
         return device;
     }
 
