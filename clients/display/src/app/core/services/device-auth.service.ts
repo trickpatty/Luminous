@@ -7,7 +7,7 @@ import { ElectronService, DeviceTokenData } from './electron.service';
 import { environment } from '../../../environments/environment';
 
 export interface LinkCodeResponse {
-  code: string;
+  linkCode: string;
   expiresAt: string;
   deviceId: string;
 }
@@ -20,8 +20,10 @@ export interface LinkStatusResponse {
 }
 
 export interface DeviceHeartbeatResponse {
-  valid: boolean;
-  familyName?: string;
+  deviceId: string;
+  lastSeenAt: string;
+  isActive: boolean;
+  appVersion?: string;
 }
 
 /**
@@ -83,10 +85,10 @@ export class DeviceAuthService {
         this.http.post<LinkCodeResponse>(`${environment.apiUrl}/devices/link-code`, {})
       );
 
-      this._linkCode.set(response.code);
-      this.startLinkPolling(response.deviceId, response.code);
+      this._linkCode.set(response.linkCode);
+      this.startLinkPolling(response.deviceId, response.linkCode);
 
-      return response.code;
+      return response.linkCode;
     } catch (error) {
       this._linkError.set('Failed to generate link code. Please try again.');
       this._isLinking.set(false);
@@ -176,20 +178,26 @@ export class DeviceAuthService {
   private startHeartbeat(): void {
     this.stopHeartbeat();
 
+    const deviceId = this._deviceToken()?.deviceId;
+    if (!deviceId) {
+      console.warn('Cannot start heartbeat: no device ID');
+      return;
+    }
+
     // Heartbeat every 5 minutes
     this.heartbeatSubscription = interval(environment.display.heartbeatInterval)
       .pipe(
         switchMap(() =>
           this.http.post<DeviceHeartbeatResponse>(
-            `${environment.apiUrl}/devices/heartbeat`,
+            `${environment.apiUrl}/devices/${deviceId}/heartbeat`,
             {}
           )
         )
       )
       .subscribe({
         next: (response) => {
-          if (!response.valid) {
-            console.log('Device token invalid, unlinking...');
+          if (!response.isActive) {
+            console.log('Device is inactive, unlinking...');
             this.unlink();
           }
         },

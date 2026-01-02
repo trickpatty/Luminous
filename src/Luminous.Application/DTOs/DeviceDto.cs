@@ -66,3 +66,14 @@ public sealed record LinkedDeviceDto
     public string TokenType { get; init; } = "Bearer";
     public int ExpiresIn { get; init; }
 }
+
+/// <summary>
+/// Data transfer object for device link status (used by display app polling).
+/// </summary>
+public sealed record DeviceLinkStatusDto
+{
+    public string Status { get; init; } = "pending"; // "pending", "linked", "expired"
+    public string? DeviceToken { get; init; }
+    public string? FamilyId { get; init; }
+    public string? FamilyName { get; init; }
+}
