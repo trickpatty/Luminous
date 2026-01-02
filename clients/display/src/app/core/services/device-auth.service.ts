@@ -6,6 +6,11 @@ import { tap, switchMap, takeWhile } from 'rxjs/operators';
 import { ElectronService, DeviceTokenData } from './electron.service';
 import { environment } from '../../../environments/environment';
 
+export interface LinkCodeRequest {
+  deviceType: 'Display' | 'Mobile' | 'Web';
+  platform?: string;
+}
+
 export interface LinkCodeResponse {
   linkCode: string;
   expiresAt: string;
@@ -81,8 +86,19 @@ export class DeviceAuthService {
     this._linkError.set(null);
 
     try {
+      // Build request with device information
+      const request: LinkCodeRequest = {
+        deviceType: 'Display',
+        platform: this.electronService.isElectron()
+          ? `Electron/${window.electronAPI?.platform || 'unknown'}`
+          : 'Browser',
+      };
+
       const response = await firstValueFrom(
-        this.http.post<LinkCodeResponse>(`${environment.apiUrl}/devices/link-code`, {})
+        this.http.post<LinkCodeResponse>(
+          `${environment.apiUrl}/devices/link-code`,
+          request
+        )
       );
 
       this._linkCode.set(response.linkCode);
@@ -90,6 +106,7 @@ export class DeviceAuthService {
 
       return response.linkCode;
     } catch (error) {
+      console.error('Failed to request link code:', error);
       this._linkError.set('Failed to generate link code. Please try again.');
       this._isLinking.set(false);
       throw error;

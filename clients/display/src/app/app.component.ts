@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, NgZone, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { CanvasService } from './core/services/canvas.service';
@@ -12,9 +12,10 @@ import { ExitDialogComponent } from './shared/components/exit-dialog/exit-dialog
   template: `
     <div class="app-container" [attr.data-theme]="theme()">
       <router-outlet></router-outlet>
-      @if (showExitDialog) {
+      @if (showExitDialog()) {
         <app-exit-dialog
-          (close)="showExitDialog = false"
+          [externalError]="exitPinError()"
+          (close)="closeExitDialog()"
           (exit)="exitApp($event)"
         />
       }
@@ -31,9 +32,11 @@ import { ExitDialogComponent } from './shared/components/exit-dialog/exit-dialog
 export class AppComponent implements OnInit, OnDestroy {
   private readonly canvasService = inject(CanvasService);
   private readonly electronService = inject(ElectronService);
+  private readonly ngZone = inject(NgZone);
 
   protected readonly theme = this.canvasService.currentTheme;
-  protected showExitDialog = false;
+  protected readonly showExitDialog = signal(false);
+  protected readonly exitPinError = signal<string | null>(null);
 
   private exitDialogCleanup?: () => void;
 
@@ -42,9 +45,13 @@ export class AppComponent implements OnInit, OnDestroy {
     this.canvasService.startAdaptation();
 
     // Listen for exit dialog trigger from Electron
+    // Use NgZone.run() to ensure Angular change detection runs
     if (this.electronService.isElectron()) {
       this.exitDialogCleanup = this.electronService.onShowExitDialog(() => {
-        this.showExitDialog = true;
+        this.ngZone.run(() => {
+          this.exitPinError.set(null);
+          this.showExitDialog.set(true);
+        });
       });
     }
   }
@@ -54,15 +61,23 @@ export class AppComponent implements OnInit, OnDestroy {
     this.exitDialogCleanup?.();
   }
 
-  exitApp(pin: string): void {
+  closeExitDialog(): void {
+    this.showExitDialog.set(false);
+    this.exitPinError.set(null);
+  }
+
+  async exitApp(pin: string): Promise<void> {
+    this.exitPinError.set(null);
+
     if (this.electronService.isElectron()) {
-      this.electronService.verifyExitPin(pin).then((success) => {
-        if (!success) {
-          // PIN incorrect - dialog will show error
-          console.log('Exit PIN incorrect');
-        }
-      });
+      const success = await this.electronService.verifyExitPin(pin);
+      if (!success) {
+        // PIN incorrect - show error in dialog, don't close
+        this.exitPinError.set('Incorrect PIN');
+        return;
+      }
+      // If successful, the main process will quit the app
     }
-    this.showExitDialog = false;
+    this.showExitDialog.set(false);
   }
 }
