@@ -15,6 +15,7 @@ on:
     branches: [main, develop]
     paths:
       - 'clients/display/**'
+      - 'assets/icons/**'
       - '.github/workflows/electron.yml'
     tags:
       - 'display-v*'
@@ -22,6 +23,7 @@ on:
     branches: [main, develop]
     paths:
       - 'clients/display/**'
+      - 'assets/icons/**'
       - '.github/workflows/electron.yml'
   workflow_dispatch:
     inputs:
@@ -107,24 +109,13 @@ jobs:
       - name: Build Angular app
         run: npm run build:prod
 
-      - name: Generate placeholder icons
+      - name: Generate icons
         run: |
-          # Create icons directory
           mkdir -p build/icons
           mkdir -p assets
 
-          # Check if source icon exists in repo, otherwise generate placeholder
-          if [ -f "build/icons/icon.png" ]; then
-            echo "Using existing icon from repository"
-          else
-            echo "Generating placeholder icon"
-            # Generate a simple placeholder icon using ImageMagick
-            convert -size 512x512 xc:'#3B82F6' \
-              -fill '#1E40AF' -draw "rectangle 0,256 512,512" \
-              -fill white -font DejaVu-Sans-Bold -pointsize 280 \
-              -gravity center -draw "text 0,0 'L'" \
-              build/icons/icon.png
-          fi
+          # Copy icon from central location
+          cp ../../assets/icons/icon.png build/icons/icon.png
 
           # Create multiple sizes for Linux
           for size in 16 32 48 64 128 256 512; do
@@ -176,27 +167,17 @@ jobs:
       - name: Build Angular app
         run: npm run build:prod
 
-      - name: Generate placeholder icons
+      - name: Generate icons
         shell: pwsh
         run: |
-          # Create directories
           New-Item -ItemType Directory -Force -Path build/icons
           New-Item -ItemType Directory -Force -Path assets
 
+          # Copy icon from central location
+          Copy-Item "..\..\assets\icons\icon.png" -Destination "build\icons\icon.png"
+
           # Install ImageMagick
           choco install imagemagick.app -y --no-progress
-
-          # Check if source icon exists in repo, otherwise generate placeholder
-          if (-not (Test-Path "build/icons/icon.png")) {
-            Write-Host "Generating placeholder icon"
-            & "C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\magick.exe" -size 512x512 xc:"#3B82F6" `
-              -fill "#1E40AF" -draw "rectangle 0,256 512,512" `
-              -fill white -font Arial-Bold -pointsize 280 `
-              -gravity center -draw "text 0,0 'L'" `
-              build/icons/icon.png
-          } else {
-            Write-Host "Using existing icon from repository"
-          }
 
           # Generate multiple sizes and create ICO
           $sizes = @(16, 32, 48, 64, 128, 256)
@@ -252,26 +233,16 @@ jobs:
       - name: Build Angular app
         run: npm run build:prod
 
-      - name: Generate placeholder icons
+      - name: Generate icons
         run: |
-          # Create directories
           mkdir -p build/icons
           mkdir -p assets
 
+          # Copy icon from central location
+          cp ../../assets/icons/icon.png build/icons/icon.png
+
           # Install ImageMagick via Homebrew
           brew install imagemagick --quiet || true
-
-          # Check if source icon exists in repo, otherwise generate placeholder
-          if [ -f "build/icons/icon.png" ]; then
-            echo "Using existing icon from repository"
-          else
-            echo "Generating placeholder icon"
-            magick -size 512x512 xc:'#3B82F6' \
-              -fill '#1E40AF' -draw "rectangle 0,256 512,512" \
-              -fill white -font Helvetica-Bold -pointsize 280 \
-              -gravity center -draw "text 0,0 'L'" \
-              build/icons/icon.png
-          fi
 
           # Create iconset directory for macOS
           mkdir -p build/icon.iconset
@@ -341,26 +312,16 @@ jobs:
       - name: Build Angular app
         run: npm run build:prod
 
-      - name: Generate placeholder icons
+      - name: Generate icons
         run: |
-          # Create directories
           mkdir -p build/icons
           mkdir -p assets
 
+          # Copy icon from central location
+          cp ../../assets/icons/icon.png build/icons/icon.png
+
           # Install ImageMagick via Homebrew
           brew install imagemagick --quiet || true
-
-          # Check if source icon exists in repo, otherwise generate placeholder
-          if [ -f "build/icons/icon.png" ]; then
-            echo "Using existing icon from repository"
-          else
-            echo "Generating placeholder icon"
-            magick -size 512x512 xc:'#3B82F6' \
-              -fill '#1E40AF' -draw "rectangle 0,256 512,512" \
-              -fill white -font Helvetica-Bold -pointsize 280 \
-              -gravity center -draw "text 0,0 'L'" \
-              build/icons/icon.png
-          fi
 
           # Create iconset directory for macOS
           mkdir -p build/icon.iconset
