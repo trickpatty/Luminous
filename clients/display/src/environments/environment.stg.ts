@@ -1,30 +1,30 @@
 /**
- * Development environment configuration (deployed dev, not local)
+ * Staging environment configuration
  *
  * IMPORTANT: Update these URLs with your actual Azure deployment URLs.
  * You can find the URLs by running:
- *   az deployment group show --name <deployment-name> --resource-group rg-lum-dev --query properties.outputs
+ *   az deployment group show --name <deployment-name> --resource-group rg-lum-stg --query properties.outputs
  *
  * Or use the helper script:
- *   npm run config:fetch -- dev
+ *   npm run config:fetch -- stg
  *
  * URL Pattern:
- *   Static Web App: https://stapp-lum-dev-{suffix}.azurestaticapps.net
- *   App Service:    https://app-lum-dev-{suffix}.azurewebsites.net
+ *   Static Web App: https://stapp-lum-stg-{suffix}.azurestaticapps.net
+ *   App Service:    https://app-lum-stg-{suffix}.azurewebsites.net
  *
  * The {suffix} is a 6-character unique string generated from the resource group ID.
  */
 export const environment = {
   production: false,
-  environmentName: 'dev',
+  environmentName: 'stg',
 
   // API URL: The Static Web App URL (proxies to App Service backend)
   // Replace {SUFFIX} with your actual Azure deployment suffix
-  apiUrl: 'https://stapp-lum-dev-{SUFFIX}.azurestaticapps.net/api',
+  apiUrl: 'https://stapp-lum-stg-{SUFFIX}.azurestaticapps.net/api',
 
   // SignalR URL: Direct connection to App Service for WebSocket support
   // Replace {SUFFIX} with your actual Azure deployment suffix
-  signalRUrl: 'https://app-lum-dev-{SUFFIX}.azurewebsites.net/hubs',
+  signalRUrl: 'https://app-lum-stg-{SUFFIX}.azurewebsites.net/hubs',
 
   auth: {
     deviceTokenStorageKey: 'luminous_device_token',
