@@ -114,6 +114,9 @@ jobs:
           mkdir -p build/icons
           mkdir -p assets
 
+          # Install ImageMagick
+          sudo apt-get update && sudo apt-get install -y imagemagick
+
           # Copy icon from central location
           cp ../../assets/icons/icon.png build/icons/icon.png
 
@@ -177,17 +180,20 @@ jobs:
           Copy-Item "..\..\assets\icons\icon.png" -Destination "build\icons\icon.png"
 
           # Install ImageMagick
-          choco install imagemagick.app -y --no-progress
+          choco install imagemagick -y --no-progress
+
+          # Refresh PATH to include ImageMagick
+          $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
 
           # Generate multiple sizes and create ICO
           $sizes = @(16, 32, 48, 64, 128, 256)
           $icoInputs = @()
           foreach ($size in $sizes) {
-            & "C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\magick.exe" build/icons/icon.png -resize "${size}x${size}" "build/icons/${size}x${size}.png"
+            magick build/icons/icon.png -resize "${size}x${size}" "build/icons/${size}x${size}.png"
             $icoInputs += "build/icons/${size}x${size}.png"
           }
           # Create ICO file
-          & "C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\magick.exe" $icoInputs build/icon.ico
+          magick $icoInputs build/icon.ico
 
       - name: Build Electron (Windows)
         run: npx electron-builder build --win --publish never
