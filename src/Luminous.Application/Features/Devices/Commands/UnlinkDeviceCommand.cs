@@ -55,9 +55,9 @@ public sealed class UnlinkDeviceCommandHandler : IRequestHandler<UnlinkDeviceCom
                 "DeviceId", "Device is not linked to any family.")]);
         }
 
-        device.Unlink(_currentUserService.UserId ?? "system");
-
-        await _unitOfWork.Devices.UpdateAsync(device, cancellationToken);
+        // Delete the device entirely - unlinked devices can't be relinked without a new code
+        // This avoids partition key issues since we'd otherwise need to move the device back
+        await _unitOfWork.Devices.DeleteAsync(device, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Unit.Value;

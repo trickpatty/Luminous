@@ -34,7 +34,7 @@ public class UnlinkDeviceCommandTests
     }
 
     [Fact]
-    public async Task Handle_WithLinkedDevice_ShouldUnlinkDevice()
+    public async Task Handle_WithLinkedDevice_ShouldDeleteDevice()
     {
         // Arrange
         var familyId = Nanoid.Generate();
@@ -55,8 +55,7 @@ public class UnlinkDeviceCommandTests
 
         // Assert
         result.Should().Be(Unit.Value);
-        device.IsLinked.Should().BeFalse();
-        _deviceRepositoryMock.Verify(x => x.UpdateAsync(device, It.IsAny<CancellationToken>()), Times.Once);
+        _deviceRepositoryMock.Verify(x => x.DeleteAsync(device, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
