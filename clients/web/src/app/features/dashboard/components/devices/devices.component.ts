@@ -159,8 +159,33 @@ import { Device, DeviceType } from '../../../../models';
             <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6">
               <h3 class="text-lg font-semibold text-gray-900 mb-4">Link New Device</h3>
 
-              @if (!linkCode()) {
+              @if (!linkSuccess()) {
                 <div class="space-y-4">
+                  <!-- Instructions -->
+                  <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <p class="text-sm text-blue-800">
+                      <strong>Step 1:</strong> On your display, tap "Get Link Code" to generate a 6-digit code.
+                    </p>
+                    <p class="text-sm text-blue-800 mt-2">
+                      <strong>Step 2:</strong> Enter that code below to link the device to your family.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      Link Code from Display
+                    </label>
+                    <input
+                      type="text"
+                      [(ngModel)]="enteredLinkCode"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-center text-2xl font-mono tracking-widest"
+                      placeholder="000000"
+                      maxlength="6"
+                      pattern="[0-9]*"
+                      inputmode="numeric"
+                    />
+                  </div>
+
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">
                       Device Name
@@ -171,21 +196,14 @@ import { Device, DeviceType } from '../../../../models';
                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                       placeholder="e.g., Kitchen Display"
                     />
+                    <p class="text-xs text-gray-500 mt-1">Give your display a name so you can identify it later.</p>
                   </div>
 
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                      Device Type
-                    </label>
-                    <select
-                      [(ngModel)]="newDeviceType"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    >
-                      <option [value]="DeviceType.Display">Wall Display</option>
-                      <option [value]="DeviceType.Mobile">Mobile App</option>
-                      <option [value]="DeviceType.Web">Web Browser</option>
-                    </select>
-                  </div>
+                  @if (linkError()) {
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-3">
+                      <p class="text-sm text-red-700">{{ linkError() }}</p>
+                    </div>
+                  }
 
                   <div class="flex justify-end gap-3 mt-6">
                     <app-button variant="secondary" (onClick)="closeLinkModal()">
@@ -193,36 +211,28 @@ import { Device, DeviceType } from '../../../../models';
                     </app-button>
                     <app-button
                       variant="primary"
-                      [loading]="generatingCode()"
-                      [disabled]="!newDeviceName"
-                      (onClick)="generateLinkCode()"
+                      [loading]="linking()"
+                      [disabled]="!canLink()"
+                      (onClick)="linkDeviceWithCode()"
                     >
-                      Generate Link Code
+                      Link Device
                     </app-button>
                   </div>
                 </div>
               } @else {
                 <div class="text-center">
-                  <p class="text-sm text-gray-600 mb-4">
-                    Enter this code on your device to link it to your family:
-                  </p>
-                  <div class="bg-gray-100 rounded-xl p-6 mb-4">
-                    <p class="text-4xl font-mono font-bold tracking-widest text-gray-900">
-                      {{ linkCode()?.linkCode }}
-                    </p>
+                  <div class="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
                   </div>
-                  <p class="text-xs text-gray-500 mb-6">
-                    This code expires {{ formatDate(linkCode()!.expiresAt) }}
+                  <p class="text-lg font-medium text-gray-900 mb-2">Device Linked!</p>
+                  <p class="text-sm text-gray-600 mb-6">
+                    The display is now connected to your family and will sync automatically.
                   </p>
-
-                  <div class="flex justify-center gap-3">
-                    <app-button variant="secondary" (onClick)="closeLinkModal()">
-                      Done
-                    </app-button>
-                    <app-button variant="ghost" (onClick)="copyCode()">
-                      Copy Code
-                    </app-button>
-                  </div>
+                  <app-button variant="primary" (onClick)="closeLinkModal()">
+                    Done
+                  </app-button>
                 </div>
               }
             </div>
@@ -303,27 +313,26 @@ export class DevicesComponent implements OnInit {
   private readonly authService = inject(AuthService);
   readonly deviceService = inject(DeviceService);
 
-  DeviceType = DeviceType;
-
   // State
   error = signal<string | null>(null);
   successMessage = signal<string | null>(null);
   showLinkModal = signal(false);
   showEditModal = signal(false);
   showUnlinkModal = signal(false);
-  generatingCode = signal(false);
+  linking = signal(false);
   updating = signal(false);
   unlinking = signal(false);
   selectedDevice = signal<Device | null>(null);
+  linkSuccess = signal(false);
+  linkError = signal<string | null>(null);
 
   // Form fields
   newDeviceName = '';
-  newDeviceType = DeviceType.Display;
+  enteredLinkCode = '';
   editDeviceName = '';
 
   // Computed
   devices = this.deviceService.devices;
-  linkCode = this.deviceService.linkCode;
 
   canManageDevices = () => {
     const role = this.authService.user()?.role;
@@ -387,39 +396,55 @@ export class DevicesComponent implements OnInit {
   closeLinkModal(): void {
     this.showLinkModal.set(false);
     this.newDeviceName = '';
-    this.newDeviceType = DeviceType.Display;
-    this.deviceService.clearLinkCode();
+    this.enteredLinkCode = '';
+    this.linkSuccess.set(false);
+    this.linkError.set(null);
   }
 
-  generateLinkCode(): void {
-    if (!this.newDeviceName) return;
+  isValidLinkCode(): boolean {
+    return /^\d{6}$/.test(this.enteredLinkCode);
+  }
 
-    this.generatingCode.set(true);
-    this.error.set(null);
+  canLink(): boolean {
+    return this.isValidLinkCode() && this.newDeviceName.trim().length > 0;
+  }
+
+  linkDeviceWithCode(): void {
+    if (!this.canLink()) return;
+
+    const familyId = this.authService.user()?.familyId;
+    if (!familyId) {
+      this.linkError.set('Unable to determine family. Please try again.');
+      return;
+    }
+
+    this.linking.set(true);
+    this.linkError.set(null);
 
     this.deviceService
-      .generateLinkCode({
-        deviceType: this.newDeviceType,
-        name: this.newDeviceName,
+      .linkDevice({
+        linkCode: this.enteredLinkCode,
+        familyId: familyId,
+        deviceName: this.newDeviceName.trim(),
       })
       .subscribe({
         next: () => {
-          this.generatingCode.set(false);
+          this.linking.set(false);
+          this.linkSuccess.set(true);
+          this.successMessage.set('Device linked successfully!');
         },
         error: (err) => {
-          this.generatingCode.set(false);
-          this.error.set(err.message || 'Failed to generate link code');
-          this.closeLinkModal();
+          this.linking.set(false);
+          const errorMessage = err.error?.message || err.message || 'Failed to link device';
+          if (errorMessage.includes('not found') || errorMessage.includes('invalid')) {
+            this.linkError.set('Invalid or expired link code. Please check the code on your display and try again.');
+          } else if (errorMessage.includes('expired')) {
+            this.linkError.set('This link code has expired. Please generate a new code on your display.');
+          } else {
+            this.linkError.set(errorMessage);
+          }
         },
       });
-  }
-
-  copyCode(): void {
-    const code = this.linkCode()?.linkCode;
-    if (code) {
-      navigator.clipboard.writeText(code);
-      this.successMessage.set('Code copied to clipboard!');
-    }
   }
 
   // Edit Modal

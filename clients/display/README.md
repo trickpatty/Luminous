@@ -169,11 +169,17 @@ clients/display/
 
 ## Device Linking Flow
 
-1. Display shows a 6-digit code
-2. User enters code in Luminous web/mobile app
-3. Server validates and links device to family
-4. Display receives device token
-5. Token stored securely in Electron user data
+The display uses a "device shows code, user enters code" pattern for secure linking:
+
+1. **On the Display**: Tap "Get Link Code" to generate a unique 6-digit code
+2. **On the Display**: The code appears on screen (valid for 15 minutes)
+3. **On Web/Mobile App**: An admin logs in and goes to Devices
+4. **On Web/Mobile App**: Click "Link New Device", enter the code shown on the display
+5. **Server**: Validates the code and links the device to the family
+6. **On the Display**: Automatically receives authentication token and syncs family data
+7. **Token Storage**: Credentials stored securely in Electron user data
+
+> **Note**: The display generates the code and waits; the authenticated user in the web/mobile app enters the code to complete linking.
 
 ## Keyboard Shortcuts
 

@@ -67,10 +67,12 @@ export interface DeviceHeartbeat {
 }
 
 /**
- * Request to link a device
+ * Request to link a device to a family using a code from the display
  */
 export interface LinkDeviceRequest {
   linkCode: string;
+  familyId: string;
+  deviceName: string;
 }
 
 /**
