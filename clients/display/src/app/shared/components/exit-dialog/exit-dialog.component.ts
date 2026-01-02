@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -18,9 +18,9 @@ import { CommonModule } from '@angular/common';
           }
         </div>
 
-        @if (error()) {
+        @if (displayError) {
           <div class="pin-error">
-            {{ error() }}
+            {{ displayError }}
           </div>
         }
 
@@ -117,28 +117,34 @@ import { CommonModule } from '@angular/common';
   `],
 })
 export class ExitDialogComponent {
+  @Input() externalError: string | null = null;
   @Output() close = new EventEmitter<void>();
   @Output() exit = new EventEmitter<string>();
 
   protected readonly pin = signal('');
-  protected readonly error = signal<string | null>(null);
+  protected readonly internalError = signal<string | null>(null);
+
+  // Combine internal and external errors
+  protected get displayError(): string | null {
+    return this.externalError || this.internalError();
+  }
 
   readonly numpadKeys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', 'OK'];
 
   handleKey(key: string): void {
     if (key === 'C') {
       this.pin.set('');
-      this.error.set(null);
+      this.internalError.set(null);
     } else if (key === 'OK') {
       if (this.pin().length === 4) {
         this.exit.emit(this.pin());
       } else {
-        this.error.set('Enter 4 digits');
+        this.internalError.set('Enter 4 digits');
       }
     } else {
       if (this.pin().length < 4) {
         this.pin.update((p) => p + key);
-        this.error.set(null);
+        this.internalError.set(null);
       }
     }
   }
