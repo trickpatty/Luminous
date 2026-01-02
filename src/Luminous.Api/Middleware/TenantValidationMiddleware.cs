@@ -15,7 +15,8 @@ public partial class TenantValidationMiddleware
     private readonly ILogger<TenantValidationMiddleware> _logger;
 
     // Regex pattern to match family-scoped routes
-    [GeneratedRegex(@"/api/(?:families|users/family|devices|events/family|chores/family)/([a-zA-Z0-9_-]+)")]
+    // Note: devices routes use /api/devices/family/{familyId} pattern, not /api/devices/{familyId}
+    [GeneratedRegex(@"/api/(?:families|users/family|devices/family|events/family|chores/family)/([a-zA-Z0-9_-]+)")]
     private static partial Regex FamilyScopedRouteRegex();
 
     public TenantValidationMiddleware(RequestDelegate next, ILogger<TenantValidationMiddleware> logger)

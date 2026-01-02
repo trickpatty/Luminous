@@ -33,6 +33,46 @@ public class DevicesController : ApiControllerBase
     }
 
     /// <summary>
+    /// Gets the link status of a device (used by display app polling).
+    /// </summary>
+    /// <param name="deviceId">The device ID.</param>
+    /// <returns>The link status.</returns>
+    [HttpGet("link-status/{deviceId}")]
+    [ProducesResponseType(typeof(ApiResponse<DeviceLinkStatusDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<DeviceLinkStatusDto>>> GetLinkStatus(string deviceId)
+    {
+        var query = new GetLinkStatusQuery
+        {
+            DeviceId = deviceId
+        };
+        var result = await Mediator.Send(query);
+        return OkResponse(result);
+    }
+
+    /// <summary>
+    /// Records a device heartbeat (used by display app before it's linked to a family).
+    /// </summary>
+    /// <param name="deviceId">The device ID.</param>
+    /// <param name="request">The heartbeat request.</param>
+    /// <returns>The heartbeat response.</returns>
+    [HttpPost("{deviceId}/heartbeat")]
+    [ProducesResponseType(typeof(ApiResponse<DeviceHeartbeatDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<DeviceHeartbeatDto>>> RecordDeviceHeartbeat(
+        string deviceId,
+        [FromBody] RecordHeartbeatRequest request)
+    {
+        var command = new RecordDeviceHeartbeatCommand
+        {
+            DeviceId = deviceId,
+            AppVersion = request.AppVersion
+        };
+        var result = await Mediator.Send(command);
+        return OkResponse(result);
+    }
+
+    /// <summary>
     /// Links a device to a family using a link code.
     /// </summary>
     /// <param name="request">The link request.</param>
