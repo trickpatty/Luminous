@@ -18,6 +18,12 @@ public interface IDeviceRepository : IRepository<Device>
     Task<Device?> GetByLinkCodeAsync(string linkCode, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets a device by ID across all partitions (cross-partition query).
+    /// Use sparingly as cross-partition queries are less efficient.
+    /// </summary>
+    Task<Device?> GetByIdCrossPartitionAsync(string deviceId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets all devices in a family.
     /// </summary>
     Task<IReadOnlyList<Device>> GetByFamilyIdAsync(string familyId, CancellationToken cancellationToken = default);

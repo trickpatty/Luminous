@@ -50,7 +50,14 @@ public sealed class GetLinkStatusQueryHandler : IRequestHandler<GetLinkStatusQue
 
         if (device == null)
         {
-            throw new NotFoundException("Device", request.DeviceId);
+            // Device not found in device ID partition - it may have been linked and moved to a family partition
+            // Try a cross-partition query to find it
+            device = await _unitOfWork.Devices.GetByIdCrossPartitionAsync(request.DeviceId, cancellationToken);
+
+            if (device == null)
+            {
+                throw new NotFoundException("Device", request.DeviceId);
+            }
         }
 
         // Determine status

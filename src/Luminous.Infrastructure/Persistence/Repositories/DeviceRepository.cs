@@ -41,6 +41,15 @@ public sealed class DeviceRepository : CosmosRepositoryBase<Device>, IDeviceRepo
         return results.FirstOrDefault();
     }
 
+    public async Task<Device?> GetByIdCrossPartitionAsync(string deviceId, CancellationToken cancellationToken = default)
+    {
+        var query = new QueryDefinition("SELECT * FROM c WHERE c.id = @deviceId")
+            .WithParameter("@deviceId", deviceId);
+
+        var results = await QueryAsync(query, cancellationToken: cancellationToken);
+        return results.FirstOrDefault();
+    }
+
     public async Task<IReadOnlyList<Device>> GetByFamilyIdAsync(string familyId, CancellationToken cancellationToken = default)
     {
         var query = new QueryDefinition("SELECT * FROM c WHERE c.familyId = @familyId ORDER BY c.name")
