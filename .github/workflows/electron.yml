@@ -4,6 +4,11 @@
 # Builds the Electron display application for Windows, macOS (Intel & Apple
 # Silicon), and Linux. Creates GitHub releases with downloadable installers.
 #
+# Features:
+#   - Dynamic Azure API URL configuration per environment
+#   - Multi-platform builds (Windows, macOS, Linux)
+#   - Support for dev, stg, and prd environments
+#
 # Phase 2.1: Display Application CI/CD
 # TOGAF Principle: TP-4 - Infrastructure as Code
 # =============================================================================
@@ -27,6 +32,15 @@ on:
       - '.github/workflows/electron.yml'
   workflow_dispatch:
     inputs:
+      environment:
+        description: 'Target environment for API configuration'
+        required: true
+        type: choice
+        default: 'dev'
+        options:
+          - dev
+          - stg
+          - prd
       create_release:
         description: 'Create a GitHub release'
         required: false
@@ -40,18 +54,90 @@ on:
 env:
   NODE_VERSION: '20.x'
   WORKING_DIRECTORY: ./clients/display
+  RG_PREFIX: 'rg-lum'
+  # Default to 'dev' for automated builds, can be overridden via workflow_dispatch
+  TARGET_ENV: ${{ github.event.inputs.environment || 'dev' }}
 
 defaults:
   run:
     working-directory: ./clients/display
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
+  # ===========================================================================
+  # Fetch Azure Configuration
+  # ===========================================================================
+  fetch-azure-config:
+    name: Fetch Azure Config (${{ github.event.inputs.environment || 'dev' }})
+    runs-on: ubuntu-latest
+    outputs:
+      static_web_app_url: ${{ steps.get-urls.outputs.static_web_app_url }}
+      app_service_url: ${{ steps.get-urls.outputs.app_service_url }}
+      environment: ${{ steps.get-urls.outputs.environment }}
+      build_config: ${{ steps.get-urls.outputs.build_config }}
+
+    steps:
+      - name: Determine environment
+        id: env
+        run: |
+          ENV="${{ github.event.inputs.environment || 'dev' }}"
+          echo "environment=$ENV" >> $GITHUB_OUTPUT
+
+          # Map environment to build config
+          if [ "$ENV" == "prd" ]; then
+            echo "build_config=production" >> $GITHUB_OUTPUT
+          else
+            echo "build_config=$ENV" >> $GITHUB_OUTPUT
+          fi
+        working-directory: .
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Get Azure URLs
+        id: get-urls
+        run: |
+          ENV="${{ steps.env.outputs.environment }}"
+          RG="${{ env.RG_PREFIX }}-$ENV"
+
+          echo "Fetching URLs from resource group: $RG"
+
+          # Get Static Web App URL
+          SWA_URL=$(az staticwebapp list --resource-group $RG --query "[0].defaultHostname" -o tsv 2>/dev/null || echo "")
+          if [ -z "$SWA_URL" ]; then
+            echo "::warning::Static Web App not found in $RG. Using placeholder URL."
+            SWA_URL="stapp-lum-$ENV-placeholder.azurestaticapps.net"
+          fi
+          echo "Static Web App URL: $SWA_URL"
+          echo "static_web_app_url=$SWA_URL" >> $GITHUB_OUTPUT
+
+          # Get App Service URL (filter out Function Apps)
+          APP_URL=$(az webapp list --resource-group $RG --query "[?contains(kind, 'app') && !contains(kind, 'functionapp')].defaultHostName" -o tsv 2>/dev/null | head -1 || echo "")
+          if [ -z "$APP_URL" ]; then
+            echo "::warning::App Service not found in $RG. Using placeholder URL."
+            APP_URL="app-lum-$ENV-placeholder.azurewebsites.net"
+          fi
+          echo "App Service URL: $APP_URL"
+          echo "app_service_url=$APP_URL" >> $GITHUB_OUTPUT
+
+          echo "environment=$ENV" >> $GITHUB_OUTPUT
+          echo "build_config=${{ steps.env.outputs.build_config }}" >> $GITHUB_OUTPUT
+        working-directory: .
+
   # ===========================================================================
   # Build and Test (all PRs and pushes)
   # ===========================================================================
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-latest
+    needs: fetch-azure-config
 
     permissions:
       contents: read
@@ -70,6 +156,30 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Configure environment URLs
+        run: |
+          ENV="${{ needs.fetch-azure-config.outputs.environment }}"
+          SWA_URL="${{ needs.fetch-azure-config.outputs.static_web_app_url }}"
+          APP_URL="${{ needs.fetch-azure-config.outputs.app_service_url }}"
+
+          echo "Configuring environment for: $ENV"
+          echo "  API URL: https://$SWA_URL/api"
+          echo "  SignalR URL: https://$APP_URL/hubs"
+
+          # Determine which environment file to update
+          if [ "$ENV" == "prd" ]; then
+            ENV_FILE="src/environments/environment.production.ts"
+          else
+            ENV_FILE="src/environments/environment.$ENV.ts"
+          fi
+
+          # Update the environment file with actual URLs
+          sed -i "s|apiUrl:.*|apiUrl: 'https://$SWA_URL/api',|" "$ENV_FILE"
+          sed -i "s|signalRUrl:.*|signalRUrl: 'https://$APP_URL/hubs',|" "$ENV_FILE"
+
+          echo "Updated $ENV_FILE:"
+          grep -E "(apiUrl|signalRUrl)" "$ENV_FILE"
+
       - name: Run linting
         run: npm run lint --if-present
         continue-on-error: true
@@ -78,15 +188,15 @@ jobs:
         run: npm run typecheck
 
       - name: Build Angular app
-        run: npm run build:prod
+        run: npm run build -- --configuration ${{ needs.fetch-azure-config.outputs.build_config }}
 
   # ===========================================================================
   # Build Linux (Ubuntu)
   # ===========================================================================
   build-linux:
-    name: Build Linux
+    name: Build Linux (${{ needs.fetch-azure-config.outputs.environment }})
     runs-on: ubuntu-latest
-    needs: build-and-test
+    needs: [fetch-azure-config, build-and-test]
     if: github.event_name == 'push' || github.event.inputs.create_release == 'true'
 
     permissions:
@@ -106,8 +216,32 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Configure environment URLs
+        run: |
+          ENV="${{ needs.fetch-azure-config.outputs.environment }}"
+          SWA_URL="${{ needs.fetch-azure-config.outputs.static_web_app_url }}"
+          APP_URL="${{ needs.fetch-azure-config.outputs.app_service_url }}"
+
+          echo "Configuring environment for: $ENV"
+          echo "  API URL: https://$SWA_URL/api"
+          echo "  SignalR URL: https://$APP_URL/hubs"
+
+          # Determine which environment file to update
+          if [ "$ENV" == "prd" ]; then
+            ENV_FILE="src/environments/environment.production.ts"
+          else
+            ENV_FILE="src/environments/environment.$ENV.ts"
+          fi
+
+          # Update the environment file with actual URLs
+          sed -i "s|apiUrl:.*|apiUrl: 'https://$SWA_URL/api',|" "$ENV_FILE"
+          sed -i "s|signalRUrl:.*|signalRUrl: 'https://$APP_URL/hubs',|" "$ENV_FILE"
+
+          echo "Updated $ENV_FILE:"
+          grep -E "(apiUrl|signalRUrl)" "$ENV_FILE"
+
       - name: Build Angular app
-        run: npm run build:prod
+        run: npm run build -- --configuration ${{ needs.fetch-azure-config.outputs.build_config }}
 
       - name: Generate icons
         run: |
@@ -133,7 +267,7 @@ jobs:
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: linux-build
+          name: linux-build-${{ needs.fetch-azure-config.outputs.environment }}
           path: |
             clients/display/release/*.AppImage
             clients/display/release/*.deb
@@ -145,9 +279,9 @@ jobs:
   # Build Windows
   # ===========================================================================
   build-windows:
-    name: Build Windows
+    name: Build Windows (${{ needs.fetch-azure-config.outputs.environment }})
     runs-on: windows-latest
-    needs: build-and-test
+    needs: [fetch-azure-config, build-and-test]
     if: github.event_name == 'push' || github.event.inputs.create_release == 'true'
 
     permissions:
@@ -167,8 +301,39 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Configure environment URLs
+        shell: pwsh
+        run: |
+          $ENV = "${{ needs.fetch-azure-config.outputs.environment }}"
+          $SWA_URL = "${{ needs.fetch-azure-config.outputs.static_web_app_url }}"
+          $APP_URL = "${{ needs.fetch-azure-config.outputs.app_service_url }}"
+
+          Write-Host "Configuring environment for: $ENV"
+          Write-Host "  API URL: https://$SWA_URL/api"
+          Write-Host "  SignalR URL: https://$APP_URL/hubs"
+
+          # Determine which environment file to update
+          if ($ENV -eq "prd") {
+            $ENV_FILE = "src/environments/environment.production.ts"
+          } else {
+            $ENV_FILE = "src/environments/environment.$ENV.ts"
+          }
+
+          # Read the file content
+          $content = Get-Content $ENV_FILE -Raw
+
+          # Update the URLs
+          $content = $content -replace "apiUrl:.*", "apiUrl: 'https://$SWA_URL/api',"
+          $content = $content -replace "signalRUrl:.*", "signalRUrl: 'https://$APP_URL/hubs',"
+
+          # Write back
+          Set-Content $ENV_FILE $content
+
+          Write-Host "Updated $ENV_FILE"
+          Get-Content $ENV_FILE | Select-String -Pattern "(apiUrl|signalRUrl)"
+
       - name: Build Angular app
-        run: npm run build:prod
+        run: npm run build -- --configuration ${{ needs.fetch-azure-config.outputs.build_config }}
 
       - name: Generate icons
         shell: pwsh
@@ -203,7 +368,7 @@ jobs:
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: windows-build
+          name: windows-build-${{ needs.fetch-azure-config.outputs.environment }}
           path: |
             clients/display/release/*.exe
             clients/display/release/*.msi
@@ -214,9 +379,9 @@ jobs:
   # Build macOS (Intel x64)
   # ===========================================================================
   build-macos-intel:
-    name: Build macOS (Intel)
+    name: Build macOS Intel (${{ needs.fetch-azure-config.outputs.environment }})
     runs-on: macos-15  # Intel runner (macos-13 deprecated)
-    needs: build-and-test
+    needs: [fetch-azure-config, build-and-test]
     if: github.event_name == 'push' || github.event.inputs.create_release == 'true'
 
     permissions:
@@ -236,8 +401,32 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Configure environment URLs
+        run: |
+          ENV="${{ needs.fetch-azure-config.outputs.environment }}"
+          SWA_URL="${{ needs.fetch-azure-config.outputs.static_web_app_url }}"
+          APP_URL="${{ needs.fetch-azure-config.outputs.app_service_url }}"
+
+          echo "Configuring environment for: $ENV"
+          echo "  API URL: https://$SWA_URL/api"
+          echo "  SignalR URL: https://$APP_URL/hubs"
+
+          # Determine which environment file to update
+          if [ "$ENV" == "prd" ]; then
+            ENV_FILE="src/environments/environment.production.ts"
+          else
+            ENV_FILE="src/environments/environment.$ENV.ts"
+          fi
+
+          # Update the environment file with actual URLs (macOS sed syntax)
+          sed -i '' "s|apiUrl:.*|apiUrl: 'https://$SWA_URL/api',|" "$ENV_FILE"
+          sed -i '' "s|signalRUrl:.*|signalRUrl: 'https://$APP_URL/hubs',|" "$ENV_FILE"
+
+          echo "Updated $ENV_FILE:"
+          grep -E "(apiUrl|signalRUrl)" "$ENV_FILE"
+
       - name: Build Angular app
-        run: npm run build:prod
+        run: npm run build -- --configuration ${{ needs.fetch-azure-config.outputs.build_config }}
 
       - name: Generate icons
         run: |
@@ -281,7 +470,7 @@ jobs:
       - name: Upload macOS Intel artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: macos-intel-build
+          name: macos-intel-build-${{ needs.fetch-azure-config.outputs.environment }}
           path: |
             clients/display/release/*-x64.dmg
             clients/display/release/*-x64.zip
@@ -293,9 +482,9 @@ jobs:
   # Build macOS (Apple Silicon arm64)
   # ===========================================================================
   build-macos-arm:
-    name: Build macOS (Apple Silicon)
+    name: Build macOS ARM (${{ needs.fetch-azure-config.outputs.environment }})
     runs-on: macos-14  # Apple Silicon runner
-    needs: build-and-test
+    needs: [fetch-azure-config, build-and-test]
     if: github.event_name == 'push' || github.event.inputs.create_release == 'true'
 
     permissions:
@@ -315,8 +504,32 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Configure environment URLs
+        run: |
+          ENV="${{ needs.fetch-azure-config.outputs.environment }}"
+          SWA_URL="${{ needs.fetch-azure-config.outputs.static_web_app_url }}"
+          APP_URL="${{ needs.fetch-azure-config.outputs.app_service_url }}"
+
+          echo "Configuring environment for: $ENV"
+          echo "  API URL: https://$SWA_URL/api"
+          echo "  SignalR URL: https://$APP_URL/hubs"
+
+          # Determine which environment file to update
+          if [ "$ENV" == "prd" ]; then
+            ENV_FILE="src/environments/environment.production.ts"
+          else
+            ENV_FILE="src/environments/environment.$ENV.ts"
+          fi
+
+          # Update the environment file with actual URLs (macOS sed syntax)
+          sed -i '' "s|apiUrl:.*|apiUrl: 'https://$SWA_URL/api',|" "$ENV_FILE"
+          sed -i '' "s|signalRUrl:.*|signalRUrl: 'https://$APP_URL/hubs',|" "$ENV_FILE"
+
+          echo "Updated $ENV_FILE:"
+          grep -E "(apiUrl|signalRUrl)" "$ENV_FILE"
+
       - name: Build Angular app
-        run: npm run build:prod
+        run: npm run build -- --configuration ${{ needs.fetch-azure-config.outputs.build_config }}
 
       - name: Generate icons
         run: |
@@ -360,7 +573,7 @@ jobs:
       - name: Upload macOS ARM artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: macos-arm-build
+          name: macos-arm-build-${{ needs.fetch-azure-config.outputs.environment }}
           path: |
             clients/display/release/*-arm64.dmg
             clients/display/release/*-arm64.zip
@@ -374,7 +587,7 @@ jobs:
   release:
     name: Create Release
     runs-on: ubuntu-latest
-    needs: [build-linux, build-windows, build-macos-intel, build-macos-arm]
+    needs: [fetch-azure-config, build-linux, build-windows, build-macos-intel, build-macos-arm]
     if: startsWith(github.ref, 'refs/tags/display-v') || github.event.inputs.create_release == 'true'
 
     permissions:
@@ -395,12 +608,13 @@ jobs:
       - name: Determine version
         id: version
         run: |
+          ENV="${{ needs.fetch-azure-config.outputs.environment }}"
           if [[ "${{ github.event.inputs.version }}" != "" ]]; then
             echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
           elif [[ "${{ github.ref }}" == refs/tags/display-v* ]]; then
             echo "version=${GITHUB_REF#refs/tags/display-v}" >> $GITHUB_OUTPUT
           else
-            echo "version=$(date +'%Y%m%d')-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+            echo "version=$(date +'%Y%m%d')-$(git rev-parse --short HEAD)-$ENV" >> $GITHUB_OUTPUT
           fi
 
       - name: Create Release
@@ -412,12 +626,15 @@ jobs:
           prerelease: ${{ contains(steps.version.outputs.version, 'beta') || contains(steps.version.outputs.version, 'alpha') }}
           generate_release_notes: true
           files: |
-            artifacts/linux-build/*
-            artifacts/windows-build/*
-            artifacts/macos-intel-build/*
-            artifacts/macos-arm-build/*
+            artifacts/linux-build-${{ needs.fetch-azure-config.outputs.environment }}/*
+            artifacts/windows-build-${{ needs.fetch-azure-config.outputs.environment }}/*
+            artifacts/macos-intel-build-${{ needs.fetch-azure-config.outputs.environment }}/*
+            artifacts/macos-arm-build-${{ needs.fetch-azure-config.outputs.environment }}/*
           body: |
             ## Luminous Display v${{ steps.version.outputs.version }}
+
+            **Environment:** ${{ needs.fetch-azure-config.outputs.environment }}
+            **API Endpoint:** https://${{ needs.fetch-azure-config.outputs.static_web_app_url }}/api
 
             ### Downloads
 

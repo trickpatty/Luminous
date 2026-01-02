@@ -83,6 +83,27 @@
               ],
               "outputHashing": "all"
             },
+            "stg": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "750kB",
+                  "maximumError": "1.5MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "16kB",
+                  "maximumError": "24kB"
+                }
+              ],
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.stg.ts"
+                }
+              ],
+              "outputHashing": "all"
+            },
             "development": {
               "optimization": false,
               "extractLicenses": false,
@@ -99,6 +120,9 @@
             },
             "dev": {
               "buildTarget": "display:build:dev"
+            },
+            "stg": {
+              "buildTarget": "display:build:stg"
             },
             "development": {
               "buildTarget": "display:build:development"
