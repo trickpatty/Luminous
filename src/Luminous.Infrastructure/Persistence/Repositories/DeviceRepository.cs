@@ -18,10 +18,9 @@ public sealed class DeviceRepository : CosmosRepositoryBase<Device>, IDeviceRepo
 
     protected override PartitionKey GetPartitionKey(Device entity)
     {
-        // Unlinked devices don't have a family ID yet
-        return string.IsNullOrEmpty(entity.FamilyId)
-            ? new PartitionKey(entity.Id)
-            : new PartitionKey(entity.FamilyId);
+        // For unlinked devices, FamilyId is set to the device's own ID
+        // For linked devices, FamilyId is the actual family ID
+        return new PartitionKey(entity.FamilyId);
     }
 
     protected override string GetPartitionKeyPath() => "/familyId";
@@ -59,5 +58,32 @@ public sealed class DeviceRepository : CosmosRepositoryBase<Device>, IDeviceRepo
             .WithParameter("@threshold", threshold);
 
         return await QueryAsync(query, cancellationToken: cancellationToken);
+    }
+
+    public async Task<Device> MoveToFamilyAsync(Device device, string oldPartitionKey, CancellationToken cancellationToken = default)
+    {
+        var container = await GetContainerAsync(cancellationToken);
+
+        // CosmosDB doesn't support changing partition keys, so we delete and recreate
+        // Use a transactional batch to ensure atomicity within the same partition won't work here
+        // since we're moving between partitions. We'll delete first, then create.
+
+        // Delete the old document from the old partition
+        await container.DeleteItemAsync<Device>(
+            device.Id,
+            new PartitionKey(oldPartitionKey),
+            cancellationToken: cancellationToken);
+
+        Logger.LogDebug("Deleted device {DeviceId} from old partition {OldPartition}", device.Id, oldPartitionKey);
+
+        // Create the device in the new partition (with the new FamilyId)
+        var response = await container.CreateItemAsync(
+            device,
+            GetPartitionKey(device),
+            cancellationToken: cancellationToken);
+
+        Logger.LogDebug("Created device {DeviceId} in new partition {NewPartition}", device.Id, device.FamilyId);
+
+        return response.Resource;
     }
 }
