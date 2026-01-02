@@ -123,29 +123,38 @@ Each family represents a **tenant** with complete data isolation:
 
 #### Device Linking Flow
 
+The linking flow uses a "device shows code, user enters code" pattern. This ensures that:
+- The display (unauthenticated) can request a code without credentials
+- Only an authenticated family admin can complete the linking
+- The code is visible on the physical display, preventing remote hijacking
+
 ```
 +------------------+                    +------------------+
-|   DISPLAY APP    |                    |    MOBILE APP    |
+|   DISPLAY APP    |                    |   WEB/MOBILE APP |
 +------------------+                    +------------------+
         |                                       |
-        | 1. Display shows                      |
-        |    6-digit link code                  |
+        | 1. User taps "Get Link Code"          |
+        |    on the display                     |
+        |                                       |
+        | 2. Display shows 6-digit code         |
         |    (expires in 15 min)                |
         |                                       |
-        |                               2. User logs in
+        |                               3. Admin logs in
         |                                  via Azure AD B2C
         |                                       |
-        |                               3. User enters
-        |                                  link code
+        |                               4. Admin clicks
+        |                                  "Link New Device"
         |                                       |
-        |       4. API validates code           |
+        |                               5. Admin enters code
+        |                                  from display screen
+        |                                       |
+        |       6. API validates code           |
         |          and links device             |
-        |          to family                    |
+        |          to admin's family            |
         |<--------------------------------------|
         |                                       |
-        | 5. Display receives                   |
-        |    device token and                   |
-        |    syncs family data                  |
+        | 7. Display receives device token      |
+        |    and syncs family data              |
         |                                       |
 +------------------+                    +------------------+
 ```
