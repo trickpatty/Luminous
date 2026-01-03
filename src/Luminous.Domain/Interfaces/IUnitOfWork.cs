@@ -51,6 +51,11 @@ public interface IUnitOfWork : IDisposable
     IRefreshTokenRepository RefreshTokens { get; }
 
     /// <summary>
+    /// Gets the calendar connection repository.
+    /// </summary>
+    ICalendarConnectionRepository CalendarConnections { get; }
+
+    /// <summary>
     /// Saves all pending changes.
     /// </summary>
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

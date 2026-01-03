@@ -17,6 +17,7 @@
     <PackageReference Include="Fido2.AspNet" />
     <PackageReference Include="Serilog.AspNetCore" />
     <PackageReference Include="Serilog.Sinks.ApplicationInsights" />
+    <PackageReference Include="Ical.Net" />
   </ItemGroup>
 
   <ItemGroup>

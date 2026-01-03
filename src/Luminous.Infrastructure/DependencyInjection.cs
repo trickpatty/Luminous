@@ -1,5 +1,8 @@
 using Luminous.Application.Common.Interfaces;
 using Luminous.Domain.Interfaces;
+using Luminous.Infrastructure.Calendar.Configuration;
+using Luminous.Infrastructure.Calendar.Providers;
+using Luminous.Infrastructure.Calendar.Services;
 using Luminous.Infrastructure.Persistence;
 using Luminous.Infrastructure.Persistence.Configuration;
 using Luminous.Infrastructure.Persistence.Repositories;
@@ -42,6 +45,24 @@ public static class DependencyInjection
 
         // Register services
         services.AddSingleton<IDateTimeService, DateTimeService>();
+
+        // Configure Calendar settings
+        services.Configure<CalendarSettings>(configuration.GetSection(CalendarSettings.SectionName));
+
+        // Register Calendar providers
+        services.AddHttpClient<GoogleCalendarProvider>();
+        services.AddHttpClient<MicrosoftCalendarProvider>();
+        services.AddHttpClient<IcsCalendarProvider>();
+
+        services.AddScoped<ICalendarProvider, GoogleCalendarProvider>();
+        services.AddScoped<ICalendarProvider, MicrosoftCalendarProvider>();
+        services.AddScoped<ICalendarProvider, IcsCalendarProvider>();
+
+        // Register Calendar sync service
+        services.AddScoped<ICalendarSyncService, CalendarSyncService>();
+
+        // Register CalendarConnection repository
+        services.AddScoped<ICalendarConnectionRepository, CalendarConnectionRepository>();
 
         return services;
     }
