@@ -244,12 +244,21 @@ function setupShortcuts() {
     });
   }
 
-  // Refresh shortcut
-  globalShortcut.register('CommandOrControl+R', () => {
+  // Refresh shortcut - reload the app properly
+  const refreshRegistered = globalShortcut.register('CommandOrControl+R', () => {
     if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.reload();
+      // Reload by loading the original URL/file to ensure proper initialization
+      const isDev = process.env.LUMINOUS_DEV === 'true';
+      if (isDev) {
+        mainWindow.loadURL('http://localhost:4200');
+      } else {
+        mainWindow.loadFile(path.join(__dirname, '../dist/display/browser/index.html'));
+      }
     }
   });
+  if (!refreshRegistered) {
+    console.warn('Failed to register Ctrl+R shortcut');
+  }
 
   // Toggle fullscreen (dev mode only)
   if (CONFIG.kiosk.allowDevTools) {
@@ -340,6 +349,10 @@ function setupIPC() {
     if (pin === CONFIG.kiosk.exitPin) {
       console.log('Admin exit verified');
       app.isQuitting = true;
+      // Destroy the window first to ensure clean exit from kiosk mode
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.destroy();
+      }
       setTimeout(() => app.quit(), 100);
       return true;
     }
@@ -423,7 +436,8 @@ app.on('window-all-closed', () => {
     return;
   }
 
-  if (process.platform !== 'darwin') {
+  // In kiosk mode, always quit regardless of platform
+  if (CONFIG.kiosk.enabled || process.platform !== 'darwin') {
     app.quit();
   }
 });

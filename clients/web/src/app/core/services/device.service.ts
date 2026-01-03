@@ -136,16 +136,18 @@ export class DeviceService {
 
   /**
    * Unlink a device from the family
+   * Note: The API returns 204 NoContent and deletes the device
    */
-  unlinkDevice(familyId: string, deviceId: string): Observable<Device> {
+  unlinkDevice(familyId: string, deviceId: string): Observable<void> {
     this._loading.set(true);
 
     return this.api
-      .post<Device>(`devices/family/${familyId}/${deviceId}/unlink`, {})
+      .post<void>(`devices/family/${familyId}/${deviceId}/unlink`, {})
       .pipe(
-        tap((device) => {
+        tap(() => {
+          // Remove the device from the list since the backend deletes it
           this._devices.update((devices) =>
-            devices.map((d) => (d.id === device.id ? device : d))
+            devices.filter((d) => d.id !== deviceId)
           );
           this._loading.set(false);
         }),

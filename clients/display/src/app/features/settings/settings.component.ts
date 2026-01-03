@@ -38,7 +38,7 @@ import { CanvasService } from '../../core/services/canvas.service';
               </div>
               <select
                 class="setting-select"
-                [(ngModel)]="settings().timeFormat"
+                [ngModel]="settings().timeFormat"
                 (ngModelChange)="updateSetting('timeFormat', $event)"
               >
                 <option value="12h">12 Hour</option>
@@ -90,7 +90,7 @@ import { CanvasService } from '../../core/services/canvas.service';
               </div>
               <select
                 class="setting-select"
-                [(ngModel)]="settings().defaultView"
+                [ngModel]="settings().defaultView"
                 (ngModelChange)="updateSetting('defaultView', $event)"
               >
                 <option value="schedule">Schedule</option>
@@ -183,7 +183,10 @@ import { CanvasService } from '../../core/services/canvas.service';
   `,
   styles: [`
     .settings-page {
+      height: 100vh;
       overflow-y: auto;
+      display: flex;
+      flex-direction: column;
     }
 
     .settings-header {
@@ -214,6 +217,8 @@ import { CanvasService } from '../../core/services/canvas.service';
     }
 
     .settings-content {
+      flex: 1;
+      overflow-y: auto;
       padding-bottom: var(--space-12);
     }
 
