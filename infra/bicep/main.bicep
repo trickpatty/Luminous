@@ -137,6 +137,7 @@ var cosmosContainers = [
   { name: 'otptokens', partitionKeyPath: '/email' }
   { name: 'refreshtokens', partitionKeyPath: '/userId' }
   { name: 'calendarconnections', partitionKeyPath: '/familyId' }
+  { name: 'oauthsessions', partitionKeyPath: '/familyId' }
 ]
 
 // =============================================================================

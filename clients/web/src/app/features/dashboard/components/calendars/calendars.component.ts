@@ -106,9 +106,9 @@ type ModalStep = 'provider' | 'oauth-loading' | 'select-calendars' | 'assign-mem
                       <span [innerHTML]="getProviderIcon(connection.provider)" class="w-5 h-5"></span>
                     </div>
                     <div class="min-w-0">
-                      <h3 class="text-sm font-semibold text-gray-900 truncate">{{ connection.displayName }}</h3>
+                      <h3 class="text-sm font-semibold text-gray-900 truncate">{{ connection.name }}</h3>
                       <p class="text-xs text-gray-500 truncate">
-                        {{ connection.accountEmail || calendarService.getProviderDisplayName(connection.provider) }}
+                        {{ connection.externalAccountId || calendarService.getProviderDisplayName(connection.provider) }}
                       </p>
                     </div>
                   </div>
@@ -210,9 +210,9 @@ type ModalStep = 'provider' | 'oauth-loading' | 'select-calendars' | 'assign-mem
                       </span>
                     }
                   </div>
-                  @if (connection.lastSyncAt) {
+                  @if (connection.lastSyncedAt) {
                     <span class="text-xs text-gray-500">
-                      {{ formatLastSync(connection.lastSyncAt) }}
+                      {{ formatLastSync(connection.lastSyncedAt) }}
                     </span>
                   }
                 </div>
@@ -637,8 +637,8 @@ type ModalStep = 'provider' | 'oauth-loading' | 'select-calendars' | 'assign-mem
                     <span [innerHTML]="getProviderIcon(selectedConnection()!.provider)" class="w-5 h-5"></span>
                   </div>
                   <div>
-                    <p class="font-medium text-gray-900">{{ selectedConnection()!.displayName }}</p>
-                    <p class="text-sm text-gray-500">{{ selectedConnection()!.accountEmail || calendarService.getProviderDisplayName(selectedConnection()!.provider) }}</p>
+                    <p class="font-medium text-gray-900">{{ selectedConnection()!.name }}</p>
+                    <p class="text-sm text-gray-500">{{ selectedConnection()!.externalAccountId || calendarService.getProviderDisplayName(selectedConnection()!.provider) }}</p>
                   </div>
                 </div>
 
@@ -709,12 +709,9 @@ type ModalStep = 'provider' | 'oauth-loading' | 'select-calendars' | 'assign-mem
                 </div>
 
                 <!-- Last Sync Info -->
-                @if (selectedConnection()!.lastSyncAt) {
+                @if (selectedConnection()!.lastSyncedAt) {
                   <div class="text-sm text-gray-500">
-                    Last synced: {{ formatLastSync(selectedConnection()!.lastSyncAt!) }}
-                    @if (selectedConnection()!.lastSyncEventCount !== undefined) {
-                      <span class="ml-1">({{ selectedConnection()!.lastSyncEventCount }} events)</span>
-                    }
+                    Last synced: {{ formatLastSync(selectedConnection()!.lastSyncedAt!) }}
                   </div>
                 }
               </div>
@@ -744,7 +741,7 @@ type ModalStep = 'provider' | 'oauth-loading' | 'select-calendars' | 'assign-mem
             <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6" (click)="$event.stopPropagation()">
               <h3 class="text-lg font-semibold text-gray-900 mb-2">Disconnect Calendar?</h3>
               <p class="text-sm text-gray-600 mb-4">
-                Are you sure you want to disconnect <strong>{{ selectedConnection()?.displayName }}</strong>?
+                Are you sure you want to disconnect <strong>{{ selectedConnection()?.name }}</strong>?
                 Events from this calendar will no longer appear on the family display.
               </p>
               <p class="text-sm text-gray-500 mb-6">
@@ -1067,50 +1064,38 @@ export class CalendarsComponent implements OnInit {
   // Create Connections
   createConnections(): void {
     const familyId = this.authService.user()?.familyId;
-    const provider = this.selectedProvider();
-    if (!familyId || !provider) return;
+    const sessionId = this.calendarService.pendingSessionId();
+    if (!familyId || !sessionId) return;
 
     this.creating.set(true);
 
     const calendars = this.selectedCalendars();
     const assignments = this.calendarMemberAssignments();
-    const accountEmail = this.calendarService.pendingAccountEmail();
 
-    // Create connections sequentially
-    let completed = 0;
-    const createNext = () => {
-      if (completed >= calendars.length) {
-        this.creating.set(false);
-        this.modalStep.set('success');
-        this.calendarService.clearPendingOAuth();
-        return;
-      }
-
-      const calendar = calendars[completed];
-      const memberIds = assignments.get(calendar.id) || [];
-
-      this.calendarService
-        .createConnection(familyId, {
-          provider,
-          displayName: calendar.name,
-          externalCalendarId: calendar.id,
-          externalCalendarName: calendar.name,
-          calendarColor: calendar.color,
-          assignedMemberIds: memberIds,
-        })
-        .subscribe({
-          next: () => {
-            completed++;
-            createNext();
-          },
-          error: (err) => {
-            this.creating.set(false);
-            this.error.set(err.message || `Failed to connect ${calendar.name}`);
-          },
-        });
+    // Create all connections at once using the session-based API
+    const request = {
+      sessionId,
+      calendars: calendars.map((calendar) => ({
+        externalCalendarId: calendar.id,
+        displayName: calendar.name,
+        color: calendar.color,
+        assignedMemberIds: assignments.get(calendar.id) || [],
+      })),
     };
 
-    createNext();
+    this.calendarService
+      .createConnectionsFromSession(familyId, request)
+      .subscribe({
+        next: () => {
+          this.creating.set(false);
+          this.modalStep.set('success');
+          this.calendarService.clearPendingOAuth();
+        },
+        error: (err) => {
+          this.creating.set(false);
+          this.error.set(err.message || 'Failed to connect calendars');
+        },
+      });
   }
 
   // ICS Connection
@@ -1140,7 +1125,7 @@ export class CalendarsComponent implements OnInit {
     this.calendarService.validateIcsUrl(familyId, url).subscribe({
       next: (result) => {
         this.validatingIcs.set(false);
-        if (!result.valid) {
+        if (!result.isValid) {
           this.icsError.set(result.error || 'Invalid calendar URL');
           return;
         }
@@ -1150,7 +1135,7 @@ export class CalendarsComponent implements OnInit {
         this.calendarService
           .createConnection(familyId, {
             provider: CalendarProvider.IcsUrl,
-            displayName: this.icsCalendarName,
+            name: this.icsCalendarName,
             icsUrl: url,
             assignedMemberIds: this.icsMemberIds(),
           })
@@ -1209,7 +1194,7 @@ export class CalendarsComponent implements OnInit {
   openEditModal(connection: CalendarConnection): void {
     this.openMenuId.set(null);
     this.selectedConnection.set(connection);
-    this.editDisplayName = connection.displayName;
+    this.editDisplayName = connection.name;
     this.editMemberIds.set([...connection.assignedMemberIds]);
     this.editSyncPastDays = connection.syncSettings.syncPastDays;
     this.editSyncFutureDays = connection.syncSettings.syncFutureDays;
@@ -1239,7 +1224,7 @@ export class CalendarsComponent implements OnInit {
 
     this.calendarService
       .updateConnection(familyId, connection.id, {
-        displayName: this.editDisplayName,
+        name: this.editDisplayName,
         assignedMemberIds: this.editMemberIds(),
         syncSettings: {
           syncPastDays: this.editSyncPastDays,

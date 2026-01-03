@@ -9,6 +9,7 @@ import {
   OAuthCompleteRequest,
   OAuthCompleteResponse,
   CreateCalendarConnectionRequest,
+  CreateConnectionsFromSessionRequest,
   UpdateCalendarConnectionRequest,
   SyncCalendarResponse,
   ValidateIcsUrlResponse,
@@ -29,6 +30,7 @@ export class CalendarConnectionService {
   private readonly _loading = signal(false);
   private readonly _error = signal<string | null>(null);
   private readonly _oauthState = signal<string | null>(null);
+  private readonly _pendingSessionId = signal<string | null>(null);
   private readonly _pendingCalendars = signal<ExternalCalendarInfo[]>([]);
   private readonly _pendingAccountEmail = signal<string | null>(null);
   private readonly _syncing = signal<Set<string>>(new Set());
@@ -38,6 +40,7 @@ export class CalendarConnectionService {
   readonly loading = this._loading.asReadonly();
   readonly error = this._error.asReadonly();
   readonly oauthState = this._oauthState.asReadonly();
+  readonly pendingSessionId = this._pendingSessionId.asReadonly();
   readonly pendingCalendars = this._pendingCalendars.asReadonly();
   readonly pendingAccountEmail = this._pendingAccountEmail.asReadonly();
   readonly syncing = this._syncing.asReadonly();
@@ -119,6 +122,7 @@ export class CalendarConnectionService {
       )
       .pipe(
         tap((response) => {
+          this._pendingSessionId.set(response.sessionId);
           this._pendingCalendars.set(response.calendars);
           this._pendingAccountEmail.set(response.accountEmail);
           this._oauthState.set(null);
@@ -127,6 +131,34 @@ export class CalendarConnectionService {
         catchError((error) => {
           this._error.set(error.message || 'Failed to complete OAuth flow');
           this._oauthState.set(null);
+          this._loading.set(false);
+          throw error;
+        })
+      );
+  }
+
+  /**
+   * Create calendar connections from an OAuth session
+   */
+  createConnectionsFromSession(
+    familyId: string,
+    request: CreateConnectionsFromSessionRequest
+  ): Observable<CalendarConnection[]> {
+    this._loading.set(true);
+    this._error.set(null);
+
+    return this.api
+      .post<CalendarConnection[]>(
+        `calendar-connections/family/${familyId}/oauth/connections`,
+        request
+      )
+      .pipe(
+        tap((connections) => {
+          this._connections.update((existing) => [...existing, ...connections]);
+          this._loading.set(false);
+        }),
+        catchError((error) => {
+          this._error.set(error.message || 'Failed to create calendar connections');
           this._loading.set(false);
           throw error;
         })
@@ -293,6 +325,7 @@ export class CalendarConnectionService {
    */
   clearPendingOAuth(): void {
     this._oauthState.set(null);
+    this._pendingSessionId.set(null);
     this._pendingCalendars.set([]);
     this._pendingAccountEmail.set(null);
   }
@@ -312,6 +345,7 @@ export class CalendarConnectionService {
     this._loading.set(false);
     this._error.set(null);
     this._oauthState.set(null);
+    this._pendingSessionId.set(null);
     this._pendingCalendars.set([]);
     this._pendingAccountEmail.set(null);
     this._syncing.set(new Set());

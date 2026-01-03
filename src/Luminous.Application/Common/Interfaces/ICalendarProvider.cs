@@ -53,6 +53,13 @@ public interface ICalendarProvider
     Task RevokeTokensAsync(OAuthTokens tokens);
 
     /// <summary>
+    /// Gets the account email/identifier for the authenticated user.
+    /// </summary>
+    /// <param name="tokens">The OAuth tokens.</param>
+    /// <returns>The account email address.</returns>
+    Task<string> GetAccountEmailAsync(OAuthTokens tokens);
+
+    /// <summary>
     /// Gets the list of calendars available for the authenticated user.
     /// </summary>
     /// <param name="tokens">The OAuth tokens.</param>

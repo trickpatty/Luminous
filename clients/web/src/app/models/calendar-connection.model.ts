@@ -3,7 +3,7 @@
  */
 export enum CalendarProvider {
   Google = 'Google',
-  Microsoft = 'Microsoft',
+  Microsoft = 'Outlook', // Backend uses 'Outlook' for Microsoft
   Apple = 'Apple',
   IcsUrl = 'IcsUrl',
 }
@@ -21,57 +21,70 @@ export enum CalendarConnectionStatus {
 }
 
 /**
- * Calendar sync settings
+ * Calendar sync settings (matches CalendarSyncSettingsDto)
  */
 export interface CalendarSyncSettings {
-  syncEnabled: boolean;
   syncIntervalMinutes: number;
   syncPastDays: number;
   syncFutureDays: number;
-  includeAllDayEvents: boolean;
-  includePrivateEvents: boolean;
+  importAllDayEvents: boolean;
+  importDeclinedEvents: boolean;
+  twoWaySync: boolean;
 }
 
 /**
- * Calendar connection entity
+ * Calendar connection entity (matches CalendarConnectionDto from backend)
  */
 export interface CalendarConnection {
   id: string;
   familyId: string;
+  name: string;
   provider: CalendarProvider;
   status: CalendarConnectionStatus;
-  displayName: string;
-  accountEmail?: string;
-  externalCalendarId?: string;
-  externalCalendarName?: string;
-  calendarColor?: string;
-  icsUrl?: string;
+  externalAccountId?: string;
   assignedMemberIds: string[];
-  syncSettings: CalendarSyncSettings;
-  lastSyncAt?: string;
-  lastSyncEventCount?: number;
+  color?: string;
+  isEnabled: boolean;
+  isReadOnly: boolean;
+  lastSyncedAt?: string;
+  nextSyncAt?: string;
   lastSyncError?: string;
-  syncToken?: string;
+  consecutiveFailures: number;
+  syncSettings: CalendarSyncSettings;
   createdAt: string;
-  createdBy: string;
-  updatedAt?: string;
 }
 
 /**
- * External calendar info (from provider)
+ * Calendar connection summary (lighter version)
+ */
+export interface CalendarConnectionSummary {
+  id: string;
+  name: string;
+  provider: CalendarProvider;
+  status: CalendarConnectionStatus;
+  isEnabled: boolean;
+  color?: string;
+  lastSyncedAt?: string;
+}
+
+/**
+ * External calendar info (from provider, matches ExternalCalendarInfo from backend)
  */
 export interface ExternalCalendarInfo {
   id: string;
   name: string;
+  description?: string;
   color?: string;
+  isReadOnly: boolean;
   isPrimary: boolean;
-  accessRole: string;
+  timeZone?: string;
 }
 
 /**
- * OAuth start response
+ * OAuth initiate response (matches OAuthInitiateResponse from backend)
  */
 export interface OAuthStartResponse {
+  sessionId: string;
   authorizationUrl: string;
   state: string;
 }
@@ -86,33 +99,51 @@ export interface OAuthCompleteRequest {
 }
 
 /**
- * OAuth complete response with available calendars
+ * OAuth complete response (matches OAuthCompleteResponse from backend)
  */
 export interface OAuthCompleteResponse {
+  sessionId: string;
   accountEmail: string;
   calendars: ExternalCalendarInfo[];
 }
 
 /**
- * Create calendar connection request
+ * Request to create connections from an OAuth session
+ */
+export interface CreateConnectionsFromSessionRequest {
+  sessionId: string;
+  calendars: CreateConnectionFromSessionCalendar[];
+}
+
+/**
+ * Calendar to create from a session
+ */
+export interface CreateConnectionFromSessionCalendar {
+  externalCalendarId: string;
+  displayName: string;
+  color?: string;
+  assignedMemberIds: string[];
+}
+
+/**
+ * Create calendar connection request (for ICS only)
  */
 export interface CreateCalendarConnectionRequest {
+  name: string;
   provider: CalendarProvider;
-  displayName: string;
-  externalCalendarId?: string;
-  externalCalendarName?: string;
-  calendarColor?: string;
   icsUrl?: string;
   assignedMemberIds: string[];
-  syncSettings?: Partial<CalendarSyncSettings>;
+  color?: string;
 }
 
 /**
  * Update calendar connection request
  */
 export interface UpdateCalendarConnectionRequest {
-  displayName?: string;
+  name?: string;
   assignedMemberIds?: string[];
+  color?: string;
+  isEnabled?: boolean;
   syncSettings?: Partial<CalendarSyncSettings>;
 }
 
@@ -128,17 +159,10 @@ export interface SyncCalendarResponse {
 }
 
 /**
- * Validate ICS URL request
- */
-export interface ValidateIcsUrlRequest {
-  url: string;
-}
-
-/**
- * Validate ICS URL response
+ * Validate ICS URL response (matches ValidateIcsUrlResponse from backend)
  */
 export interface ValidateIcsUrlResponse {
-  valid: boolean;
+  isValid: boolean;
   calendarName?: string;
   eventCount?: number;
   error?: string;

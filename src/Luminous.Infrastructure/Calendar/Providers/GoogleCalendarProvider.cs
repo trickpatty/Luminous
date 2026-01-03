@@ -132,6 +132,18 @@ public sealed class GoogleCalendarProvider : ICalendarProvider
         }
     }
 
+    public async Task<string> GetAccountEmailAsync(OAuthTokens tokens)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "https://www.googleapis.com/oauth2/v2/userinfo");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
+
+        var response = await _httpClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+
+        var result = await response.Content.ReadFromJsonAsync<GoogleUserInfo>(JsonOptions);
+        return result?.Email ?? throw new InvalidOperationException("Failed to get account email");
+    }
+
     public async Task<IReadOnlyList<ExternalCalendarInfo>> GetCalendarsAsync(OAuthTokens tokens)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, $"{CalendarApiBaseUrl}/users/me/calendarList");
@@ -477,6 +489,11 @@ public sealed class GoogleCalendarProvider : ICalendarProvider
     {
         public string? Email { get; init; }
         public string? DisplayName { get; init; }
+    }
+
+    private sealed record GoogleUserInfo
+    {
+        public string? Email { get; init; }
     }
 
     #endregion

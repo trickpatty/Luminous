@@ -198,6 +198,38 @@ public sealed class CalendarConnection : Entity
     }
 
     /// <summary>
+    /// Sets the external calendar info (ID and account email).
+    /// </summary>
+    public void SetExternalCalendarInfo(string externalCalendarId, string externalAccountId)
+    {
+        if (string.IsNullOrWhiteSpace(externalCalendarId))
+            throw new ArgumentException("External calendar ID is required.", nameof(externalCalendarId));
+
+        ExternalCalendarId = externalCalendarId;
+        ExternalAccountId = externalAccountId;
+    }
+
+    /// <summary>
+    /// Sets the OAuth tokens for this connection.
+    /// </summary>
+    public void SetOAuthTokens(OAuthTokens tokens)
+    {
+        Tokens = tokens ?? throw new ArgumentNullException(nameof(tokens));
+    }
+
+    /// <summary>
+    /// Activates the connection (marks it ready for syncing).
+    /// </summary>
+    public void Activate()
+    {
+        if (RequiresOAuth && Tokens == null)
+            throw new InvalidOperationException("OAuth tokens must be set before activating");
+
+        Status = CalendarConnectionStatus.Active;
+        ScheduleNextSync();
+    }
+
+    /// <summary>
     /// Updates the OAuth tokens.
     /// </summary>
     public void UpdateTokens(OAuthTokens tokens)

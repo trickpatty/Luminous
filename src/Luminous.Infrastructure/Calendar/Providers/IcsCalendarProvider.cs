@@ -55,6 +55,11 @@ public sealed class IcsCalendarProvider : ICalendarProvider
         throw new NotSupportedException("ICS subscriptions do not require OAuth");
     }
 
+    public Task<string> GetAccountEmailAsync(OAuthTokens tokens)
+    {
+        throw new NotSupportedException("ICS subscriptions do not have accounts");
+    }
+
     public Task<IReadOnlyList<ExternalCalendarInfo>> GetCalendarsAsync(OAuthTokens tokens)
     {
         throw new NotSupportedException("ICS subscriptions do not have calendar lists");

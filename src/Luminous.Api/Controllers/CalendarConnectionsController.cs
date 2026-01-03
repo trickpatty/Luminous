@@ -220,6 +220,112 @@ public class CalendarConnectionsController : ApiControllerBase
         var result = await Mediator.Send(command);
         return OkResponse(result);
     }
+
+    // =========================================================================
+    // NEW SESSION-BASED OAUTH ENDPOINTS
+    // =========================================================================
+
+    /// <summary>
+    /// Initiates an OAuth flow to connect calendars from a provider.
+    /// Returns a session ID and authorization URL.
+    /// </summary>
+    /// <param name="familyId">The family ID.</param>
+    /// <param name="request">The OAuth initiation request.</param>
+    /// <returns>Session ID, authorization URL, and state.</returns>
+    [HttpPost("family/{familyId}/oauth/start")]
+    [Authorize(Policy = "FamilyAdmin")]
+    [ProducesResponseType(typeof(ApiResponse<OAuthInitiateResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<OAuthInitiateResponse>>> InitiateOAuth(
+        string familyId,
+        [FromBody] InitiateOAuthRequest request)
+    {
+        var command = new InitiateOAuthCommand
+        {
+            FamilyId = familyId,
+            Provider = request.Provider,
+            RedirectUri = request.RedirectUri
+        };
+        var result = await Mediator.Send(command);
+        return OkResponse(result);
+    }
+
+    /// <summary>
+    /// Completes an OAuth flow and returns the list of available calendars.
+    /// </summary>
+    /// <param name="familyId">The family ID.</param>
+    /// <param name="request">The OAuth completion request.</param>
+    /// <returns>Session ID, account email, and available calendars.</returns>
+    [HttpPost("family/{familyId}/oauth/complete")]
+    [Authorize(Policy = "FamilyAdmin")]
+    [ProducesResponseType(typeof(ApiResponse<OAuthCompleteResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<OAuthCompleteResponse>>> CompleteOAuthSession(
+        string familyId,
+        [FromBody] CompleteOAuthSessionRequest request)
+    {
+        var command = new CompleteOAuthSessionCommand
+        {
+            FamilyId = familyId,
+            Code = request.Code,
+            State = request.State,
+            RedirectUri = request.RedirectUri
+        };
+        var result = await Mediator.Send(command);
+        return OkResponse(result);
+    }
+
+    /// <summary>
+    /// Creates calendar connections from a completed OAuth session.
+    /// </summary>
+    /// <param name="familyId">The family ID.</param>
+    /// <param name="request">The connection creation request.</param>
+    /// <returns>The created connections.</returns>
+    [HttpPost("family/{familyId}/oauth/connections")]
+    [Authorize(Policy = "FamilyAdmin")]
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<CalendarConnectionDto>>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<CalendarConnectionDto>>>> CreateConnectionsFromSession(
+        string familyId,
+        [FromBody] CreateConnectionsFromSessionRequest request)
+    {
+        var command = new CreateConnectionsFromSessionCommand
+        {
+            FamilyId = familyId,
+            SessionId = request.SessionId,
+            Calendars = request.Calendars.Select(c => new CreateConnectionFromSessionRequest
+            {
+                ExternalCalendarId = c.ExternalCalendarId,
+                DisplayName = c.DisplayName,
+                Color = c.Color,
+                AssignedMemberIds = c.AssignedMemberIds
+            }).ToList()
+        };
+        var result = await Mediator.Send(command);
+        return CreatedResponse($"/api/calendar-connections/family/{familyId}", result);
+    }
+
+    /// <summary>
+    /// Validates an ICS URL before creating a connection.
+    /// </summary>
+    /// <param name="familyId">The family ID.</param>
+    /// <param name="request">The validation request.</param>
+    /// <returns>Validation result with calendar info if valid.</returns>
+    [HttpPost("family/{familyId}/validate-ics")]
+    [Authorize(Policy = "FamilyAdmin")]
+    [ProducesResponseType(typeof(ApiResponse<ValidateIcsUrlResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<ValidateIcsUrlResponse>>> ValidateIcsUrl(
+        string familyId,
+        [FromBody] ValidateIcsUrlRequest request)
+    {
+        var command = new ValidateIcsUrlCommand
+        {
+            FamilyId = familyId,
+            Url = request.Url
+        };
+        var result = await Mediator.Send(command);
+        return OkResponse(result);
+    }
 }
 
 /// <summary>
@@ -309,4 +415,98 @@ public record CompleteOAuthRequest
     /// The OAuth redirect URI (must match the one used in start).
     /// </summary>
     public required string RedirectUri { get; init; }
+}
+
+// =========================================================================
+// NEW SESSION-BASED OAUTH REQUEST DTOS
+// =========================================================================
+
+/// <summary>
+/// Request to initiate OAuth flow.
+/// </summary>
+public record InitiateOAuthRequest
+{
+    /// <summary>
+    /// The calendar provider to connect.
+    /// </summary>
+    public required CalendarProvider Provider { get; init; }
+
+    /// <summary>
+    /// The OAuth redirect URI.
+    /// </summary>
+    public required string RedirectUri { get; init; }
+}
+
+/// <summary>
+/// Request to complete OAuth session.
+/// </summary>
+public record CompleteOAuthSessionRequest
+{
+    /// <summary>
+    /// The authorization code from the OAuth provider.
+    /// </summary>
+    public required string Code { get; init; }
+
+    /// <summary>
+    /// The state parameter from the OAuth callback.
+    /// </summary>
+    public required string State { get; init; }
+
+    /// <summary>
+    /// The OAuth redirect URI (must match the one used in start).
+    /// </summary>
+    public required string RedirectUri { get; init; }
+}
+
+/// <summary>
+/// Request to create connections from an OAuth session.
+/// </summary>
+public record CreateConnectionsFromSessionRequest
+{
+    /// <summary>
+    /// The OAuth session ID.
+    /// </summary>
+    public required string SessionId { get; init; }
+
+    /// <summary>
+    /// The calendars to connect.
+    /// </summary>
+    public required List<CreateConnectionFromSessionCalendarRequest> Calendars { get; init; }
+}
+
+/// <summary>
+/// Calendar to connect from an OAuth session.
+/// </summary>
+public record CreateConnectionFromSessionCalendarRequest
+{
+    /// <summary>
+    /// External calendar ID from the provider.
+    /// </summary>
+    public required string ExternalCalendarId { get; init; }
+
+    /// <summary>
+    /// Display name for the calendar.
+    /// </summary>
+    public required string DisplayName { get; init; }
+
+    /// <summary>
+    /// Calendar color (hex code).
+    /// </summary>
+    public string? Color { get; init; }
+
+    /// <summary>
+    /// Family member IDs to assign this calendar to.
+    /// </summary>
+    public List<string> AssignedMemberIds { get; init; } = [];
+}
+
+/// <summary>
+/// Request to validate an ICS URL.
+/// </summary>
+public record ValidateIcsUrlRequest
+{
+    /// <summary>
+    /// The ICS URL to validate.
+    /// </summary>
+    public required string Url { get; init; }
 }

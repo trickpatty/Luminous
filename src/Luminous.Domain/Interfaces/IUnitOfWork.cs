@@ -56,6 +56,11 @@ public interface IUnitOfWork : IDisposable
     ICalendarConnectionRepository CalendarConnections { get; }
 
     /// <summary>
+    /// Gets the OAuth session repository.
+    /// </summary>
+    IOAuthSessionRepository OAuthSessions { get; }
+
+    /// <summary>
     /// Saves all pending changes.
     /// </summary>
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

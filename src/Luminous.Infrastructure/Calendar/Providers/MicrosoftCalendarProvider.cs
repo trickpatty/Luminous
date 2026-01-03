@@ -122,6 +122,18 @@ public sealed class MicrosoftCalendarProvider : ICalendarProvider
         return Task.CompletedTask;
     }
 
+    public async Task<string> GetAccountEmailAsync(OAuthTokens tokens)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"{GraphApiBaseUrl}/me");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
+
+        var response = await _httpClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+
+        var result = await response.Content.ReadFromJsonAsync<GraphUser>(JsonOptions);
+        return result?.Mail ?? result?.UserPrincipalName ?? throw new InvalidOperationException("Failed to get account email");
+    }
+
     public async Task<IReadOnlyList<ExternalCalendarInfo>> GetCalendarsAsync(OAuthTokens tokens)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, $"{GraphApiBaseUrl}/me/calendars");
@@ -539,6 +551,12 @@ public sealed class MicrosoftCalendarProvider : ICalendarProvider
     private sealed record GraphRemoved
     {
         public string? Reason { get; init; }
+    }
+
+    private sealed record GraphUser
+    {
+        public string? Mail { get; init; }
+        public string? UserPrincipalName { get; init; }
     }
 
     #endregion
