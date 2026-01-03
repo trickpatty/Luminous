@@ -1,6 +1,7 @@
 // Core services barrel export
 export { ApiService } from './api.service';
 export { AuthService } from './auth.service';
+export { CalendarConnectionService } from './calendar-connection.service';
 export { CanvasService, type CanvasPeriod, type CanvasPreference } from './canvas.service';
 export { DeviceService } from './device.service';
 export { FamilyService } from './family.service';

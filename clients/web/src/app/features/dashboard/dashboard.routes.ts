@@ -27,6 +27,14 @@ export const DASHBOARD_ROUTES: Routes = [
         title: 'Family Members - Luminous',
       },
       {
+        path: 'calendars',
+        loadComponent: () =>
+          import('./components/calendars/calendars.component').then(
+            (m) => m.CalendarsComponent
+          ),
+        title: 'Connected Calendars - Luminous',
+      },
+      {
         path: 'devices',
         loadComponent: () =>
           import('./components/devices/devices.component').then(
