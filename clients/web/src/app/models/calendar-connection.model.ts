@@ -1,11 +1,13 @@
 /**
- * Calendar provider type
+ * Calendar provider type (must match backend CalendarProvider enum)
  */
 export enum CalendarProvider {
   Google = 'Google',
-  Microsoft = 'Outlook', // Backend uses 'Outlook' for Microsoft
-  Apple = 'Apple',
+  Outlook = 'Outlook',
+  ICloud = 'ICloud',
+  CalDav = 'CalDav',
   IcsUrl = 'IcsUrl',
+  Internal = 'Internal',
 }
 
 /**

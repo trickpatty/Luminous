@@ -290,7 +290,7 @@ type ModalStep = 'provider' | 'oauth-loading' | 'select-calendars' | 'assign-mem
                     <button
                       type="button"
                       class="w-full flex items-center gap-4 p-4 border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-colors text-left"
-                      (click)="startOAuthFlow(CalendarProvider.Microsoft)"
+                      (click)="startOAuthFlow(CalendarProvider.Outlook)"
                     >
                       <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                         <svg class="w-5 h-5 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
@@ -852,28 +852,36 @@ export class CalendarsComponent implements OnInit {
 
   // Provider icons and colors
   getProviderBgColor(provider: CalendarProvider): string {
-    const colors: Record<CalendarProvider, string> = {
+    const colors: Partial<Record<CalendarProvider, string>> = {
       [CalendarProvider.Google]: 'bg-red-100 text-red-600',
-      [CalendarProvider.Microsoft]: 'bg-blue-100 text-blue-600',
-      [CalendarProvider.Apple]: 'bg-gray-100 text-gray-600',
+      [CalendarProvider.Outlook]: 'bg-blue-100 text-blue-600',
+      [CalendarProvider.ICloud]: 'bg-gray-100 text-gray-600',
+      [CalendarProvider.CalDav]: 'bg-green-100 text-green-600',
       [CalendarProvider.IcsUrl]: 'bg-purple-100 text-purple-600',
+      [CalendarProvider.Internal]: 'bg-primary-100 text-primary-600',
     };
     return colors[provider] || 'bg-gray-100 text-gray-600';
   }
 
   getProviderIcon(provider: CalendarProvider): string {
-    const icons: Record<CalendarProvider, string> = {
+    const icons: Partial<Record<CalendarProvider, string>> = {
       [CalendarProvider.Google]: `<svg viewBox="0 0 24 24" fill="currentColor">
         <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/>
       </svg>`,
-      [CalendarProvider.Microsoft]: `<svg viewBox="0 0 24 24" fill="currentColor">
+      [CalendarProvider.Outlook]: `<svg viewBox="0 0 24 24" fill="currentColor">
         <path d="M11.5,3v8.5H3V3H11.5z M11.5,21H3v-8.5h8.5V21z M12.5,3H21v8.5h-8.5V3z M21,12.5V21h-8.5v-8.5H21z"/>
       </svg>`,
-      [CalendarProvider.Apple]: `<svg viewBox="0 0 24 24" fill="currentColor">
+      [CalendarProvider.ICloud]: `<svg viewBox="0 0 24 24" fill="currentColor">
         <path d="M18.71,19.5C17.88,20.74 17,21.95 15.66,21.97C14.32,22 13.89,21.18 12.37,21.18C10.84,21.18 10.37,21.95 9.1,22C7.79,22.05 6.8,20.68 5.96,19.47C4.25,17 2.94,12.45 4.7,9.39C5.57,7.87 7.13,6.91 8.82,6.88C10.1,6.86 11.32,7.75 12.11,7.75C12.89,7.75 14.37,6.68 15.92,6.84C16.57,6.87 18.39,7.1 19.56,8.82C19.47,8.88 17.39,10.1 17.41,12.63C17.44,15.65 20.06,16.66 20.09,16.67C20.06,16.74 19.67,18.11 18.71,19.5M13,3.5C13.73,2.67 14.94,2.04 15.94,2C16.07,3.17 15.6,4.35 14.9,5.19C14.21,6.04 13.07,6.7 11.95,6.61C11.8,5.46 12.36,4.26 13,3.5Z"/>
+      </svg>`,
+      [CalendarProvider.CalDav]: `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
       </svg>`,
       [CalendarProvider.IcsUrl]: `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+      </svg>`,
+      [CalendarProvider.Internal]: `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>`,
     };
     return icons[provider] || '';

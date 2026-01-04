@@ -362,11 +362,13 @@ export class CalendarConnectionService {
    * Get provider display name
    */
   getProviderDisplayName(provider: CalendarProvider): string {
-    const names: Record<CalendarProvider, string> = {
+    const names: Partial<Record<CalendarProvider, string>> = {
       [CalendarProvider.Google]: 'Google Calendar',
-      [CalendarProvider.Microsoft]: 'Microsoft Outlook',
-      [CalendarProvider.Apple]: 'Apple iCloud',
+      [CalendarProvider.Outlook]: 'Microsoft Outlook',
+      [CalendarProvider.ICloud]: 'Apple iCloud',
+      [CalendarProvider.CalDav]: 'CalDAV',
       [CalendarProvider.IcsUrl]: 'Calendar URL',
+      [CalendarProvider.Internal]: 'Luminous Calendar',
     };
     return names[provider] || provider;
   }
