@@ -144,7 +144,7 @@ public sealed class IcsCalendarProvider : ICalendarProvider
 
         try
         {
-            var calendar = Calendar.Load(content);
+            var calendar = Ical.Net.Calendar.Load(content);
 
             foreach (var calEvent in calendar.Events)
             {

@@ -71,7 +71,7 @@ public sealed class CalendarSyncService : ICalendarSyncService
                     connection.ExternalCalendarId,
                     startDate,
                     endDate,
-                    result.FullSyncRequired ? null : connection.SyncToken);
+                    connection.SyncToken);
             }
 
             // Process the sync result
