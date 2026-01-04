@@ -95,7 +95,8 @@ public sealed class CreateConnectionsFromSessionCommandHandler
             throw new InvalidOperationException("OAuth session is not valid for connection creation");
         }
 
-        var userId = _currentUserService.UserId ?? session.CreatedBy;
+        var userId = _currentUserService.UserId ?? session.CreatedBy
+            ?? throw new InvalidOperationException("Unable to determine user for calendar connection");
         var connections = new List<CalendarConnectionDto>();
 
         foreach (var calendarRequest in request.Calendars)
