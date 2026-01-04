@@ -94,7 +94,7 @@ type ModalStep = 'provider' | 'oauth-loading' | 'select-calendars' | 'assign-mem
       @else {
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           @for (connection of connections(); track connection.id) {
-            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+            <div class="bg-white rounded-xl border border-gray-200 hover:shadow-md transition-shadow">
               <div class="p-5">
                 <!-- Header -->
                 <div class="flex items-start justify-between mb-4">
@@ -117,15 +117,16 @@ type ModalStep = 'provider' | 'oauth-loading' | 'select-calendars' | 'assign-mem
                     <div class="relative">
                       <button
                         type="button"
+                        data-menu-button
                         class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                        (click)="toggleMenu(connection.id)"
+                        (click)="toggleMenu(connection.id); $event.stopPropagation()"
                       >
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                           <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
                         </svg>
                       </button>
                       @if (openMenuId() === connection.id) {
-                        <div class="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+                        <div data-menu-dropdown class="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
                           <button
                             type="button"
                             class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
@@ -837,10 +838,26 @@ export class CalendarsComponent implements OnInit {
 
     // Listen for OAuth callback messages
     window.addEventListener('message', this.handleOAuthCallback.bind(this));
+
+    // Close menu when clicking outside
+    document.addEventListener('click', this.handleDocumentClick.bind(this));
   }
 
   ngOnDestroy(): void {
     window.removeEventListener('message', this.handleOAuthCallback.bind(this));
+    document.removeEventListener('click', this.handleDocumentClick.bind(this));
+  }
+
+  private handleDocumentClick(event: MouseEvent): void {
+    // Close menu if clicking outside of it
+    if (this.openMenuId() !== null) {
+      const target = event.target as HTMLElement;
+      const menuButton = target.closest('[data-menu-button]');
+      const menuDropdown = target.closest('[data-menu-dropdown]');
+      if (!menuButton && !menuDropdown) {
+        this.openMenuId.set(null);
+      }
+    }
   }
 
   private loadFamilyMembers(familyId: string): void {
