@@ -53,11 +53,6 @@ public class OAuthSession : Entity
     public bool IsCompleted { get; private set; }
 
     /// <summary>
-    /// User who initiated the OAuth flow.
-    /// </summary>
-    public string CreatedBy { get; private set; } = null!;
-
-    /// <summary>
     /// Creates a new OAuth session for initiating an OAuth flow.
     /// </summary>
     public static OAuthSession Create(
