@@ -11,6 +11,7 @@ namespace Luminous.Api.Controllers;
 /// <summary>
 /// Controller for managing calendar connections.
 /// </summary>
+[Route("api/calendar-connections")]
 public class CalendarConnectionsController : ApiControllerBase
 {
     /// <summary>
