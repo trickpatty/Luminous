@@ -25,7 +25,7 @@ public interface IOAuthSessionRepository
     /// <summary>
     /// Updates an existing OAuth session.
     /// </summary>
-    Task UpdateAsync(OAuthSession session, CancellationToken cancellationToken = default);
+    Task<OAuthSession> UpdateAsync(OAuthSession session, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes an OAuth session.
