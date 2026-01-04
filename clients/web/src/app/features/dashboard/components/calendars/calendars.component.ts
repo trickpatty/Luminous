@@ -1173,16 +1173,10 @@ export class CalendarsComponent implements OnInit {
 
     this.calendarService.syncConnection(familyId, connection.id).subscribe({
       next: (result) => {
-        this.toastService.show({
-          message: `Synced ${result.eventsAdded + result.eventsUpdated} events`,
-          variant: 'success',
-        });
+        this.toastService.success(`Synced ${result.eventsAdded + result.eventsUpdated} events`);
       },
       error: (err) => {
-        this.toastService.show({
-          message: err.message || 'Sync failed',
-          variant: 'error',
-        });
+        this.toastService.error(err.message || 'Sync failed');
       },
     });
   }
