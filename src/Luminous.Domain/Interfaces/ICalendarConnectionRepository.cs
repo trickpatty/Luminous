@@ -39,7 +39,7 @@ public interface ICalendarConnectionRepository : IRepository<CalendarConnection>
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets calendar connections that need to be synced (NextSyncAt <= now).
+    /// Gets calendar connections that need to be synced (NextSyncAt is less than or equal to now).
     /// </summary>
     Task<IReadOnlyList<CalendarConnection>> GetDueSyncAsync(
         DateTime now,

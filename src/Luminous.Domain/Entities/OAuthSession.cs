@@ -1,3 +1,4 @@
+using Luminous.Domain.Common;
 using Luminous.Domain.Enums;
 using Luminous.Domain.ValueObjects;
 
