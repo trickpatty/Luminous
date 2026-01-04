@@ -133,12 +133,14 @@ import { CardComponent, AvatarComponent, ButtonComponent, SpinnerComponent } fro
       <div class="mt-8">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
         <div class="flex flex-wrap gap-3">
-          <app-button variant="secondary">
-            <svg class="h-5 w-5 mr-2 -ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            Connect Calendar
-          </app-button>
+          <a routerLink="/dashboard/calendars">
+            <app-button variant="secondary">
+              <svg class="h-5 w-5 mr-2 -ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Connect Calendar
+            </app-button>
+          </a>
 
           <a routerLink="/dashboard/members">
             <app-button variant="secondary">
