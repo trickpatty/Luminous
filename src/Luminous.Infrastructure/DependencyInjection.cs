@@ -30,6 +30,9 @@ public static class DependencyInjection
         // Register Cosmos DB context
         services.AddSingleton<CosmosDbContext>();
 
+        // Register Cosmos DB initializer to ensure containers exist at startup
+        services.AddHostedService<CosmosDbInitializer>();
+
         // Register repositories
         services.AddScoped<IFamilyRepository, FamilyRepository>();
         services.AddScoped<IUserRepository, UserRepository>();

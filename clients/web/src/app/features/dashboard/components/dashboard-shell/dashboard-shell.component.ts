@@ -98,7 +98,7 @@ interface NavItem {
       </aside>
 
       <!-- Main content area -->
-      <div class="flex-1 flex flex-col min-w-0 pb-14 lg:pb-0">
+      <div class="flex-1 flex flex-col min-w-0 pb-20 lg:pb-0">
         <!-- Top header (mobile) -->
         <header class="sticky top-0 z-sticky bg-surface-primary border-b border-light lg:hidden">
           <div class="flex items-center justify-between h-14 px-4">
