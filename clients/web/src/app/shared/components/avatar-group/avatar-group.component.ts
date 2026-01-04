@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ContentChildren, QueryList, AfterContentInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AvatarComponent, AvatarSize, MemberColorName } from '../avatar/avatar.component';
 
@@ -13,8 +13,12 @@ export interface AvatarGroupItem {
   selector: 'app-avatar-group',
   standalone: true,
   imports: [CommonModule, AvatarComponent],
+  host: {
+    'style': 'display: contents;',
+  },
   template: `
     <div class="avatar-group" [attr.aria-label]="ariaLabel">
+      <!-- Support for items input -->
       @for (item of visibleItems; track $index) {
         <app-avatar
           [name]="item.name"
@@ -24,6 +28,8 @@ export interface AvatarGroupItem {
           [size]="size"
         />
       }
+      <!-- Support for content projection -->
+      <ng-content></ng-content>
       @if (overflowCount > 0) {
         <div
           [class]="overflowClasses"
@@ -35,17 +41,28 @@ export interface AvatarGroupItem {
     </div>
   `,
 })
-export class AvatarGroupComponent {
+export class AvatarGroupComponent implements AfterContentInit {
   @Input() items: AvatarGroupItem[] = [];
   @Input() max = 4;
   @Input() size: AvatarSize = 'md';
+
+  @ContentChildren(AvatarComponent) projectedAvatars!: QueryList<AvatarComponent>;
+
+  private projectedCount = 0;
+
+  ngAfterContentInit(): void {
+    this.projectedCount = this.projectedAvatars?.length ?? 0;
+  }
 
   get visibleItems(): AvatarGroupItem[] {
     return this.items.slice(0, this.max);
   }
 
   get overflowCount(): number {
-    return Math.max(0, this.items.length - this.max);
+    // Count overflow from either items input or projected content
+    const itemsOverflow = Math.max(0, this.items.length - this.max);
+    const projectedOverflow = Math.max(0, this.projectedCount - this.max);
+    return itemsOverflow || projectedOverflow;
   }
 
   get ariaLabel(): string {

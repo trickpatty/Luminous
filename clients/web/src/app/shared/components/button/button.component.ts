@@ -8,6 +8,9 @@ export type ButtonSize = 'sm' | 'md' | 'lg' | 'xl';
   selector: 'app-button',
   standalone: true,
   imports: [CommonModule],
+  host: {
+    'style': 'display: inline-block;',
+  },
   template: `
     <button
       [type]="type"

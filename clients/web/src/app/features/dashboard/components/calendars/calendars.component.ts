@@ -94,8 +94,8 @@ type ModalStep = 'provider' | 'oauth-loading' | 'select-calendars' | 'assign-mem
       @else {
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           @for (connection of connections(); track connection.id) {
-            <div class="bg-white rounded-xl border border-gray-200 hover:shadow-md transition-shadow">
-              <div class="p-5">
+            <div class="bg-white rounded-xl border border-gray-200 hover:shadow-md transition-shadow overflow-visible">
+              <div class="p-5 overflow-visible">
                 <!-- Header -->
                 <div class="flex items-start justify-between mb-4">
                   <div class="flex items-center gap-3">
@@ -114,19 +114,19 @@ type ModalStep = 'provider' | 'oauth-loading' | 'select-calendars' | 'assign-mem
                   </div>
                   <!-- Actions Menu -->
                   @if (canManageCalendars()) {
-                    <div class="relative">
+                    <div class="relative overflow-visible">
                       <button
                         type="button"
                         data-menu-button
-                        class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        class="flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                         (click)="toggleMenu(connection.id); $event.stopPropagation()"
                       >
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                           <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
                         </svg>
                       </button>
                       @if (openMenuId() === connection.id) {
-                        <div data-menu-dropdown class="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
+                        <div data-menu-dropdown class="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
                           <button
                             type="button"
                             class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
@@ -814,6 +814,10 @@ export class CalendarsComponent implements OnInit {
   // OAuth popup reference
   private oauthPopup: Window | null = null;
 
+  // Bound event handlers (stored for proper cleanup)
+  private boundHandleOAuthCallback = this.handleOAuthCallback.bind(this);
+  private boundHandleDocumentClick = this.handleDocumentClick.bind(this);
+
   // Computed
   connections = this.calendarService.connections;
   familyMembers = signal<User[]>([]);
@@ -837,15 +841,15 @@ export class CalendarsComponent implements OnInit {
     }
 
     // Listen for OAuth callback messages
-    window.addEventListener('message', this.handleOAuthCallback.bind(this));
+    window.addEventListener('message', this.boundHandleOAuthCallback);
 
     // Close menu when clicking outside
-    document.addEventListener('click', this.handleDocumentClick.bind(this));
+    document.addEventListener('click', this.boundHandleDocumentClick);
   }
 
   ngOnDestroy(): void {
-    window.removeEventListener('message', this.handleOAuthCallback.bind(this));
-    document.removeEventListener('click', this.handleDocumentClick.bind(this));
+    window.removeEventListener('message', this.boundHandleOAuthCallback);
+    document.removeEventListener('click', this.boundHandleDocumentClick);
   }
 
   private handleDocumentClick(event: MouseEvent): void {
