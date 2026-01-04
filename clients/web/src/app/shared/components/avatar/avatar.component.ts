@@ -21,6 +21,9 @@ export type MemberColorName = keyof typeof MEMBER_COLORS;
   selector: 'app-avatar',
   standalone: true,
   imports: [CommonModule],
+  host: {
+    'style': 'display: contents;',
+  },
   template: `
     <div
       [class]="avatarClasses"
