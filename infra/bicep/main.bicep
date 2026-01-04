@@ -443,6 +443,64 @@ resource jwtSecretKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   dependsOn: [keyVault]
 }
 
+// Calendar OAuth secrets - these must be populated manually after deployment
+// Get credentials from Google Cloud Console and Azure AD App Registration
+resource calendarGoogleClientIdSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVaultRef
+  name: 'calendar-google-client-id'
+  properties: {
+    // Placeholder - must be updated with actual Google OAuth Client ID from Google Cloud Console
+    value: 'REPLACE_WITH_GOOGLE_CLIENT_ID'
+    contentType: 'text/plain'
+    attributes: {
+      enabled: true
+    }
+  }
+  dependsOn: [keyVault]
+}
+
+resource calendarGoogleClientSecretSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVaultRef
+  name: 'calendar-google-client-secret'
+  properties: {
+    // Placeholder - must be updated with actual Google OAuth Client Secret
+    value: 'REPLACE_WITH_GOOGLE_CLIENT_SECRET'
+    contentType: 'text/plain'
+    attributes: {
+      enabled: true
+    }
+  }
+  dependsOn: [keyVault]
+}
+
+resource calendarMicrosoftClientIdSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVaultRef
+  name: 'calendar-microsoft-client-id'
+  properties: {
+    // Placeholder - must be updated with actual Microsoft/Azure AD App Client ID
+    value: 'REPLACE_WITH_MICROSOFT_CLIENT_ID'
+    contentType: 'text/plain'
+    attributes: {
+      enabled: true
+    }
+  }
+  dependsOn: [keyVault]
+}
+
+resource calendarMicrosoftClientSecretSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVaultRef
+  name: 'calendar-microsoft-client-secret'
+  properties: {
+    // Placeholder - must be updated with actual Microsoft/Azure AD App Client Secret
+    value: 'REPLACE_WITH_MICROSOFT_CLIENT_SECRET'
+    contentType: 'text/plain'
+    attributes: {
+      enabled: true
+    }
+  }
+  dependsOn: [keyVault]
+}
+
 // =============================================================================
 // Web Hosting (Static Web App deployed first for CORS configuration)
 // =============================================================================
@@ -554,6 +612,14 @@ module appServiceSettings 'br/public:avm/res/web/site/config:0.1.1' = {
       Fido2__ServerDomain: staticWebApp.outputs.defaultHostname
       Fido2__ServerName: 'Luminous Family Hub'
       Fido2__Origins__0: 'https://${staticWebApp.outputs.defaultHostname}'
+      // Calendar OAuth settings - credentials stored securely in Key Vault
+      // These must be populated after deployment with values from Google Cloud Console and Azure AD
+      Calendar__Google__ClientId: '@Microsoft.KeyVault(VaultName=${names.keyVault};SecretName=calendar-google-client-id)'
+      Calendar__Google__ClientSecret: '@Microsoft.KeyVault(VaultName=${names.keyVault};SecretName=calendar-google-client-secret)'
+      Calendar__Microsoft__ClientId: '@Microsoft.KeyVault(VaultName=${names.keyVault};SecretName=calendar-microsoft-client-id)'
+      Calendar__Microsoft__ClientSecret: '@Microsoft.KeyVault(VaultName=${names.keyVault};SecretName=calendar-microsoft-client-secret)'
+      Calendar__Microsoft__TenantId: 'common'
+      Calendar__DefaultRedirectUri: 'https://${staticWebApp.outputs.defaultHostname}/auth/calendar/callback'
     }
   }
   dependsOn: [
@@ -563,6 +629,10 @@ module appServiceSettings 'br/public:avm/res/web/site/config:0.1.1' = {
     acsConnectionStringSecret
     jwtSecretKeySecret
     emailService // Ensures email domain exists for sender address
+    calendarGoogleClientIdSecret
+    calendarGoogleClientSecretSecret
+    calendarMicrosoftClientIdSecret
+    calendarMicrosoftClientSecretSecret
   ]
 }
 
