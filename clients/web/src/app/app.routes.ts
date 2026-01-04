@@ -18,6 +18,14 @@ export const routes: Routes = [
       import('./features/dashboard/dashboard.routes').then((m) => m.DASHBOARD_ROUTES),
   },
   {
+    path: 'oauth/callback',
+    loadComponent: () =>
+      import('./features/oauth-callback/oauth-callback.component').then(
+        (m) => m.OAuthCallbackComponent
+      ),
+    title: 'Authorization - Luminous',
+  },
+  {
     path: 'unauthorized',
     loadComponent: () =>
       import('./features/unauthorized/unauthorized.component').then(

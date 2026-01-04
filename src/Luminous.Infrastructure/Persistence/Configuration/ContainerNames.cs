@@ -18,4 +18,6 @@ public static class ContainerNames
     public const string Credentials = "credentials";
     public const string OtpTokens = "otptokens";
     public const string RefreshTokens = "refreshtokens";
+    public const string CalendarConnections = "calendarconnections";
+    public const string OAuthSessions = "oauthsessions";
 }

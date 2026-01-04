@@ -50,6 +50,13 @@ export class UserService {
   }
 
   /**
+   * Alias for getMembers - get all family members
+   */
+  getFamilyMembers(familyId: string): Observable<User[]> {
+    return this.getMembers(familyId);
+  }
+
+  /**
    * Get a specific user
    */
   getUser(familyId: string, userId: string): Observable<User> {

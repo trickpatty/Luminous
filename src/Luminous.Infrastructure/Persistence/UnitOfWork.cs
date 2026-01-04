@@ -22,6 +22,8 @@ public sealed class UnitOfWork : IUnitOfWork
     private IInvitationRepository? _invitations;
     private IOtpTokenRepository? _otpTokens;
     private IRefreshTokenRepository? _refreshTokens;
+    private ICalendarConnectionRepository? _calendarConnections;
+    private IOAuthSessionRepository? _oauthSessions;
 
     public UnitOfWork(
         CosmosDbContext context,
@@ -58,6 +60,12 @@ public sealed class UnitOfWork : IUnitOfWork
 
     public IRefreshTokenRepository RefreshTokens => _refreshTokens ??=
         new RefreshTokenRepository(_context, _loggerFactory.CreateLogger<RefreshTokenRepository>());
+
+    public ICalendarConnectionRepository CalendarConnections => _calendarConnections ??=
+        new CalendarConnectionRepository(_context, _loggerFactory.CreateLogger<CalendarConnectionRepository>());
+
+    public IOAuthSessionRepository OAuthSessions => _oauthSessions ??=
+        new OAuthSessionRepository(_context, _loggerFactory.CreateLogger<OAuthSessionRepository>());
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

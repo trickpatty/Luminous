@@ -1,0 +1,23 @@
+{
+  "version": "2.0",
+  "logging": {
+    "applicationInsights": {
+      "samplingSettings": {
+        "isEnabled": true,
+        "excludedTypes": "Request"
+      },
+      "enableLiveMetricsFilters": true
+    },
+    "logLevel": {
+      "default": "Information",
+      "Luminous": "Debug"
+    }
+  },
+  "extensions": {
+    "timers": {
+      "schedule": {
+        "adjustForDST": true
+      }
+    }
+  }
+}

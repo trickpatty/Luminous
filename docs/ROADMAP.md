@@ -473,14 +473,37 @@ Deliver the display application with calendar integration, real-time sync, and g
 - [x] Tailwind CSS configuration for display sizes
 - [x] README.md with deployment documentation
 
-#### 2.2 Calendar Integration
+#### 2.2 Calendar Integration ✅ COMPLETED
 
-- [ ] **2.2.1** Google Calendar OAuth integration
-- [ ] **2.2.2** Microsoft Graph (Outlook) integration
-- [ ] **2.2.3** ICS URL subscription support
-- [ ] **2.2.4** Calendar-to-profile assignment
-- [ ] **2.2.5** Azure Function for calendar sync jobs
-- [ ] **2.2.6** Recurring event support
+- [x] **2.2.1** Google Calendar OAuth integration
+  - *Implemented: GoogleCalendarProvider with OAuth 2.0 flow, token refresh, calendar list, event fetch with delta sync*
+  - *API: Full Google Calendar API v3 integration with incremental sync support*
+- [x] **2.2.2** Microsoft Graph (Outlook) integration
+  - *Implemented: MicrosoftCalendarProvider with OAuth 2.0 flow, token refresh, calendar list, event fetch with delta query*
+  - *API: Microsoft Graph API integration with delta sync for incremental updates*
+- [x] **2.2.3** ICS URL subscription support
+  - *Implemented: IcsCalendarProvider with HTTP fetch, ETag caching, Ical.Net parsing*
+  - *Features: Supports webcal:// URLs, handles recurring events, parses VALARM reminders*
+- [x] **2.2.4** Calendar-to-profile assignment
+  - *Implemented: CalendarConnection.AssignedMemberIds for mapping calendars to family members*
+  - *Events from synced calendars automatically assigned to configured members*
+- [x] **2.2.5** Azure Function for calendar sync jobs
+  - *Implemented: Luminous.Functions.Sync project with timer-triggered CalendarSyncFunction*
+  - *Runs every 5 minutes to sync due calendar connections*
+- [x] **2.2.6** Recurring event support
+  - *Implemented: RecurrenceRule parsing from RRULE format (Daily, Weekly, Monthly, Yearly)*
+  - *Supports interval, BYDAY, UNTIL, COUNT parameters*
+
+**Additional deliverables:**
+- [x] CalendarConnection domain entity with OAuth token storage
+- [x] CalendarSyncSettings and OAuthTokens value objects
+- [x] ICalendarProvider and ICalendarSyncService interfaces
+- [x] CalendarSyncService for orchestrating sync operations
+- [x] CalendarConnectionRepository with CosmosDB container
+- [x] Full API: GET/POST/PUT/DELETE /api/calendar-connections/family/{familyId}
+- [x] OAuth flow: POST .../oauth/start, POST .../oauth/complete
+- [x] Manual sync: POST .../sync
+- [x] Calendar settings in App Service configuration
 
 #### 2.3 Calendar Views
 
