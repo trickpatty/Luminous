@@ -30,8 +30,8 @@ public static class DependencyInjection
         // Register Cosmos DB context
         services.AddSingleton<CosmosDbContext>();
 
-        // Register Cosmos DB initializer to ensure containers exist at startup
-        services.AddHostedService<CosmosDbInitializer>();
+        // Note: CosmosDB containers must be created via Bicep infrastructure (infra/bicep/main.bicep).
+        // Azure AD RBAC data plane roles do not include container creation permissions.
 
         // Register repositories
         services.AddScoped<IFamilyRepository, FamilyRepository>();
