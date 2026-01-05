@@ -1,4 +1,5 @@
 using FluentValidation;
+using Luminous.Application.Common.Exceptions;
 using Luminous.Application.Common.Interfaces;
 using Luminous.Domain.Interfaces;
 using MediatR;
@@ -49,25 +50,37 @@ public sealed class CompleteOAuthByStateCommandHandler
         CancellationToken cancellationToken)
     {
         // Find the session by state - the state token is the security credential
+        // Note: The query already filters out expired sessions (expiresAt > now)
         var session = await _unitOfWork.OAuthSessions.GetByStateAsync(request.State, cancellationToken)
-            ?? throw new InvalidOperationException("Invalid or expired OAuth state. Please try again.");
+            ?? throw new BadRequestException(
+                "Invalid or expired OAuth state. Please start the authorization process again.",
+                "OAUTH_STATE_INVALID");
 
         // Session already contains the familyId - no need to require it from client
         // The state token cryptographically proves ownership of this session
 
+        // Defense-in-depth check for expiration (handles clock skew between DB and app server)
         if (session.IsExpired)
-            throw new InvalidOperationException("OAuth session has expired. Please start again.");
+            throw new BadRequestException(
+                "OAuth session has expired. Please start the authorization process again.",
+                "OAUTH_SESSION_EXPIRED");
 
         if (session.IsCompleted)
-            throw new InvalidOperationException("OAuth session has already been completed");
+            throw new BadRequestException(
+                "This authorization has already been completed. Please start a new connection.",
+                "OAUTH_SESSION_COMPLETED");
 
-        // Validate redirect URI matches
+        // Validate redirect URI matches (security check)
         if (session.RedirectUri != request.RedirectUri)
-            throw new InvalidOperationException("Redirect URI mismatch");
+            throw new BadRequestException(
+                "Redirect URI mismatch. Please start the authorization process again.",
+                "OAUTH_REDIRECT_MISMATCH");
 
         // Get the provider
         var provider = _providers.FirstOrDefault(p => p.ProviderType == session.Provider)
-            ?? throw new InvalidOperationException($"No provider found for {session.Provider}");
+            ?? throw new BadRequestException(
+                $"Calendar provider '{session.Provider}' is not available.",
+                "OAUTH_PROVIDER_UNAVAILABLE");
 
         // Exchange code for tokens
         var tokens = await provider.ExchangeCodeAsync(request.Code, request.RedirectUri);

@@ -78,10 +78,12 @@ public class OAuthSession : Entity
     /// <summary>
     /// Completes the OAuth flow by storing the tokens.
     /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown when the session has expired.</exception>
     public void Complete(OAuthTokens tokens, string accountEmail)
     {
+        // This is a domain-level check; the application layer should catch this before calling Complete
         if (IsExpired)
-            throw new InvalidOperationException("OAuth session has expired");
+            throw new InvalidOperationException("OAuth session has expired. Please start the authorization process again.");
 
         Tokens = tokens ?? throw new ArgumentNullException(nameof(tokens));
         AccountEmail = accountEmail ?? throw new ArgumentNullException(nameof(accountEmail));
