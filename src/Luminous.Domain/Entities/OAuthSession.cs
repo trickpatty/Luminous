@@ -11,6 +11,7 @@ namespace Luminous.Domain.Entities;
 /// </summary>
 public class OAuthSession : Entity
 {
+    [JsonConstructor]
     private OAuthSession() { } // EF/serialization
 
     /// <summary>
