@@ -210,7 +210,15 @@ public sealed class GoogleCalendarProvider : ICalendarProvider
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
 
         var response = await _httpClient.SendAsync(request);
-        response.EnsureSuccessStatusCode();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            _logger.LogError(
+                "Failed to get user info from Google. Status={StatusCode}, Response={Response}",
+                response.StatusCode, errorContent);
+            response.EnsureSuccessStatusCode();
+        }
 
         var result = await response.Content.ReadFromJsonAsync<GoogleUserInfo>(JsonOptions);
         return result?.Email ?? throw new InvalidOperationException("Failed to get account email");
