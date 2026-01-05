@@ -277,6 +277,30 @@ public class CalendarConnectionsController : ApiControllerBase
     }
 
     /// <summary>
+    /// Completes an OAuth flow using only the state parameter.
+    /// The familyId is extracted from the server-side session.
+    /// Use this endpoint for redirect flows where client state may be unavailable.
+    /// </summary>
+    /// <param name="request">The OAuth completion request.</param>
+    /// <returns>Session ID, account email, and available calendars.</returns>
+    [HttpPost("oauth/complete")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse<OAuthCompleteResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<OAuthCompleteResponse>>> CompleteOAuthByState(
+        [FromBody] CompleteOAuthByStateRequest request)
+    {
+        var command = new CompleteOAuthByStateCommand
+        {
+            Code = request.Code,
+            State = request.State,
+            RedirectUri = request.RedirectUri
+        };
+        var result = await Mediator.Send(command);
+        return OkResponse(result);
+    }
+
+    /// <summary>
     /// Creates calendar connections from a completed OAuth session.
     /// </summary>
     /// <param name="familyId">The family ID.</param>
@@ -442,6 +466,28 @@ public record InitiateOAuthRequest
 /// Request to complete OAuth session.
 /// </summary>
 public record CompleteOAuthSessionRequest
+{
+    /// <summary>
+    /// The authorization code from the OAuth provider.
+    /// </summary>
+    public required string Code { get; init; }
+
+    /// <summary>
+    /// The state parameter from the OAuth callback.
+    /// </summary>
+    public required string State { get; init; }
+
+    /// <summary>
+    /// The OAuth redirect URI (must match the one used in start).
+    /// </summary>
+    public required string RedirectUri { get; init; }
+}
+
+/// <summary>
+/// Request to complete OAuth using only the state parameter.
+/// Used for redirect flows where client-side state may be unavailable.
+/// </summary>
+public record CompleteOAuthByStateRequest
 {
     /// <summary>
     /// The authorization code from the OAuth provider.

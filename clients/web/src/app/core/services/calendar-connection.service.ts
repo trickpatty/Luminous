@@ -138,6 +138,39 @@ export class CalendarConnectionService {
   }
 
   /**
+   * Complete OAuth flow using only state parameter.
+   * The familyId is extracted from the server-side session.
+   * Use this for redirect flows where client state may be unavailable.
+   */
+  completeOAuthByState(
+    request: OAuthCompleteRequest
+  ): Observable<OAuthCompleteResponse> {
+    this._loading.set(true);
+    this._error.set(null);
+
+    return this.api
+      .post<OAuthCompleteResponse>(
+        'calendar-connections/oauth/complete',
+        request
+      )
+      .pipe(
+        tap((response) => {
+          this._pendingSessionId.set(response.sessionId);
+          this._pendingCalendars.set(response.calendars);
+          this._pendingAccountEmail.set(response.accountEmail);
+          this._oauthState.set(null);
+          this._loading.set(false);
+        }),
+        catchError((error) => {
+          this._error.set(error.message || 'Failed to complete OAuth flow');
+          this._oauthState.set(null);
+          this._loading.set(false);
+          throw error;
+        })
+      );
+  }
+
+  /**
    * Create calendar connections from an OAuth session
    */
   createConnectionsFromSession(
