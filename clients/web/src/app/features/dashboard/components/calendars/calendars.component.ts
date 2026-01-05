@@ -916,7 +916,7 @@ export class CalendarsComponent implements OnInit {
   // Member helpers
   getAssignedMembers(connection: CalendarConnection): User[] {
     return this.familyMembers().filter((m) =>
-      connection.assignedMemberIds.includes(m.id)
+      connection.assignedMemberIds?.includes(m.id)
     );
   }
 
@@ -1218,7 +1218,7 @@ export class CalendarsComponent implements OnInit {
     this.openMenuId.set(null);
     this.selectedConnection.set(connection);
     this.editDisplayName = connection.name;
-    this.editMemberIds.set([...connection.assignedMemberIds]);
+    this.editMemberIds.set([...(connection.assignedMemberIds ?? [])]);
     this.editSyncPastDays = connection.syncSettings.syncPastDays;
     this.editSyncFutureDays = connection.syncSettings.syncFutureDays;
     this.showEditModal.set(true);
