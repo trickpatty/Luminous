@@ -51,6 +51,7 @@ public sealed class GoogleCalendarSettings
     /// </summary>
     public List<string> Scopes { get; set; } =
     [
+        "email",
         "https://www.googleapis.com/auth/calendar.readonly",
         "https://www.googleapis.com/auth/calendar.events.readonly"
     ];

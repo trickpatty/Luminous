@@ -206,9 +206,7 @@ public sealed class GoogleCalendarProvider : ICalendarProvider
 
     public async Task<string> GetAccountEmailAsync(OAuthTokens tokens)
     {
-        // Use the Calendar API to get the primary calendar, whose ID is the user's email.
-        // This avoids needing the 'email' scope which would require re-authorization.
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"{CalendarApiBaseUrl}/calendars/primary");
+        using var request = new HttpRequestMessage(HttpMethod.Get, "https://www.googleapis.com/oauth2/v2/userinfo");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
 
         var response = await _httpClient.SendAsync(request);
@@ -217,13 +215,13 @@ public sealed class GoogleCalendarProvider : ICalendarProvider
         {
             var errorContent = await response.Content.ReadAsStringAsync();
             _logger.LogError(
-                "Failed to get primary calendar for email lookup. Status={StatusCode}, Response={Response}",
+                "Failed to get user info from Google. Status={StatusCode}, Response={Response}",
                 response.StatusCode, errorContent);
             response.EnsureSuccessStatusCode();
         }
 
-        var result = await response.Content.ReadFromJsonAsync<GooglePrimaryCalendarResponse>(JsonOptions);
-        return result?.Id ?? throw new InvalidOperationException("Failed to get account email from primary calendar");
+        var result = await response.Content.ReadFromJsonAsync<GoogleUserInfo>(JsonOptions);
+        return result?.Email ?? throw new InvalidOperationException("Failed to get account email");
     }
 
     public async Task<IReadOnlyList<ExternalCalendarInfo>> GetCalendarsAsync(OAuthTokens tokens)
@@ -573,13 +571,9 @@ public sealed class GoogleCalendarProvider : ICalendarProvider
         public string? DisplayName { get; init; }
     }
 
-    private sealed record GooglePrimaryCalendarResponse
+    private sealed record GoogleUserInfo
     {
-        /// <summary>
-        /// The calendar ID - for the primary calendar, this is the user's email address.
-        /// </summary>
-        public string? Id { get; init; }
-        public string? Summary { get; init; }
+        public string? Email { get; init; }
     }
 
     #endregion
