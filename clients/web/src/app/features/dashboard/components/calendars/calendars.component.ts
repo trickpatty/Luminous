@@ -1209,13 +1209,12 @@ export class CalendarsComponent implements OnInit {
 
     if (!code || !state) return;
 
-    const familyId = this.authService.user()?.familyId;
-    if (!familyId) return;
-
     const redirectUri = `${window.location.origin}/oauth/callback`;
 
+    // Use completeOAuthByState which extracts familyId from the server-side session.
+    // The state token cryptographically proves ownership of the session.
     this.calendarService
-      .completeOAuth(familyId, { code, state, redirectUri })
+      .completeOAuthByState({ code, state, redirectUri })
       .subscribe({
         next: () => {
           this.modalStep.set('select-calendars');

@@ -127,6 +127,16 @@ public record CalendarConnectionSummaryDto
     /// Last successful sync time.
     /// </summary>
     public DateTime? LastSyncedAt { get; init; }
+
+    /// <summary>
+    /// Sync settings.
+    /// </summary>
+    public CalendarSyncSettingsDto SyncSettings { get; init; } = new();
+
+    /// <summary>
+    /// Assigned family member IDs.
+    /// </summary>
+    public List<string> AssignedMemberIds { get; init; } = [];
 }
 
 /// <summary>
