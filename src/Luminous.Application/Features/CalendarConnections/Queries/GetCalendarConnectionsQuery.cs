@@ -58,7 +58,17 @@ public sealed class GetCalendarConnectionsQueryHandler
             Status = c.Status,
             IsEnabled = c.IsEnabled,
             Color = c.Color,
-            LastSyncedAt = c.LastSyncedAt
+            LastSyncedAt = c.LastSyncedAt,
+            SyncSettings = new CalendarSyncSettingsDto
+            {
+                SyncIntervalMinutes = c.SyncSettings.SyncIntervalMinutes,
+                SyncPastDays = c.SyncSettings.SyncPastDays,
+                SyncFutureDays = c.SyncSettings.SyncFutureDays,
+                ImportAllDayEvents = c.SyncSettings.ImportAllDayEvents,
+                ImportDeclinedEvents = c.SyncSettings.ImportDeclinedEvents,
+                TwoWaySync = c.SyncSettings.TwoWaySync
+            },
+            AssignedMemberIds = c.AssignedMemberIds.ToList()
         }).ToList();
     }
 }
