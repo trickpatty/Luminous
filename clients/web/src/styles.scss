@@ -605,6 +605,7 @@
   /* Alert */
   .alert {
     display: flex;
+    align-items: center;
     padding: var(--space-4);
     border-radius: var(--radius-lg);
     gap: var(--space-3);
