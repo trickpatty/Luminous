@@ -82,11 +82,50 @@ public sealed class GoogleCalendarProvider : ICalendarProvider
         });
 
         var response = await _httpClient.PostAsync(TokenEndpoint, content);
-        response.EnsureSuccessStatusCode();
 
-        var tokenResponse = await response.Content.ReadFromJsonAsync<GoogleTokenResponse>(JsonOptions);
+        // Read the response content before calling EnsureSuccessStatusCode
+        // so we can log detailed error information
+        var responseContent = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogError(
+                "Google OAuth token exchange failed. Status={StatusCode}, Response={Response}",
+                response.StatusCode, responseContent);
+            response.EnsureSuccessStatusCode(); // This will throw with the status code
+        }
+
+        // Use dedicated options for token deserialization - no naming policy needed
+        // since GoogleTokenResponse has explicit JsonPropertyName attributes
+        var tokenOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
+        var tokenResponse = JsonSerializer.Deserialize<GoogleTokenResponse>(responseContent, tokenOptions);
+
         if (tokenResponse is null)
+        {
+            _logger.LogError("Failed to parse Google token response: {Response}", responseContent);
             throw new InvalidOperationException("Failed to parse token response");
+        }
+
+        // Validate the access token is present
+        if (string.IsNullOrEmpty(tokenResponse.AccessToken))
+        {
+            _logger.LogError(
+                "Google OAuth returned empty access token. HasRefreshToken={HasRefresh}, ExpiresIn={ExpiresIn}, Response={Response}",
+                !string.IsNullOrEmpty(tokenResponse.RefreshToken),
+                tokenResponse.ExpiresIn,
+                responseContent);
+            throw new InvalidOperationException("Google OAuth returned an empty access token");
+        }
+
+        _logger.LogDebug(
+            "Google OAuth token exchange successful. HasRefreshToken={HasRefresh}, ExpiresIn={ExpiresIn}, Scope={Scope}",
+            !string.IsNullOrEmpty(tokenResponse.RefreshToken),
+            tokenResponse.ExpiresIn,
+            tokenResponse.Scope);
 
         return OAuthTokens.Create(
             tokenResponse.AccessToken,
@@ -109,11 +148,36 @@ public sealed class GoogleCalendarProvider : ICalendarProvider
         });
 
         var response = await _httpClient.PostAsync(TokenEndpoint, content);
-        response.EnsureSuccessStatusCode();
+        var responseContent = await response.Content.ReadAsStringAsync();
 
-        var tokenResponse = await response.Content.ReadFromJsonAsync<GoogleTokenResponse>(JsonOptions);
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogError(
+                "Google OAuth token refresh failed. Status={StatusCode}, Response={Response}",
+                response.StatusCode, responseContent);
+            response.EnsureSuccessStatusCode();
+        }
+
+        var tokenOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
+        var tokenResponse = JsonSerializer.Deserialize<GoogleTokenResponse>(responseContent, tokenOptions);
+
         if (tokenResponse is null)
+        {
+            _logger.LogError("Failed to parse Google token refresh response: {Response}", responseContent);
             throw new InvalidOperationException("Failed to parse token response");
+        }
+
+        if (string.IsNullOrEmpty(tokenResponse.AccessToken))
+        {
+            _logger.LogError(
+                "Google OAuth token refresh returned empty access token. Response={Response}",
+                responseContent);
+            throw new InvalidOperationException("Google OAuth returned an empty access token");
+        }
 
         // Google may or may not return a new refresh token
         return OAuthTokens.Create(
