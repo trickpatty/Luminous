@@ -136,12 +136,13 @@ export class OAuthCallbackComponent implements OnInit {
       }, 500);
     } else {
       // Redirect flow - complete OAuth directly and redirect to calendars page
+      // Uses stateless endpoint that extracts familyId from server-side session
       this.processingMessage = 'Connecting your calendar...';
       this.processingSubtext = 'Please wait while we complete the setup.';
 
       const redirectUri = `${window.location.origin}/oauth/callback`;
 
-      this.calendarService.completeOAuth('', { code, state, redirectUri }).subscribe({
+      this.calendarService.completeOAuthByState({ code, state, redirectUri }).subscribe({
         next: () => {
           this.processing = false;
           this.toastService.success('Calendar connected successfully!');

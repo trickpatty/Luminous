@@ -74,8 +74,8 @@ Both integrations require you to register an OAuth application with the respecti
 3. Select **Web application** as the application type
 4. Enter a name (e.g., "Luminous Web Client")
 5. Add **Authorized redirect URIs**:
-   - For local development: `http://localhost:4200/auth/calendar/callback`
-   - For production: `https://your-app-domain.azurestaticapps.net/auth/calendar/callback`
+   - For local development: `http://localhost:4200/oauth/callback`
+   - For production: `https://your-app-domain.azurestaticapps.net/oauth/callback`
 6. Click **Create**
 7. Copy the **Client ID** and **Client Secret**
 
@@ -102,7 +102,7 @@ For production use with any Google account:
    - **Name**: Luminous Calendar Integration
    - **Supported account types**: "Accounts in any organizational directory and personal Microsoft accounts"
    - **Redirect URI**: Select "Web" and enter:
-     - For local development: `http://localhost:4200/auth/calendar/callback`
+     - For local development: `http://localhost:4200/oauth/callback`
 5. Click **Register**
 6. Copy the **Application (client) ID** - this is your Client ID
 
@@ -135,7 +135,7 @@ For production use with any Google account:
 
 1. Go to **Authentication**
 2. Under **Web** → **Redirect URIs**, add your production URL:
-   - `https://your-app-domain.azurestaticapps.net/auth/calendar/callback`
+   - `https://your-app-domain.azurestaticapps.net/oauth/callback`
 3. Click **Save**
 
 ---
@@ -158,7 +158,7 @@ Edit `src/Luminous.Api/appsettings.Development.json`:
       "ClientSecret": "YOUR_MICROSOFT_CLIENT_SECRET",
       "TenantId": "common"
     },
-    "DefaultRedirectUri": "http://localhost:4200/auth/calendar/callback"
+    "DefaultRedirectUri": "http://localhost:4200/oauth/callback"
   }
 }
 ```
@@ -178,7 +178,7 @@ export Calendar__Microsoft__ClientSecret="YOUR_MICROSOFT_CLIENT_SECRET"
 export Calendar__Microsoft__TenantId="common"
 
 # Redirect URI
-export Calendar__DefaultRedirectUri="http://localhost:4200/auth/calendar/callback"
+export Calendar__DefaultRedirectUri="http://localhost:4200/oauth/callback"
 ```
 
 ### Option 3: User Secrets (Recommended for Development)
@@ -270,7 +270,7 @@ Use the calendar connection endpoints to test:
 curl -X POST "http://localhost:5000/api/calendar-connections/family/{familyId}/oauth/start" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer {your-jwt-token}" \
-  -d '{"provider": "Google", "redirectUri": "http://localhost:4200/auth/calendar/callback"}'
+  -d '{"provider": "Google", "redirectUri": "http://localhost:4200/oauth/callback"}'
 ```
 
 ### 3. Verify Configuration
