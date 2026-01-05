@@ -18,7 +18,7 @@ import {
   User,
 } from '../../../../models';
 
-type ModalStep = 'provider' | 'oauth-loading' | 'select-calendars' | 'assign-members' | 'ics-url' | 'success';
+type ModalStep = 'provider' | 'oauth-loading' | 'popup-blocked' | 'select-calendars' | 'assign-members' | 'ics-url' | 'success';
 
 @Component({
   selector: 'app-calendars',
@@ -173,8 +173,8 @@ type ModalStep = 'provider' | 'oauth-loading' | 'select-calendars' | 'assign-mem
                         @for (member of getAssignedMembers(connection); track member.id) {
                           <app-avatar
                             [name]="member.displayName"
-                            [color]="member.profile?.color"
-                            [src]="member.profile?.avatarUrl"
+                            [color]="member.profile.color"
+                            [src]="member.profile.avatarUrl"
                             size="xs"
                           />
                         }
@@ -342,6 +342,105 @@ type ModalStep = 'provider' | 'oauth-loading' | 'select-calendars' | 'assign-mem
                 </div>
               }
 
+              <!-- Popup Blocked -->
+              @if (modalStep() === 'popup-blocked') {
+                <div class="p-6">
+                  <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Authorization Window Blocked</h3>
+                    <button
+                      type="button"
+                      class="p-1 text-gray-400 hover:text-gray-600 rounded-lg"
+                      (click)="closeConnectModal()"
+                    >
+                      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+                    <div class="flex gap-3">
+                      <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <div>
+                        <p class="text-sm text-amber-800 font-medium">Pop-up window was blocked</p>
+                        <p class="text-sm text-amber-700 mt-1">
+                          @if (isStandaloneMode()) {
+                            This app is running in standalone mode (home screen) which doesn't support pop-up windows.
+                          } @else {
+                            Your browser blocked the authorization window. This is a security feature to protect you.
+                          }
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p class="text-sm text-gray-600 mb-4">Choose how you'd like to continue:</p>
+
+                  <div class="space-y-3">
+                    <!-- Option 1: Open in new tab (if not standalone) -->
+                    @if (!isStandaloneMode()) {
+                      <button
+                        type="button"
+                        class="w-full flex items-center gap-3 p-4 border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-colors text-left"
+                        (click)="openOAuthInNewTab()"
+                      >
+                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <svg class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                        </div>
+                        <div class="flex-1">
+                          <p class="font-medium text-gray-900">Open in new tab</p>
+                          <p class="text-sm text-gray-500">Opens authorization in a new browser tab</p>
+                        </div>
+                      </button>
+                    }
+
+                    <!-- Option 2: Redirect in same window -->
+                    <button
+                      type="button"
+                      class="w-full flex items-center gap-3 p-4 border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-colors text-left"
+                      (click)="redirectToOAuth()"
+                    >
+                      <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <svg class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        </svg>
+                      </div>
+                      <div class="flex-1">
+                        <p class="font-medium text-gray-900">Continue in this window</p>
+                        <p class="text-sm text-gray-500">Redirects you to {{ calendarService.getProviderDisplayName(selectedProvider()!) }}</p>
+                      </div>
+                    </button>
+
+                    <!-- Option 3: Copy link -->
+                    <button
+                      type="button"
+                      class="w-full flex items-center gap-3 p-4 border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-colors text-left"
+                      (click)="copyOAuthLink()"
+                    >
+                      <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <svg class="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <div class="flex-1">
+                        <p class="font-medium text-gray-900">{{ linkCopied() ? 'Link copied!' : 'Copy authorization link' }}</p>
+                        <p class="text-sm text-gray-500">Open the link manually in any browser</p>
+                      </div>
+                    </button>
+                  </div>
+
+                  <div class="mt-4 pt-4 border-t border-gray-100">
+                    <app-button variant="secondary" class="w-full" (onClick)="modalStep.set('provider')">
+                      Choose a Different Provider
+                    </app-button>
+                  </div>
+                </div>
+              }
+
               <!-- Select Calendars -->
               @if (modalStep() === 'select-calendars') {
                 <div class="p-6">
@@ -465,7 +564,7 @@ type ModalStep = 'provider' | 'oauth-loading' | 'select-calendars' | 'assign-mem
                             >
                               <app-avatar
                                 [name]="member.displayName"
-                                [color]="member.profile?.color"
+                                [color]="member.profile.color"
                                 size="xs"
                               />
                               {{ member.displayName }}
@@ -557,7 +656,7 @@ type ModalStep = 'provider' | 'oauth-loading' | 'select-calendars' | 'assign-mem
                             [class.text-gray-700]="!icsMemberIds().includes(member.id)"
                             (click)="toggleIcsMember(member.id)"
                           >
-                            <app-avatar [name]="member.displayName" [color]="member.profile?.color" size="xs" />
+                            <app-avatar [name]="member.displayName" [color]="member.profile.color" size="xs" />
                             {{ member.displayName }}
                           </button>
                         }
@@ -669,7 +768,7 @@ type ModalStep = 'provider' | 'oauth-loading' | 'select-calendars' | 'assign-mem
                         [class.text-gray-700]="!editMemberIds().includes(member.id)"
                         (click)="toggleEditMember(member.id)"
                       >
-                        <app-avatar [name]="member.displayName" [color]="member.profile?.color" size="xs" />
+                        <app-avatar [name]="member.displayName" [color]="member.profile.color" size="xs" />
                         {{ member.displayName }}
                       </button>
                     }
@@ -813,6 +912,10 @@ export class CalendarsComponent implements OnInit {
 
   // OAuth popup reference
   private oauthPopup: Window | null = null;
+
+  // Pending OAuth URL for fallback flows (popup blocked, PWA mode, etc.)
+  private pendingOAuthUrl: string | null = null;
+  linkCopied = signal(false);
 
   // Bound event handlers (stored for proper cleanup)
   private boundHandleOAuthCallback = this.handleOAuthCallback.bind(this);
@@ -976,11 +1079,21 @@ export class CalendarsComponent implements OnInit {
 
     this.selectedProvider.set(provider);
     this.modalStep.set('oauth-loading');
+    this.linkCopied.set(false);
 
     const redirectUri = `${window.location.origin}/oauth/callback`;
 
     this.calendarService.startOAuth(familyId, provider, redirectUri).subscribe({
       next: (response) => {
+        // Store URL for fallback flows
+        this.pendingOAuthUrl = response.authorizationUrl;
+
+        // Check for standalone mode (PWA / home screen app) - popups don't work
+        if (this.isStandaloneMode()) {
+          this.modalStep.set('popup-blocked');
+          return;
+        }
+
         // Open OAuth popup
         const width = 600;
         const height = 700;
@@ -992,6 +1105,12 @@ export class CalendarsComponent implements OnInit {
           'oauth_popup',
           `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no`
         );
+
+        // Check if popup was blocked
+        if (!this.oauthPopup || this.oauthPopup.closed) {
+          this.modalStep.set('popup-blocked');
+          return;
+        }
 
         // Poll for popup close
         const pollTimer = setInterval(() => {
@@ -1009,6 +1128,70 @@ export class CalendarsComponent implements OnInit {
         this.modalStep.set('provider');
       },
     });
+  }
+
+  /**
+   * Detects if the app is running in standalone mode (PWA / added to home screen).
+   * In standalone mode, window.open() either doesn't work or navigates the current page.
+   */
+  isStandaloneMode(): boolean {
+    // Check for iOS standalone mode
+    const isIOSStandalone = ('standalone' in window.navigator) && (window.navigator as { standalone?: boolean }).standalone === true;
+
+    // Check for PWA display-mode
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches
+                  || window.matchMedia('(display-mode: fullscreen)').matches;
+
+    return isIOSStandalone || isPWA;
+  }
+
+  /**
+   * Opens the OAuth URL in a new tab (fallback when popup is blocked).
+   */
+  openOAuthInNewTab(): void {
+    if (!this.pendingOAuthUrl) return;
+
+    // Use window.open with _blank target which is less likely to be blocked
+    const newWindow = window.open(this.pendingOAuthUrl, '_blank');
+
+    if (newWindow) {
+      this.modalStep.set('oauth-loading');
+    } else {
+      // Still blocked, keep showing the popup-blocked modal
+      this.toastService.error('Unable to open new tab. Please try the redirect option or copy the link.');
+    }
+  }
+
+  /**
+   * Redirects the current page to the OAuth provider.
+   * The user will be redirected back to /oauth/callback after authorization.
+   */
+  redirectToOAuth(): void {
+    if (!this.pendingOAuthUrl) return;
+
+    // Store state in sessionStorage so we can resume after redirect
+    sessionStorage.setItem('luminous_oauth_redirect', 'true');
+
+    // Redirect to OAuth provider
+    window.location.href = this.pendingOAuthUrl;
+  }
+
+  /**
+   * Copies the OAuth URL to clipboard for manual opening.
+   */
+  async copyOAuthLink(): Promise<void> {
+    if (!this.pendingOAuthUrl) return;
+
+    try {
+      await navigator.clipboard.writeText(this.pendingOAuthUrl);
+      this.linkCopied.set(true);
+      this.toastService.success('Link copied to clipboard');
+
+      // Reset after 3 seconds
+      setTimeout(() => this.linkCopied.set(false), 3000);
+    } catch {
+      this.toastService.error('Failed to copy link');
+    }
   }
 
   private handleOAuthCallback(event: MessageEvent): void {

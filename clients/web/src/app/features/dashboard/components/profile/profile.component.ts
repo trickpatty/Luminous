@@ -198,7 +198,7 @@ import { User, UserRole, UpdateUserProfileRequest, PasskeyCredential, PasskeyReg
                   <p class="text-gray-900">{{ user()!.displayName }}</p>
                 </div>
 
-                @if (user()!.profile?.nickname) {
+                @if (user()!.profile.nickname) {
                   <div>
                     <label class="block text-sm font-medium text-gray-500 mb-1">
                       Nickname
@@ -214,12 +214,12 @@ import { User, UserRole, UpdateUserProfileRequest, PasskeyCredential, PasskeyReg
                   <div class="flex items-center gap-2">
                     <span
                       class="w-8 h-8 rounded-full border-2 border-gray-200"
-                      [style.backgroundColor]="user()!.profile?.color || '#4F46E5'"
+                      [style.backgroundColor]="user()!.profile.color || '#4F46E5'"
                     ></span>
                   </div>
                 </div>
 
-                @if (user()!.profile?.birthDate) {
+                @if (user()!.profile.birthDate) {
                   <div>
                     <label class="block text-sm font-medium text-gray-500 mb-1">
                       Birth Date

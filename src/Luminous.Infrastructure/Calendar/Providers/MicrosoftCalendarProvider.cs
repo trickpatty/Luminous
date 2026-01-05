@@ -48,6 +48,14 @@ public sealed class MicrosoftCalendarProvider : ICalendarProvider
 
     public Task<string> GetAuthorizationUrlAsync(string state, string redirectUri)
     {
+        // Validate OAuth configuration
+        if (string.IsNullOrWhiteSpace(_settings.ClientId))
+        {
+            _logger.LogError("Microsoft Calendar OAuth client_id is not configured. Check Calendar:Microsoft:ClientId in app configuration or Key Vault.");
+            throw new InvalidOperationException(
+                "Microsoft Calendar integration is not configured. Please contact your administrator to set up Microsoft OAuth credentials.");
+        }
+
         var scopes = string.Join(" ", _settings.Scopes);
         var queryParams = HttpUtility.ParseQueryString(string.Empty);
         queryParams["client_id"] = _settings.ClientId;

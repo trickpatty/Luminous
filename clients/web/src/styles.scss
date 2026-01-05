@@ -7,9 +7,9 @@
  */
 
 /* Design System Imports */
-@import 'styles/design-tokens';
-@import 'styles/animations';
-@import 'styles/typography';
+@use 'styles/design-tokens';
+@use 'styles/animations';
+@use 'styles/typography';
 
 /* Tailwind Layers */
 @tailwind base;
