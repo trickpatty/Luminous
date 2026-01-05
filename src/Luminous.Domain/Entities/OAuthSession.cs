@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Luminous.Domain.Common;
 using Luminous.Domain.Enums;
 using Luminous.Domain.ValueObjects;
@@ -15,41 +16,49 @@ public class OAuthSession : Entity
     /// <summary>
     /// The family this OAuth session belongs to.
     /// </summary>
+    [JsonInclude]
     public string FamilyId { get; private set; } = null!;
 
     /// <summary>
     /// The calendar provider (Google, Microsoft, etc.)
     /// </summary>
+    [JsonInclude]
     public CalendarProvider Provider { get; private set; }
 
     /// <summary>
     /// Unique state parameter used during OAuth flow for CSRF protection.
     /// </summary>
+    [JsonInclude]
     public string State { get; private set; } = null!;
 
     /// <summary>
     /// The redirect URI used in the OAuth flow.
     /// </summary>
+    [JsonInclude]
     public string RedirectUri { get; private set; } = null!;
 
     /// <summary>
     /// The OAuth tokens obtained after authorization.
     /// </summary>
+    [JsonInclude]
     public OAuthTokens? Tokens { get; private set; }
 
     /// <summary>
     /// The email/account identifier from the OAuth provider.
     /// </summary>
+    [JsonInclude]
     public string? AccountEmail { get; private set; }
 
     /// <summary>
     /// When this session expires. Sessions are valid for 15 minutes after creation.
     /// </summary>
+    [JsonInclude]
     public DateTime ExpiresAt { get; private set; }
 
     /// <summary>
     /// Whether the OAuth flow has been completed (tokens obtained).
     /// </summary>
+    [JsonInclude]
     public bool IsCompleted { get; private set; }
 
     /// <summary>
@@ -78,10 +87,12 @@ public class OAuthSession : Entity
     /// <summary>
     /// Completes the OAuth flow by storing the tokens.
     /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown when the session has expired.</exception>
     public void Complete(OAuthTokens tokens, string accountEmail)
     {
+        // This is a domain-level check; the application layer should catch this before calling Complete
         if (IsExpired)
-            throw new InvalidOperationException("OAuth session has expired");
+            throw new InvalidOperationException("OAuth session has expired. Please start the authorization process again.");
 
         Tokens = tokens ?? throw new ArgumentNullException(nameof(tokens));
         AccountEmail = accountEmail ?? throw new ArgumentNullException(nameof(accountEmail));

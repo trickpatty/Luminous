@@ -1,4 +1,5 @@
 using FluentValidation;
+using Luminous.Application.Common.Exceptions;
 using Luminous.Application.Common.Interfaces;
 using Luminous.Application.DTOs;
 using Luminous.Domain.Entities;
@@ -84,19 +85,29 @@ public sealed class CreateConnectionsFromSessionCommandHandler
         // Get the OAuth session
         var session = await _unitOfWork.OAuthSessions.GetByIdAsync(
             request.SessionId, request.FamilyId, cancellationToken)
-            ?? throw new InvalidOperationException("OAuth session not found");
+            ?? throw new BadRequestException(
+                "OAuth session not found. Please start the authorization process again.",
+                "OAUTH_SESSION_NOT_FOUND");
 
         if (!session.IsValidForConnectionCreation)
         {
             if (session.IsExpired)
-                throw new InvalidOperationException("OAuth session has expired. Please start again.");
+                throw new BadRequestException(
+                    "OAuth session has expired. Please start the authorization process again.",
+                    "OAUTH_SESSION_EXPIRED");
             if (!session.IsCompleted)
-                throw new InvalidOperationException("OAuth session has not been completed");
-            throw new InvalidOperationException("OAuth session is not valid for connection creation");
+                throw new BadRequestException(
+                    "OAuth authorization has not been completed. Please complete the authorization first.",
+                    "OAUTH_SESSION_NOT_COMPLETED");
+            throw new BadRequestException(
+                "OAuth session is not valid for creating connections. Please start the authorization process again.",
+                "OAUTH_SESSION_INVALID");
         }
 
         var userId = _currentUserService.UserId ?? session.CreatedBy
-            ?? throw new InvalidOperationException("Unable to determine user for calendar connection");
+            ?? throw new BadRequestException(
+                "Unable to determine user for calendar connection.",
+                "USER_CONTEXT_UNAVAILABLE");
         var connections = new List<CalendarConnectionDto>();
 
         foreach (var calendarRequest in request.Calendars)

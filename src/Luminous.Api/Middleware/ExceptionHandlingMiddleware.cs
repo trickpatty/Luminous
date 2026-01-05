@@ -3,6 +3,8 @@ using System.Text.Json;
 using Luminous.Application.Common.Exceptions;
 using Luminous.Shared.Contracts;
 
+// Ensure all exception types are available for pattern matching
+
 namespace Luminous.Api.Middleware;
 
 /// <summary>
@@ -38,6 +40,10 @@ public class ExceptionHandlingMiddleware
             ValidationException validationEx => (
                 HttpStatusCode.BadRequest,
                 ApiResponse<object>.Fail("VALIDATION_ERROR", "Validation failed.", validationEx.Errors)
+            ),
+            BadRequestException badRequestEx => (
+                HttpStatusCode.BadRequest,
+                ApiResponse<object>.Fail(badRequestEx.ErrorCode ?? "BAD_REQUEST", badRequestEx.Message)
             ),
             NotFoundException notFoundEx => (
                 HttpStatusCode.NotFound,
