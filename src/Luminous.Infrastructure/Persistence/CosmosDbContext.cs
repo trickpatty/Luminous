@@ -24,10 +24,8 @@ public sealed class CosmosDbContext : IAsyncDisposable
 
         var options = new CosmosClientOptions
         {
-            SerializerOptions = new CosmosSerializationOptions
-            {
-                PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
-            },
+            // Use custom System.Text.Json serializer to properly handle [JsonInclude] on private setters
+            Serializer = new SystemTextJsonCosmosSerializer(),
             ConnectionMode = ConnectionMode.Direct,
             MaxRetryAttemptsOnRateLimitedRequests = _settings.MaxRetryAttempts,
             MaxRetryWaitTimeOnRateLimitedRequests = TimeSpan.FromSeconds(_settings.MaxRetryWaitTimeSeconds)
