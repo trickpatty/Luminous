@@ -113,8 +113,9 @@ export class OAuthCallbackComponent implements OnInit {
       );
     }
 
-    // Clean up redirect flow marker
+    // Clean up redirect flow markers
     sessionStorage.removeItem('luminous_oauth_redirect');
+    sessionStorage.removeItem('luminous_oauth_family_id');
   }
 
   private handleSuccess(code: string, state: string): void {
@@ -140,14 +141,21 @@ export class OAuthCallbackComponent implements OnInit {
       this.processingSubtext = 'Please wait while we complete the setup.';
 
       const redirectUri = `${window.location.origin}/oauth/callback`;
+      const familyId = sessionStorage.getItem('luminous_oauth_family_id');
 
-      this.calendarService.completeOAuth('', { code, state, redirectUri }).subscribe({
+      if (!familyId) {
+        this.handleError('missing_family_id', 'Session expired. Please try connecting your calendar again.');
+        return;
+      }
+
+      this.calendarService.completeOAuth(familyId, { code, state, redirectUri }).subscribe({
         next: () => {
           this.processing = false;
           this.toastService.success('Calendar connected successfully!');
 
-          // Clean up redirect flow marker
+          // Clean up redirect flow markers
           sessionStorage.removeItem('luminous_oauth_redirect');
+          sessionStorage.removeItem('luminous_oauth_family_id');
 
           // Redirect to calendars page
           setTimeout(() => {
@@ -165,6 +173,7 @@ export class OAuthCallbackComponent implements OnInit {
 
   goToCalendars(): void {
     sessionStorage.removeItem('luminous_oauth_redirect');
+    sessionStorage.removeItem('luminous_oauth_family_id');
     this.router.navigate(['/dashboard'], { queryParams: { tab: 'calendars' } });
   }
 

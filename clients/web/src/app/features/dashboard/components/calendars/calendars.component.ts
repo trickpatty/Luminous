@@ -1169,8 +1169,12 @@ export class CalendarsComponent implements OnInit {
   redirectToOAuth(): void {
     if (!this.pendingOAuthUrl) return;
 
+    const familyId = this.authService.user()?.familyId;
+    if (!familyId) return;
+
     // Store state in sessionStorage so we can resume after redirect
     sessionStorage.setItem('luminous_oauth_redirect', 'true');
+    sessionStorage.setItem('luminous_oauth_family_id', familyId);
 
     // Redirect to OAuth provider
     window.location.href = this.pendingOAuthUrl;
