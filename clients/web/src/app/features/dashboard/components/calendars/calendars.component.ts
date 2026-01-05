@@ -97,10 +97,10 @@ type ModalStep = 'provider' | 'oauth-loading' | 'popup-blocked' | 'select-calend
             <div class="bg-white rounded-xl border border-gray-200 hover:shadow-md transition-shadow overflow-visible">
               <div class="p-5 overflow-visible">
                 <!-- Header -->
-                <div class="flex items-start justify-between mb-4">
-                  <div class="flex items-center gap-3">
+                <div class="flex items-start justify-between gap-2 mb-4">
+                  <div class="flex items-center gap-3 min-w-0 overflow-hidden">
                     <div
-                      class="w-10 h-10 rounded-lg flex items-center justify-center"
+                      class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                       [class]="getProviderBgColor(connection.provider)"
                     >
                       <span [innerHTML]="getProviderIcon(connection.provider)" class="w-5 h-5"></span>
@@ -114,7 +114,7 @@ type ModalStep = 'provider' | 'oauth-loading' | 'popup-blocked' | 'select-calend
                   </div>
                   <!-- Actions Menu -->
                   @if (canManageCalendars()) {
-                    <div class="relative overflow-visible">
+                    <div class="relative flex-shrink-0">
                       <button
                         type="button"
                         data-menu-button
