@@ -1,7 +1,7 @@
 # Luminous Development Roadmap
 
-> **Document Version:** 3.3.0
-> **Last Updated:** 2026-01-01
+> **Document Version:** 3.4.0
+> **Last Updated:** 2026-01-07
 > **Status:** Active
 > **TOGAF Phase:** Phase E/F (Opportunities, Solutions & Migration Planning)
 
@@ -505,13 +505,36 @@ Deliver the display application with calendar integration, real-time sync, and g
 - [x] Manual sync: POST .../sync
 - [x] Calendar settings in App Service configuration
 
-#### 2.3 Calendar Views
+#### 2.3 Calendar Views ✅ COMPLETED
 
-- [ ] **2.3.1** Day view (next 24 hours focus)
-- [ ] **2.3.2** Week view (7-day overview)
-- [ ] **2.3.3** Month view (calendar grid)
-- [ ] **2.3.4** Agenda view (chronological list)
-- [ ] **2.3.5** Profile filtering
+- [x] **2.3.1** Day view (next 24 hours focus)
+  - *Implemented: DayViewComponent with hourly timeline, current time indicator*
+  - *Features: Date navigation, all-day event support, event color coding by member*
+  - *Displays: Event title, time, location, member badges*
+- [x] **2.3.2** Week view (7-day overview)
+  - *Implemented: WeekViewComponent with 7-day column grid*
+  - *Features: Week navigation, day selection, event preview on each day*
+  - *Highlights: Today indicator, past day dimming, click-to-day navigation*
+- [x] **2.3.3** Month view (calendar grid)
+  - *Implemented: MonthViewComponent with traditional calendar grid*
+  - *Features: Month navigation, event dots per day, selected day event preview*
+  - *Highlights: Today indicator, other-month day dimming, click-to-day navigation*
+- [x] **2.3.4** Agenda view (chronological list)
+  - *Implemented: AgendaViewComponent with grouped chronological event list*
+  - *Features: Events grouped by date, relative date labels (Today, Tomorrow, etc.)*
+  - *Displays: Time, title, location, member badges, past/current event indicators*
+- [x] **2.3.5** Profile filtering
+  - *Implemented: ProfileFilterComponent for family member filtering*
+  - *Features: Member chip toggles, "Everyone" option, active filter badge*
+  - *Integration: Filter state managed in DisplayComponent, applied to all calendar views*
+
+**Additional deliverables:**
+- [x] EventService for fetching and managing calendar events
+- [x] Calendar view mode selector in display header (Day/Week/Month/Agenda)
+- [x] Profile filter toggle button with badge showing active filter count
+- [x] Date range fetching optimized per view type
+- [x] Computed filtered events based on member selection
+- [x] Navigation between calendar views with state preservation
 
 #### 2.4 Display Widgets
 
@@ -882,3 +905,4 @@ These can be developed in parallel after Phase 0:
 | 3.1.0 | 2025-12-27 | Luminous Team | Phase 1.3.5 Authentication Endpoints completed (OTP, Passkey, Token Refresh) |
 | 3.2.0 | 2025-12-27 | Luminous Team | Added email services (Azure ACS, Handlebars templates, config-based service selection) |
 | 3.3.0 | 2026-01-01 | Luminous Team | Phase 2.1 Display Application (Angular + Electron) completed |
+| 3.4.0 | 2026-01-07 | Luminous Team | Phase 2.3 Calendar Views completed (Day, Week, Month, Agenda views + Profile filtering) |
