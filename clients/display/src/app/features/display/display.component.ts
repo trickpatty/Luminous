@@ -4,12 +4,21 @@ import { Router } from '@angular/router';
 import { interval, Subscription } from 'rxjs';
 import { DeviceAuthService } from '../../core/services/device-auth.service';
 import { CacheService, ScheduleEvent, TaskData, MemberData } from '../../core/services/cache.service';
+import { EventService } from '../../core/services/event.service';
 import { ClockWidgetComponent } from './components/clock-widget/clock-widget.component';
 import { ScheduleViewComponent } from './components/schedule-view/schedule-view.component';
 import { TasksViewComponent } from './components/tasks-view/tasks-view.component';
+import {
+  DayViewComponent,
+  WeekViewComponent,
+  MonthViewComponent,
+  AgendaViewComponent,
+  ProfileFilterComponent
+} from './components/calendar-views';
 import { environment } from '../../../environments/environment';
 
-type DisplayView = 'schedule' | 'tasks' | 'routines';
+type DisplayView = 'schedule' | 'tasks' | 'routines' | 'calendar';
+type CalendarViewMode = 'day' | 'week' | 'month' | 'agenda';
 
 @Component({
   selector: 'app-display',
@@ -19,6 +28,11 @@ type DisplayView = 'schedule' | 'tasks' | 'routines';
     ClockWidgetComponent,
     ScheduleViewComponent,
     TasksViewComponent,
+    DayViewComponent,
+    WeekViewComponent,
+    MonthViewComponent,
+    AgendaViewComponent,
+    ProfileFilterComponent,
   ],
   template: `
     <div class="display-container">
@@ -30,6 +44,7 @@ type DisplayView = 'schedule' | 'tasks' | 'routines';
             class="header-nav-btn"
             [class.active]="currentView() === 'schedule'"
             (click)="setView('schedule')"
+            aria-label="Today's schedule"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
@@ -40,8 +55,28 @@ type DisplayView = 'schedule' | 'tasks' | 'routines';
           </button>
           <button
             class="header-nav-btn"
+            [class.active]="currentView() === 'calendar'"
+            (click)="setView('calendar')"
+            aria-label="Calendar views"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 2v4"/>
+              <path d="M16 2v4"/>
+              <rect width="18" height="18" x="3" y="4" rx="2"/>
+              <path d="M3 10h18"/>
+              <path d="M8 14h.01"/>
+              <path d="M12 14h.01"/>
+              <path d="M16 14h.01"/>
+              <path d="M8 18h.01"/>
+              <path d="M12 18h.01"/>
+              <path d="M16 18h.01"/>
+            </svg>
+          </button>
+          <button
+            class="header-nav-btn"
             [class.active]="currentView() === 'tasks'"
             (click)="setView('tasks')"
+            aria-label="Tasks"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
@@ -51,6 +86,7 @@ type DisplayView = 'schedule' | 'tasks' | 'routines';
           <button
             class="header-nav-btn"
             (click)="openSettings()"
+            aria-label="Settings"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
@@ -59,6 +95,69 @@ type DisplayView = 'schedule' | 'tasks' | 'routines';
           </button>
         </div>
       </header>
+
+      <!-- Calendar view mode selector (only when in calendar view) -->
+      @if (currentView() === 'calendar') {
+        <div class="calendar-controls">
+          <div class="view-mode-selector">
+            <button
+              class="mode-btn"
+              [class.active]="calendarMode() === 'day'"
+              (click)="setCalendarMode('day')"
+            >
+              Day
+            </button>
+            <button
+              class="mode-btn"
+              [class.active]="calendarMode() === 'week'"
+              (click)="setCalendarMode('week')"
+            >
+              Week
+            </button>
+            <button
+              class="mode-btn"
+              [class.active]="calendarMode() === 'month'"
+              (click)="setCalendarMode('month')"
+            >
+              Month
+            </button>
+            <button
+              class="mode-btn"
+              [class.active]="calendarMode() === 'agenda'"
+              (click)="setCalendarMode('agenda')"
+            >
+              Agenda
+            </button>
+          </div>
+
+          <!-- Profile filter toggle -->
+          <button
+            class="filter-toggle-btn"
+            [class.active]="showProfileFilter()"
+            (click)="toggleProfileFilter()"
+            aria-label="Filter by family member"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            @if (selectedMemberIds().length > 0) {
+              <span class="filter-badge">{{ selectedMemberIds().length }}</span>
+            }
+          </button>
+        </div>
+
+        <!-- Profile filter panel -->
+        @if (showProfileFilter()) {
+          <app-profile-filter
+            [members]="members()"
+            [selectedMemberIds]="selectedMemberIds()"
+            (selectionChange)="onMemberFilterChange($event)"
+          />
+        }
+      }
 
       <!-- Main content area -->
       <main class="display-content">
@@ -69,6 +168,46 @@ type DisplayView = 'schedule' | 'tasks' | 'routines';
               [members]="members()"
               [isLoading]="isLoading()"
             />
+          }
+          @case ('calendar') {
+            @switch (calendarMode()) {
+              @case ('day') {
+                <app-day-view
+                  [events]="filteredCalendarEvents()"
+                  [members]="members()"
+                  [isLoading]="isCalendarLoading()"
+                  [selectedDate]="selectedDate()"
+                  (dateChange)="onDateChange($event)"
+                />
+              }
+              @case ('week') {
+                <app-week-view
+                  [events]="filteredCalendarEvents()"
+                  [members]="members()"
+                  [isLoading]="isCalendarLoading()"
+                  [selectedDate]="selectedDate()"
+                  (dateChange)="onDateChange($event)"
+                  (daySelect)="onDaySelect($event)"
+                />
+              }
+              @case ('month') {
+                <app-month-view
+                  [events]="filteredCalendarEvents()"
+                  [members]="members()"
+                  [isLoading]="isCalendarLoading()"
+                  [selectedDate]="selectedDate()"
+                  (dateChange)="onDateChange($event)"
+                  (daySelect)="onDaySelect($event)"
+                />
+              }
+              @case ('agenda') {
+                <app-agenda-view
+                  [events]="filteredCalendarEvents()"
+                  [members]="members()"
+                  [isLoading]="isCalendarLoading()"
+                />
+              }
+            }
           }
           @case ('tasks') {
             <app-tasks-view
@@ -136,6 +275,85 @@ type DisplayView = 'schedule' | 'tasks' | 'routines';
       color: var(--accent-600);
     }
 
+    .calendar-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--space-4);
+      padding: 0 var(--space-2);
+    }
+
+    .view-mode-selector {
+      display: flex;
+      background: var(--surface-secondary);
+      border-radius: var(--radius-xl);
+      padding: var(--space-1);
+    }
+
+    .mode-btn {
+      padding: var(--space-2) var(--space-4);
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-lg);
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--duration-quick) var(--ease-out);
+      min-height: var(--touch-min);
+    }
+
+    .mode-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .mode-btn.active {
+      background: var(--surface-primary);
+      color: var(--accent-600);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .filter-toggle-btn {
+      position: relative;
+      width: var(--touch-lg);
+      height: var(--touch-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface-secondary);
+      border: none;
+      border-radius: var(--radius-xl);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--duration-quick) var(--ease-out);
+    }
+
+    .filter-toggle-btn:active {
+      transform: scale(0.95);
+    }
+
+    .filter-toggle-btn.active {
+      background: var(--accent-100);
+      color: var(--accent-600);
+    }
+
+    .filter-badge {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 4px;
+      background: var(--accent-500);
+      color: white;
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     .display-content {
       flex: 1;
       overflow: hidden;
@@ -171,20 +389,42 @@ export class DisplayComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly authService = inject(DeviceAuthService);
   private readonly cacheService = inject(CacheService);
+  private readonly eventService = inject(EventService);
 
   private refreshSubscription?: Subscription;
 
   // State
   protected readonly currentView = signal<DisplayView>('schedule');
+  protected readonly calendarMode = signal<CalendarViewMode>('day');
+  protected readonly selectedDate = signal<Date>(new Date());
+  protected readonly showProfileFilter = signal(false);
+  protected readonly selectedMemberIds = signal<string[]>([]);
   protected readonly isLoading = signal(true);
+  protected readonly isCalendarLoading = signal(false);
   protected readonly isOffline = signal(false);
 
   // Data
   protected readonly todayEvents = signal<ScheduleEvent[]>([]);
+  protected readonly calendarEvents = signal<ScheduleEvent[]>([]);
   protected readonly tasks = signal<TaskData[]>([]);
   protected readonly members = signal<MemberData[]>([]);
 
   protected readonly familyName = this.authService.familyName;
+
+  // Computed: filtered calendar events based on selected members
+  protected readonly filteredCalendarEvents = computed(() => {
+    const events = this.calendarEvents();
+    const memberIds = this.selectedMemberIds();
+
+    if (memberIds.length === 0) {
+      return events; // No filter, show all
+    }
+
+    return events.filter(event =>
+      event.memberIds.length === 0 || // Show events without assignees
+      event.memberIds.some(id => memberIds.includes(id))
+    );
+  });
 
   ngOnInit(): void {
     this.loadData();
@@ -204,28 +444,24 @@ export class DisplayComponent implements OnInit, OnDestroy {
 
   private handleOnline = (): void => {
     this.isOffline.set(false);
-    this.loadData(); // Refresh data when back online
+    this.loadData();
   };
 
   private handleOffline = (): void => {
     this.isOffline.set(true);
-    this.loadFromCache(); // Fall back to cache
+    this.loadFromCache();
   };
 
   private async loadData(): Promise<void> {
     this.isLoading.set(true);
 
     try {
-      // Try to load from API first
-      // For now, we'll use cached data as placeholder
       await this.loadFromCache();
 
-      // In production, this would fetch from API and update cache
-      // const response = await this.api.getToday();
-      // this.todayEvents.set(response.events);
-      // this.tasks.set(response.tasks);
-      // this.cacheService.cacheSchedule(today, response.events);
-      // this.cacheService.cacheTasks(response.tasks);
+      // Load calendar events if in calendar view
+      if (this.currentView() === 'calendar') {
+        await this.loadCalendarEvents();
+      }
 
     } catch (error) {
       console.error('Failed to load data:', error);
@@ -254,6 +490,50 @@ export class DisplayComponent implements OnInit, OnDestroy {
     }
   }
 
+  private async loadCalendarEvents(): Promise<void> {
+    this.isCalendarLoading.set(true);
+
+    try {
+      const mode = this.calendarMode();
+      const date = this.selectedDate();
+      let events: ScheduleEvent[] = [];
+
+      switch (mode) {
+        case 'day':
+          events = await this.eventService.fetchEventsForDay(date);
+          break;
+        case 'week':
+          const weekStart = this.getWeekStart(date);
+          events = await this.eventService.fetchEventsForWeek(weekStart);
+          break;
+        case 'month':
+          events = await this.eventService.fetchEventsForMonth(date.getFullYear(), date.getMonth());
+          break;
+        case 'agenda':
+          const agendaStart = new Date();
+          const agendaEnd = new Date();
+          agendaEnd.setDate(agendaEnd.getDate() + 14);
+          events = await this.eventService.fetchEvents({ startDate: agendaStart, endDate: agendaEnd });
+          break;
+      }
+
+      this.calendarEvents.set(events);
+    } catch (error) {
+      console.error('Failed to load calendar events:', error);
+    } finally {
+      this.isCalendarLoading.set(false);
+    }
+  }
+
+  private getWeekStart(date: Date): Date {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day;
+    d.setDate(diff);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+
   private startRefreshTimer(): void {
     this.refreshSubscription = interval(environment.display.refreshInterval)
       .subscribe(() => {
@@ -265,6 +545,34 @@ export class DisplayComponent implements OnInit, OnDestroy {
 
   setView(view: DisplayView): void {
     this.currentView.set(view);
+
+    // Load calendar events when switching to calendar view
+    if (view === 'calendar') {
+      this.loadCalendarEvents();
+    }
+  }
+
+  setCalendarMode(mode: CalendarViewMode): void {
+    this.calendarMode.set(mode);
+    this.loadCalendarEvents();
+  }
+
+  toggleProfileFilter(): void {
+    this.showProfileFilter.set(!this.showProfileFilter());
+  }
+
+  onMemberFilterChange(memberIds: string[]): void {
+    this.selectedMemberIds.set(memberIds);
+  }
+
+  onDateChange(date: Date): void {
+    this.selectedDate.set(date);
+    this.loadCalendarEvents();
+  }
+
+  onDaySelect(date: Date): void {
+    this.selectedDate.set(date);
+    this.setCalendarMode('day');
   }
 
   openSettings(): void {
