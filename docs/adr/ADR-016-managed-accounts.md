@@ -247,7 +247,6 @@ public class User
 
     // New fields for managed accounts
     public AccountType AccountType { get; set; } = AccountType.Full;
-    public string? ManagedById { get; set; }  // Parent's user ID (null for full accounts)
     public string? ProfilePin { get; set; }   // Hashed PIN (null if not set)
     public bool PinEnabled { get; set; } = false;
     public DateTime? PinLastChanged { get; set; }
@@ -258,7 +257,7 @@ public class User
 public enum AccountType
 {
     Full,       // Has email, can self-authenticate
-    Managed,    // No email, parent-controlled authentication
+    Managed,    // No email, any parent/admin can manage authentication
     ProfileOnly // No authentication, display representation only
 }
 
@@ -267,7 +266,7 @@ public class ManagedDevice
     public string Id { get; set; } = Nanoid.Generate();
     public string FamilyId { get; set; } = string.Empty;  // Partition key
     public string ManagedAccountId { get; set; } = string.Empty;  // The child's account
-    public string AuthorizedById { get; set; } = string.Empty;  // Parent who authorized
+    public string AuthorizedById { get; set; } = string.Empty;  // Parent/Admin who authorized (audit)
     public string DeviceIdentifier { get; set; } = string.Empty;  // Device fingerprint
     public string? DeviceName { get; set; }  // "Jordan's iPad"
     public ManagedDeviceType Type { get; set; }
@@ -287,6 +286,8 @@ public enum ManagedDeviceType
 }
 ```
 
+**Note:** Managed accounts are not tied to a specific parent. Any user with Owner, Admin, or Adult role can manage all managed accounts in their family. The `AuthorizedById` field in `ManagedDevice` is for audit purposes only, tracking which parent/admin authorized a specific device.
+
 ### JWT Claims for Managed Accounts
 
 ```json
@@ -295,7 +296,6 @@ public enum ManagedDeviceType
   "family_id": "family-guid",
   "role": "child",
   "account_type": "managed",
-  "managed_by": "parent-user-id",
   "auth_method": "pin|device_passkey|parent_qr",
   "device_id": "device-guid",
   "permissions": ["view_calendar", "complete_chores", "view_rewards"],

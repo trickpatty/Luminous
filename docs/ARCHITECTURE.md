@@ -297,7 +297,6 @@ public class User
 
     // Managed Account Support (see ADR-016)
     public AccountType AccountType { get; set; } = AccountType.Full;
-    public string? ManagedById { get; set; }              // Parent's user ID (null for full accounts)
     public string? ProfilePinHash { get; set; }          // Argon2id hashed PIN (null if not set)
     public bool PinEnabled { get; set; } = false;
     public DateTime? PinLastChanged { get; set; }
@@ -318,10 +317,12 @@ public enum UserRole
 public enum AccountType
 {
     Full,        // Has email, can self-authenticate (passkey, email OTP, social, password)
-    Managed,     // No email required, parent-controlled auth (PIN, device passkey, parent QR)
+    Managed,     // No email required, any parent/admin can manage auth (PIN, device passkey, QR)
     ProfileOnly  // No authentication, display representation only (pets, very young children)
 }
 ```
+
+**Note:** Managed accounts are not tied to a specific parent. Any user with Owner, Admin, or Adult role can manage all managed accounts in their family.
 
 #### Managed Device (Child Device Authorization)
 
@@ -333,7 +334,7 @@ public class ManagedDevice
     public string Id { get; set; } = Nanoid.Generate();
     public string FamilyId { get; set; } = string.Empty;      // Partition key
     public string ManagedAccountId { get; set; } = string.Empty;  // The child's account
-    public string AuthorizedById { get; set; } = string.Empty;    // Parent who authorized
+    public string AuthorizedById { get; set; } = string.Empty;    // Parent/Admin who authorized (audit only)
     public string DeviceIdentifier { get; set; } = string.Empty;  // Device fingerprint
     public string? DeviceName { get; set; }                       // "Jordan's iPad"
     public ManagedDeviceType Type { get; set; }

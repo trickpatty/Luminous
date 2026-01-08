@@ -801,9 +801,9 @@ Support for family members without email addresses, including children, elderly 
 
 ##### 5.6.1 Account Type Infrastructure
 - [ ] **5.6.1.1** Add AccountType enum to User entity (Full, Managed, ProfileOnly)
-- [ ] **5.6.1.2** Add ManagedById field to track parent-child account relationships
-- [ ] **5.6.1.3** Create ManagedDevice entity and CosmosDB container
-- [ ] **5.6.1.4** Update JWT claims to include account_type and managed_by
+- [ ] **5.6.1.2** Create ManagedDevice entity and CosmosDB container
+- [ ] **5.6.1.3** Update JWT claims to include account_type
+- [ ] **5.6.1.4** Authorization: Any Owner/Admin/Adult can manage all managed accounts in family
 
 ##### 5.6.2 Managed Account Creation
 - [ ] **5.6.2.1** API: POST /api/users/family/{familyId}/managed - Create managed account

@@ -568,7 +568,8 @@ Luminous supports family members of all ages, including children who may not hav
 - **PRF-004**: Profile color selection
 - **PRF-005**: Birthday and age tracking
 - **PRF-006**: Account type indicator (Full, Managed, Profile Only)
-- **PRF-007**: Managed-by relationship for child accounts
+
+**Note:** Managed accounts are not tied to a specific parent. Any user with Owner, Admin, or Adult role can manage all managed accounts in the family.
 
 #### 7.3 Caregiver Information
 - **PRF-010**: Allergies and medical notes
