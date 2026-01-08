@@ -543,27 +543,104 @@ The system must be resilient to failures and require zero manual intervention.
 
 ---
 
-### 7. Profiles and Household Directory
+### 7. Profiles, Accounts, and Household Directory
 
-#### 7.1 Profile Management
+Luminous supports family members of all ages, including children who may not have email addresses. The system distinguishes between **Profiles** (family member representation) and **Accounts** (authentication capability).
+
+#### 7.1 Account Types
+
+| Account Type | Email Required | Created By | Authentication Methods | Best For |
+|--------------|---------------|------------|----------------------|----------|
+| **Full Account** | Yes | Self-registration | Passkey, Email OTP, Social Login, Password | Adults, teens with email |
+| **Managed Account** | No | Parent/Admin | Profile PIN, Device Passkey, Parent QR | Children, elderly, guests |
+| **Profile Only** | No | Parent/Admin | None (display representation only) | Pets, very young children |
+
+- **ACC-001**: Full account creation with email verification (see ADR-011)
+- **ACC-002**: Managed account creation by parent/admin (no email required)
+- **ACC-003**: Profile-only creation for representation without authentication
+- **ACC-004**: Account upgrade path (Managed → Full when child gets email)
+- **ACC-005**: Parent oversight dashboard for all managed accounts
+
+#### 7.2 Profile Management
 - **PRF-001**: Unlimited profiles (family members and pets)
 - **PRF-002**: Photo/avatar support
 - **PRF-003**: Nickname and display name
 - **PRF-004**: Profile color selection
 - **PRF-005**: Birthday and age tracking
+- **PRF-006**: Account type indicator (Full, Managed, Profile Only)
+- **PRF-007**: Managed-by relationship for child accounts
 
-#### 7.2 Caregiver Information
+#### 7.3 Caregiver Information
 - **PRF-010**: Allergies and medical notes
 - **PRF-011**: Emergency contact numbers
 - **PRF-012**: Doctor/dentist information
 - **PRF-013**: School/activity information
 - **PRF-014**: Important notes for caregivers
 
-#### 7.3 Permissions
-- **PRF-020**: Role assignment (Admin, Member, Child, Caregiver)
-- **PRF-021**: Per-role permission matrix
-- **PRF-022**: PIN codes per profile (optional)
-- **PRF-023**: Caregiver time-limited access
+#### 7.4 Child/Managed Account Setup
+
+Parents can set up accounts for children and other family members who don't have email addresses:
+
+##### 7.4.1 Creating a Managed Account
+- **CHL-001**: Parent creates child profile with name, avatar, color, birthday
+- **CHL-002**: Parent assigns role (Child, Teen) with appropriate permissions
+- **CHL-003**: Parent sets optional Profile PIN (4-6 digits) for display authentication
+- **CHL-004**: Child immediately visible on calendars, chores, and family views
+
+##### 7.4.2 Child Device Setup (Mobile/Web)
+
+Three methods for children to access their own devices:
+
+**Method A: Setup Code (Recommended for personal devices)**
+- **CHL-010**: Parent generates 6-digit setup code (5-minute expiry)
+- **CHL-011**: Child enters code in app to begin device pairing
+- **CHL-012**: Child creates device passkey (Face ID/fingerprint/PIN)
+- **CHL-013**: Device linked to child's managed account with 30-day token
+
+**Method B: QR Code Authorization (Quick temporary access)**
+- **CHL-020**: Child's device displays QR code
+- **CHL-021**: Parent scans QR with authenticated app
+- **CHL-022**: Parent selects which managed account to authorize
+- **CHL-023**: Child's device receives session token
+
+**Method C: Profile PIN on Shared Devices**
+- **CHL-030**: Child taps their profile avatar on display/shared device
+- **CHL-031**: Child enters their Profile PIN
+- **CHL-032**: Session created with child's permissions (limited duration)
+
+##### 7.4.3 Parent Controls for Managed Accounts
+- **CHL-040**: View list of all devices linked to child's account
+- **CHL-041**: Revoke device access remotely
+- **CHL-042**: Reset or change child's Profile PIN
+- **CHL-043**: View child's recent activity (chores completed, logins)
+- **CHL-044**: Set device session expiration (auto-logout after N days)
+- **CHL-045**: Receive notifications when new device is linked
+- **CHL-046**: Convert managed account to full account when ready
+
+#### 7.5 Permissions by Role
+
+| Permission | Owner | Admin | Adult | Teen | Child | Caregiver |
+|------------|-------|-------|-------|------|-------|-----------|
+| View own calendar | Full | Full | Full | Full | Full | View (care) |
+| View family calendar | Full | Full | Full | Filtered | Filtered | View (care) |
+| Create events | Full | Full | Full | Own only | No | No |
+| Edit any event | Full | Full | Full | No | No | No |
+| Mark chores complete | Full | Full | Full | Own | Own | No |
+| Create chores | Full | Full | Full | No | No | No |
+| View rewards | Full | Full | Full | Own | Own | No |
+| Request rewards | N/A | N/A | N/A | Yes | Yes | No |
+| Approve rewards | Full | Full | Full | No | No | No |
+| Manage profiles | Full | Full | Own | Limited | View | View |
+| Manage managed accounts | Full | Full | No | No | No | No |
+| Family settings | Full | Full | View | No | No | No |
+| Device management | Full | Full | No | No | No | No |
+| Billing/subscription | Full | No | No | No | No | No |
+
+#### 7.6 Additional Permissions
+- **PRF-020**: Role assignment (Owner, Admin, Adult, Teen, Child, Caregiver)
+- **PRF-021**: Per-role permission matrix enforcement
+- **PRF-022**: PIN codes per profile (optional, for display/shared device access)
+- **PRF-023**: Caregiver time-limited access tokens
 
 ---
 
@@ -723,6 +800,8 @@ Detailed Architecture Decision Records (ADRs) are maintained in `/docs/adr/`. Ke
 | ADR-008 | Magic Import Requires Approval | Accepted |
 | ADR-009 | Zero-Distraction Design Principle | Accepted |
 | ADR-010 | In-House Passwordless Authentication | Accepted |
+| ADR-011 | Secure Registration Flow | Accepted |
+| ADR-016 | Managed Accounts for Children/Non-Email Users | Accepted |
 
 ---
 
@@ -759,13 +838,20 @@ Detailed Architecture Decision Records (ADRs) are maintained in `/docs/adr/`. Ke
 | Term | Definition |
 |------|------------|
 | **Chore** | A single task or to-do item assigned to family members |
+| **Device Passkey** | A biometric or PIN-based credential bound to a specific device, enabling passwordless authentication |
 | **Display** | The wall-mounted device running the Luminous display app |
 | **External Caregiver** | Non-household members with shared access (grandparents, babysitters) |
+| **Full Account** | A user account with email address that can authenticate independently via passkey, email OTP, or social login |
 | **Household Admin** | Primary account owner with full configuration access |
-| **Magic Import** | AI-powered feature to parse unstructured inputs into structured data |
-| **Profile** | A family member or pet represented in the system |
-| **Routine** | A sequence of steps that form a repeated activity (morning routine, etc.) |
 | **Kiosk Mode** | Locked-down display mode that prevents exit to other apps |
+| **Magic Import** | AI-powered feature to parse unstructured inputs into structured data |
+| **Managed Account** | A user account without email, created and controlled by a parent/admin, for children or other family members |
+| **Parent-Delegated Auth** | Authentication method where a parent authorizes a child's device access via setup code or QR scan |
+| **Profile** | A family member or pet represented in the system (may or may not have an associated account) |
+| **Profile Only** | A representation of a family member (typically pets or very young children) without authentication capability |
+| **Profile PIN** | A 4-6 digit code that allows a managed account user to authenticate on shared displays or devices |
+| **Routine** | A sequence of steps that form a repeated activity (morning routine, etc.) |
+| **Setup Code** | A temporary 6-digit code generated by a parent to link a child's device to their managed account |
 | **Two-Way Sync** | Calendar updates flow both to and from external providers |
 
 ---
@@ -778,6 +864,7 @@ Detailed Architecture Decision Records (ADRs) are maintained in `/docs/adr/`. Ke
 | 2.0.0 | 2025-12-21 | Luminous Team | Updated for Azure/.NET/Angular stack |
 | 2.1.0 | 2025-12-23 | Luminous Team | Updated ADR references to match implemented architecture |
 | 2.2.0 | 2026-01-08 | Luminous Team | Added multi-platform strategy and feature parity philosophy |
+| 2.3.0 | 2026-01-08 | Luminous Team | Added managed accounts for children/non-email users (ADR-016) |
 
 ---
 

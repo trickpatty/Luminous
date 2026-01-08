@@ -795,6 +795,60 @@ Complete the household coordination features including profiles, meal planning, 
 - [ ] **5.5.5** Expiration settings for join codes (optional time limit, usage limit)
 - [ ] **5.5.6** Revoke/regenerate join code capability
 
+#### 5.6 Managed Accounts (Children & Non-Email Users)
+
+Support for family members without email addresses, including children, elderly relatives, and guests (see ADR-016).
+
+##### 5.6.1 Account Type Infrastructure
+- [ ] **5.6.1.1** Add AccountType enum to User entity (Full, Managed, ProfileOnly)
+- [ ] **5.6.1.2** Add ManagedById field to track parent-child account relationships
+- [ ] **5.6.1.3** Create ManagedDevice entity and CosmosDB container
+- [ ] **5.6.1.4** Update JWT claims to include account_type and managed_by
+
+##### 5.6.2 Managed Account Creation
+- [ ] **5.6.2.1** API: POST /api/users/family/{familyId}/managed - Create managed account
+- [ ] **5.6.2.2** Web UI: "Add Family Member" flow with account type selection
+- [ ] **5.6.2.3** Mobile UI: "Add Child" flow in family management
+- [ ] **5.6.2.4** Display: Child profiles visible immediately after creation
+
+##### 5.6.3 Profile PIN Authentication
+- [ ] **5.6.3.1** Add ProfilePinHash, PinEnabled fields to User entity
+- [ ] **5.6.3.2** API: PUT /api/users/family/{familyId}/{userId}/pin - Set/update PIN
+- [ ] **5.6.3.3** API: POST /api/auth/pin/verify - Verify PIN and issue session token
+- [ ] **5.6.3.4** PIN rate limiting (5 attempts per 15 minutes, 30-min lockout)
+- [ ] **5.6.3.5** Display UI: Profile selector with PIN entry dialog
+- [ ] **5.6.3.6** Web/Mobile UI: PIN setup in child profile settings
+
+##### 5.6.4 Child Device Setup (Setup Code Method)
+- [ ] **5.6.4.1** API: POST /api/managed-devices/setup-code - Generate 6-digit setup code
+- [ ] **5.6.4.2** API: POST /api/managed-devices/activate - Activate device with code
+- [ ] **5.6.4.3** Web/Mobile UI: "Set Up Child's Device" wizard for parents
+- [ ] **5.6.4.4** Mobile/Web UI: "Enter Setup Code" flow for child's device
+- [ ] **5.6.4.5** Device passkey registration without email requirement
+- [ ] **5.6.4.6** Parent notification when child device is linked
+
+##### 5.6.5 Child Device Setup (QR Code Method)
+- [ ] **5.6.5.1** API: POST /api/managed-devices/qr/generate - Child device requests QR
+- [ ] **5.6.5.2** API: POST /api/managed-devices/qr/authorize - Parent authorizes via scanned QR
+- [ ] **5.6.5.3** Mobile UI: QR code scanner for parent authorization
+- [ ] **5.6.5.4** Mobile/Web UI: QR code display on child's device
+- [ ] **5.6.5.5** Real-time session delivery via polling or WebSocket
+
+##### 5.6.6 Parent Controls
+- [ ] **5.6.6.1** API: GET /api/managed-devices/family/{familyId} - List managed devices
+- [ ] **5.6.6.2** API: DELETE /api/managed-devices/{id} - Revoke device access
+- [ ] **5.6.6.3** Web/Mobile UI: Child device management dashboard
+- [ ] **5.6.6.4** View child's recent activity (logins, actions)
+- [ ] **5.6.6.5** Set device session expiration
+- [ ] **5.6.6.6** API: POST /api/users/family/{familyId}/{userId}/upgrade - Convert managed to full
+
+##### 5.6.7 Platform Integration
+- [ ] **5.6.7.1** Display app: Profile PIN authentication flow
+- [ ] **5.6.7.2** iOS app: Device passkey registration for managed accounts
+- [ ] **5.6.7.3** Android app: Device passkey registration for managed accounts
+- [ ] **5.6.7.4** Web app: Full managed account administration
+- [ ] **5.6.7.5** All platforms: Permission enforcement for managed account roles
+
 ### Exit Criteria
 
 - Complete profile management across all platforms
@@ -802,6 +856,9 @@ Complete the household coordination features including profiles, meal planning, 
 - Lists usable for grocery and custom purposes
 - Caregivers can access via web link
 - Family join codes with approval workflow operational
+- **Children can use display app with Profile PIN authentication**
+- **Children can use mobile/web apps on their own devices (setup code or QR method)**
+- **Parents have full oversight and control over managed accounts**
 
 ---
 
@@ -1034,3 +1091,4 @@ After Phase 2.7 is complete, feature development can proceed in parallel:
 | 3.3.0 | 2026-01-01 | Luminous Team | Phase 2.1 Display Application (Angular + Electron) completed |
 | 3.4.0 | 2026-01-07 | Luminous Team | Phase 2.3 Calendar Views completed (Day, Week, Month, Agenda views + Profile filtering) |
 | 3.5.0 | 2026-01-08 | Luminous Team | Added Phase 2.7 Cross-Platform Infrastructure, feature parity strategy, updated dependency map |
+| 3.6.0 | 2026-01-08 | Luminous Team | Added Phase 5.6 Managed Accounts for children/non-email users (ADR-016) |

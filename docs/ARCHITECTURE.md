@@ -288,12 +288,21 @@ public class User
     public string Id { get; set; } = Nanoid.Generate();  // NanoId: compact, URL-safe
     public string FamilyId { get; set; } = string.Empty;  // Partition key
     public string ExternalId { get; set; } = string.Empty; // Internal auth ID
-    public string Email { get; set; } = string.Empty;
+    public string? Email { get; set; }                    // Null for managed accounts
     public string DisplayName { get; set; } = string.Empty;
     public UserRole Role { get; set; } = UserRole.Member;
     public UserProfile Profile { get; set; } = new();
     public CaregiverInfo? CaregiverInfo { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    // Managed Account Support (see ADR-016)
+    public AccountType AccountType { get; set; } = AccountType.Full;
+    public string? ManagedById { get; set; }              // Parent's user ID (null for full accounts)
+    public string? ProfilePinHash { get; set; }          // Argon2id hashed PIN (null if not set)
+    public bool PinEnabled { get; set; } = false;
+    public DateTime? PinLastChanged { get; set; }
+    public int PinFailedAttempts { get; set; } = 0;
+    public DateTime? PinLockedUntil { get; set; }
 }
 
 public enum UserRole
@@ -304,6 +313,43 @@ public enum UserRole
     Teen,       // Limited access
     Child,      // View and complete only
     Caregiver   // External, view only
+}
+
+public enum AccountType
+{
+    Full,        // Has email, can self-authenticate (passkey, email OTP, social, password)
+    Managed,     // No email required, parent-controlled auth (PIN, device passkey, parent QR)
+    ProfileOnly  // No authentication, display representation only (pets, very young children)
+}
+```
+
+#### Managed Device (Child Device Authorization)
+
+For devices authorized to access managed accounts (see ADR-016):
+
+```csharp
+public class ManagedDevice
+{
+    public string Id { get; set; } = Nanoid.Generate();
+    public string FamilyId { get; set; } = string.Empty;      // Partition key
+    public string ManagedAccountId { get; set; } = string.Empty;  // The child's account
+    public string AuthorizedById { get; set; } = string.Empty;    // Parent who authorized
+    public string DeviceIdentifier { get; set; } = string.Empty;  // Device fingerprint
+    public string? DeviceName { get; set; }                       // "Jordan's iPad"
+    public ManagedDeviceType Type { get; set; }
+    public string? PasskeyCredentialId { get; set; }              // If device passkey method used
+    public DateTime AuthorizedAt { get; set; }
+    public DateTime? LastUsedAt { get; set; }
+    public DateTime? ExpiresAt { get; set; }                      // Optional expiration
+    public bool IsRevoked { get; set; } = false;
+}
+
+public enum ManagedDeviceType
+{
+    SharedDisplay,     // Family display, PIN auth
+    PersonalMobile,    // Child's phone/tablet, passkey auth
+    PersonalWeb,       // Child's browser, passkey or session auth
+    TemporarySession   // QR-code authorized session
 }
 ```
 
@@ -337,10 +383,11 @@ public enum DeviceType
 | Data Type | Storage | Partition Strategy | Notes |
 |-----------|---------|-------------------|-------|
 | **Families** | CosmosDB | By family ID | Tenant root |
-| **Users** | CosmosDB | By family ID | Includes auth credentials link |
+| **Users** | CosmosDB | By family ID | Includes auth credentials link, account type |
 | **Events** | CosmosDB | By family ID | Calendar events |
 | **Chores** | CosmosDB | By family ID | Tasks and assignments |
-| **Devices** | CosmosDB | By family ID | Board registrations |
+| **Devices** | CosmosDB | By family ID | Board registrations (display linking) |
+| **ManagedDevices** | CosmosDB | By family ID | Child device authorizations (ADR-016) |
 | **Media** | Blob Storage | By family ID container | Avatars, recipe photos |
 | **Sessions** | Redis Cache | By session ID | Real-time sync state |
 | **Secrets** | Key Vault | N/A | API keys, certificates |
@@ -985,6 +1032,7 @@ services:
 | [ADR-013](./adr/ADR-013-shared-angular-library.md) | Shared Angular Library for Web/Display | Accepted | 2026-01-08 |
 | [ADR-014](./adr/ADR-014-cross-platform-feature-parity.md) | Cross-Platform Feature Parity Strategy | Accepted | 2026-01-08 |
 | [ADR-015](./adr/ADR-015-design-token-pipeline.md) | Design Token Export Pipeline | Accepted | 2026-01-08 |
+| [ADR-016](./adr/ADR-016-managed-accounts.md) | Managed Accounts for Children/Non-Email Users | Accepted | 2026-01-08 |
 
 ---
 
@@ -1010,3 +1058,4 @@ services:
 | 2.3.0 | 2025-12-23 | Luminous Team | Phase 0 complete: Updated status to Active |
 | 2.4.0 | 2025-12-28 | Luminous Team | Added secure registration flow, native OpenAPI |
 | 2.5.0 | 2026-01-08 | Luminous Team | Added cross-platform client architecture, shared Angular library, OpenAPI client generation, design token pipeline |
+| 2.6.0 | 2026-01-08 | Luminous Team | Added managed accounts data model for children/non-email users (ADR-016) |
