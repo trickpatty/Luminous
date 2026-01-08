@@ -4,6 +4,7 @@ export { AuthService } from './auth.service';
 export { CalendarConnectionService } from './calendar-connection.service';
 export { CanvasService, type CanvasPeriod, type CanvasPreference } from './canvas.service';
 export { DeviceService } from './device.service';
+export { EventService, type EventSummaryDto, type ScheduleEvent, type DateRange } from './event.service';
 export { FamilyService } from './family.service';
 export { InvitationService } from './invitation.service';
 export { StorageService } from './storage.service';

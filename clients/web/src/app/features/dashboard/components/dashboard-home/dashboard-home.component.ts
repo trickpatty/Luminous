@@ -1,7 +1,7 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { AuthService, FamilyService, UserService, DeviceService } from '../../../../core';
+import { AuthService, FamilyService, UserService, EventService } from '../../../../core';
 import { CardComponent, AvatarComponent, ButtonComponent, SpinnerComponent } from '../../../../shared';
 
 @Component({
@@ -49,7 +49,7 @@ import { CardComponent, AvatarComponent, ButtonComponent, SpinnerComponent } fro
         </a>
         <div class="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
           <p class="text-sm font-medium text-gray-500">Today's Events</p>
-          <p class="mt-2 text-2xl sm:text-3xl font-bold text-gray-900">0</p>
+          <p class="mt-2 text-2xl sm:text-3xl font-bold text-gray-900">{{ todayEventCount() }}</p>
         </div>
         <div class="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
           <p class="text-sm font-medium text-gray-500">Pending Tasks</p>
@@ -61,13 +61,66 @@ import { CardComponent, AvatarComponent, ButtonComponent, SpinnerComponent } fro
       <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         <!-- Today's Schedule Card -->
         <app-card title="Today's Schedule" size="lg">
-          <div class="text-center py-8 text-gray-500">
-            <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <p class="mt-2 font-medium">No events today</p>
-            <p class="text-sm mt-1">Connect a calendar to see your schedule</p>
-          </div>
+          @if (eventService.isLoading()) {
+            <div class="flex justify-center py-8">
+              <app-spinner size="md" />
+            </div>
+          } @else if (eventService.todayEvents().length === 0) {
+            <div class="text-center py-8 text-gray-500">
+              <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p class="mt-2 font-medium">No events today</p>
+              <p class="text-sm mt-1">Connect a calendar to see your schedule</p>
+            </div>
+          } @else {
+            <div class="space-y-3 max-h-80 overflow-y-auto">
+              @for (event of eventService.todayEvents().slice(0, 8); track event.id) {
+                <div
+                  class="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
+                  [class.opacity-50]="eventService.isEventPast(event)"
+                >
+                  <div
+                    class="w-1 h-full min-h-[40px] rounded-full flex-shrink-0"
+                    [style.background-color]="event.color || 'var(--primary-500)'"
+                  ></div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 truncate">
+                      {{ event.title }}
+                    </p>
+                    <p class="text-xs text-gray-500">
+                      @if (event.isAllDay) {
+                        All day
+                      } @else {
+                        {{ eventService.formatTime(event.startTime) }}
+                        @if (event.endTime) {
+                          - {{ eventService.formatTime(event.endTime) }}
+                        }
+                      }
+                    </p>
+                    @if (event.location) {
+                      <p class="text-xs text-gray-400 truncate mt-0.5">
+                        {{ event.location }}
+                      </p>
+                    }
+                  </div>
+                  @if (eventService.isEventNow(event)) {
+                    <span class="text-xs bg-primary-100 text-primary-700 px-2 py-0.5 rounded-full font-medium">
+                      Now
+                    </span>
+                  }
+                </div>
+              }
+              @if (eventService.todayEvents().length > 8) {
+                <a
+                  routerLink="/dashboard/calendars"
+                  class="block text-center text-sm text-primary-600 hover:text-primary-700 font-medium py-2"
+                >
+                  View all {{ eventService.todayEvents().length }} events
+                </a>
+              }
+            </div>
+          }
         </app-card>
 
         <!-- Tasks Card -->
@@ -168,13 +221,19 @@ export class DashboardHomeComponent implements OnInit {
   private readonly authService = inject(AuthService);
   readonly familyService = inject(FamilyService);
   readonly userService = inject(UserService);
+  readonly eventService = inject(EventService);
 
   user = this.authService.user;
+
+  // Computed signal for today's event count
+  todayEventCount = computed(() => this.eventService.todayEvents().length);
 
   ngOnInit(): void {
     const familyId = this.authService.user()?.familyId;
     if (familyId) {
       this.userService.getMembers(familyId).subscribe();
+      // Fetch today's events for the schedule widget
+      this.eventService.fetchEventsForToday().subscribe();
     }
   }
 }
