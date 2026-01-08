@@ -1,7 +1,7 @@
 # Luminous Project Overview
 
-> **Document Version:** 2.1.0
-> **Last Updated:** 2025-12-23
+> **Document Version:** 2.2.0
+> **Last Updated:** 2026-01-08
 > **Status:** Active
 > **TOGAF Phase:** Architecture Vision (Phase A)
 
@@ -173,6 +173,38 @@ Native apps provide:
 - Biometric authentication
 - Offline capability with local caching
 - Platform-specific UI/UX patterns
+
+### Multi-Platform Strategy
+
+Luminous supports four client platforms, each optimized for its context while maintaining **feature parity** across all platforms.
+
+#### Platform Purposes
+
+| Platform | Primary Purpose | Primary Users |
+|----------|-----------------|---------------|
+| **Web App** | Admin console, desktop-first management | Working parents at desk, admins |
+| **Display App** | Always-on family hub, glanceable info | All family members, at-a-glance |
+| **iOS App** | On-the-go management, notifications | Parents and teens with iPhones |
+| **Android App** | On-the-go management, notifications | Parents and teens with Android |
+
+#### Feature Parity Philosophy
+
+All platforms support all features, ensuring families aren't limited by their choice of device:
+
+- **Full Feature Access**: Calendar, tasks, chores, lists, profiles, and settings available on every platform
+- **Platform Optimization**: Each platform is optimized for its strengths (web for complex tasks, mobile for quick actions, display for glanceable info)
+- **Consistent Experience**: Shared design tokens ensure visual consistency; shared API contracts ensure behavioral consistency
+
+#### Development Approach
+
+New features follow a **phased rollout** to reduce development burden while maintaining parity:
+
+1. **Web App First**: Features developed and validated on web (fastest iteration)
+2. **Display App**: Adapted using shared Angular code (~70% reuse)
+3. **iOS App**: Native implementation using generated API client
+4. **Android App**: Native implementation using generated API client
+
+This approach allows early validation of features before native investment, while shared infrastructure (API clients, design tokens) ensures consistency without duplicate effort.
 
 ### Local Development Environment
 
@@ -745,6 +777,7 @@ Detailed Architecture Decision Records (ADRs) are maintained in `/docs/adr/`. Ke
 | 1.0.0 | 2025-12-21 | Luminous Team | Initial draft |
 | 2.0.0 | 2025-12-21 | Luminous Team | Updated for Azure/.NET/Angular stack |
 | 2.1.0 | 2025-12-23 | Luminous Team | Updated ADR references to match implemented architecture |
+| 2.2.0 | 2026-01-08 | Luminous Team | Added multi-platform strategy and feature parity philosophy |
 
 ---
 
