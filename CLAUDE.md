@@ -148,23 +148,39 @@ src/
 ├── Luminous.Application/      # Use cases, DTOs, application services
 ├── Luminous.Infrastructure/   # Data access, external services, Azure integrations
 ├── Luminous.Api/              # ASP.NET Core Web API, controllers
-└── Luminous.Functions/        # Azure Functions for background processing
+├── Luminous.Functions/        # Azure Functions for background processing
+└── Luminous.Shared/           # Shared DTOs, API contracts
 
-# Angular Web/Display Applications
+# Angular Client Applications
 clients/
+├── shared/                    # Shared Angular library (npm workspace)
+│   ├── src/lib/
+│   │   ├── models/            # TypeScript interfaces (API contracts)
+│   │   ├── services/          # Common services (API, auth, state)
+│   │   ├── components/        # Reusable UI components
+│   │   ├── interceptors/      # HTTP interceptors
+│   │   └── utils/             # Shared utilities
+│   └── ng-package.json        # Angular library config
 ├── web/                       # Main web application
 │   ├── src/app/
-│   │   ├── core/              # Singleton services, guards, interceptors
-│   │   ├── shared/            # Shared components, pipes, directives
+│   │   ├── core/              # App-specific services, guards
+│   │   ├── shared/            # App-specific shared components
 │   │   ├── features/          # Feature modules (lazy-loaded)
-│   │   └── models/            # TypeScript interfaces and types
+│   │   └── models/            # App-specific types (extends shared)
 ├── display/                   # Electron display application
-└── shared/                    # Shared Angular libraries
-
-# Native Mobile Applications
-mobile/
+│   ├── src/app/               # (same structure as web)
+│   └── electron/              # Electron main process
 ├── ios/                       # Swift/SwiftUI iOS app
 └── android/                   # Kotlin/Compose Android app
+
+# Design Tokens (Single Source of Truth)
+design-tokens/
+├── tokens.json                # Master token definitions
+├── config.js                  # Style Dictionary configuration
+└── build/                     # Generated outputs
+    ├── css/                   # CSS custom properties
+    ├── swift/                 # Swift extensions
+    └── kotlin/                # Kotlin constants
 
 # Infrastructure as Code
 infra/
@@ -181,17 +197,57 @@ infra/
 - Inputs/Outputs should be typed and documented
 - Use services for state management, avoid deep component hierarchies
 - Components should be presentational or smart, not both
+- **Import shared code from `@luminous/shared`** (the shared library)
+- Never duplicate models, services, or components that exist in shared
+
+**Shared Angular Library (`clients/shared/`)**
+- Contains code used by both web and display apps
+- Models should match API contracts (or use OpenAPI-generated types)
+- Services should be generic; app-specific logic stays in each app
+- Components should be adaptable (accept size/variant inputs)
+- Export all public API from `public-api.ts`
 
 **Native Mobile**
 - iOS: Follow SwiftUI patterns with ObservableObject for state
 - Android: Use Compose with ViewModel and StateFlow
-- Share API models via OpenAPI-generated clients
+- **Use OpenAPI-generated clients** for API communication
+- **Import design tokens** from generated Swift/Kotlin files
+- Never hardcode colors, spacing, or typography
 
 **.NET Backend**
 - Follow Clean Architecture layer separation
 - Use MediatR for CQRS pattern
 - Repository pattern for data access
 - Domain entities should be persistence-ignorant
+- **OpenAPI spec is generated automatically** - ensure DTOs are well-documented
+
+#### Cross-Platform Development Strategy
+
+Luminous follows a **feature parity** model where all platforms (Web, Display, iOS, Android) support all features, with each platform optimized for its context.
+
+**Feature Rollout Order:**
+1. **Web App first** - fastest iteration, validation with users
+2. **Display App** - adapt shared Angular code (~70% reuse from web)
+3. **iOS App** - native implementation using generated API client
+4. **Android App** - native implementation using generated API client
+
+**Code Sharing:**
+- `clients/shared/` - Shared Angular library for web and display (~70% code reuse)
+- OpenAPI-generated clients ensure API contract consistency across all platforms
+- `design-tokens/` exports ensure visual consistency (colors, spacing, typography)
+
+**Platform Optimization:**
+| Platform | Optimized For |
+|----------|---------------|
+| **Web** | Complex tasks, keyboard input, bulk operations |
+| **Display** | Glanceable info, touch interaction, ambient display |
+| **Mobile** | Quick actions, notifications, on-the-go access |
+
+**When adding a new feature:**
+1. Implement and validate on Web first
+2. Verify API contracts work via OpenAPI spec
+3. Add to Display using shared library components
+4. Implement native versions for iOS/Android
 
 ---
 

@@ -1,6 +1,6 @@
 # Luminous Design System
 
-> **Version**: 1.0.0
+> **Version**: 1.1.0
 > **Status**: Canonical Specification
 > **Last Updated**: January 2026
 
@@ -25,6 +25,7 @@ This document defines the complete design system for Luminous—every color, com
 13. [Personalization](#13-personalization)
 14. [Platform Adaptations](#14-platform-adaptations)
 15. [Implementation Reference](#15-implementation-reference)
+16. [Multi-Platform Token Export](#16-multi-platform-token-export)
 
 ---
 
@@ -1958,11 +1959,329 @@ Use this checklist when building new components:
 
 ---
 
+## 16. Multi-Platform Token Export
+
+Luminous uses a **single source of truth** for design tokens that are exported to all platforms (Web, Display, iOS, Android).
+
+### 16.1 Token Pipeline Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                       DESIGN TOKEN PIPELINE                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  design-tokens/tokens.json                                               │
+│       │                                                                  │
+│       ▼                                                                  │
+│  Style Dictionary (build tool)                                          │
+│       │                                                                  │
+│       ├─────────────────┬─────────────────┬─────────────────┐           │
+│       ▼                 ▼                 ▼                 ▼           │
+│  CSS Variables      Swift Extensions   Kotlin Object    Tailwind        │
+│  (Angular)          (iOS)              (Android)        Config          │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### 16.2 Token Source Format
+
+Tokens are defined in JSON following the [Design Tokens Community Group](https://design-tokens.github.io/community-group/format/) format:
+
+```json
+{
+  "color": {
+    "canvas": {
+      "dawn": { "$value": "#FFFCF7", "$type": "color" },
+      "morning": { "$value": "#FEFDFB", "$type": "color" },
+      "afternoon": { "$value": "#FDFCFA", "$type": "color" },
+      "evening": { "$value": "#FDF9F3", "$type": "color" },
+      "night": { "$value": "#FAF7F2", "$type": "color" }
+    },
+    "accent": {
+      "50": { "$value": "#F0F9FF", "$type": "color" },
+      "100": { "$value": "#E0F2FE", "$type": "color" },
+      "500": { "$value": "#0EA5E9", "$type": "color" },
+      "600": { "$value": "#0284C7", "$type": "color" },
+      "700": { "$value": "#0369A1", "$type": "color" }
+    },
+    "member": {
+      "sky": { "$value": "#0EA5E9", "$type": "color" },
+      "emerald": { "$value": "#10B981", "$type": "color" },
+      "amber": { "$value": "#F59E0B", "$type": "color" },
+      "rose": { "$value": "#F43F5E", "$type": "color" },
+      "violet": { "$value": "#8B5CF6", "$type": "color" }
+    }
+  },
+  "spacing": {
+    "1": { "$value": "4px", "$type": "dimension" },
+    "2": { "$value": "8px", "$type": "dimension" },
+    "4": { "$value": "16px", "$type": "dimension" },
+    "8": { "$value": "32px", "$type": "dimension" }
+  },
+  "radius": {
+    "sm": { "$value": "6px", "$type": "dimension" },
+    "md": { "$value": "8px", "$type": "dimension" },
+    "lg": { "$value": "12px", "$type": "dimension" },
+    "xl": { "$value": "16px", "$type": "dimension" }
+  },
+  "touch": {
+    "min": { "$value": "44px", "$type": "dimension" },
+    "md": { "$value": "48px", "$type": "dimension" },
+    "lg": { "$value": "56px", "$type": "dimension" }
+  }
+}
+```
+
+### 16.3 Platform Output Formats
+
+#### CSS Custom Properties (Angular Web/Display)
+
+```css
+/* Generated: design-tokens/build/css/tokens.css */
+:root {
+  --color-canvas-dawn: #FFFCF7;
+  --color-canvas-morning: #FEFDFB;
+  --color-accent-500: #0EA5E9;
+  --color-accent-600: #0284C7;
+  --color-member-sky: #0EA5E9;
+  --color-member-emerald: #10B981;
+  --spacing-1: 4px;
+  --spacing-4: 16px;
+  --radius-md: 8px;
+  --touch-min: 44px;
+}
+```
+
+#### Swift Extensions (iOS)
+
+```swift
+// Generated: design-tokens/build/swift/DesignTokens.swift
+import SwiftUI
+
+public enum DesignTokens {
+    public enum Color {
+        public enum Canvas {
+            public static let dawn = SwiftUI.Color(hex: "FFFCF7")
+            public static let morning = SwiftUI.Color(hex: "FEFDFB")
+        }
+        public enum Accent {
+            public static let _500 = SwiftUI.Color(hex: "0EA5E9")
+            public static let _600 = SwiftUI.Color(hex: "0284C7")
+        }
+        public enum Member {
+            public static let sky = SwiftUI.Color(hex: "0EA5E9")
+            public static let emerald = SwiftUI.Color(hex: "10B981")
+        }
+    }
+    public enum Spacing {
+        public static let _1: CGFloat = 4
+        public static let _4: CGFloat = 16
+    }
+    public enum Radius {
+        public static let md: CGFloat = 8
+    }
+    public enum Touch {
+        public static let min: CGFloat = 44
+    }
+}
+```
+
+#### Kotlin Constants (Android)
+
+```kotlin
+// Generated: design-tokens/build/kotlin/DesignTokens.kt
+package com.luminous.design
+
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+
+object DesignTokens {
+    object Colors {
+        object Canvas {
+            val dawn = Color(0xFFFFFCF7)
+            val morning = Color(0xFFFEFDFB)
+        }
+        object Accent {
+            val _500 = Color(0xFF0EA5E9)
+            val _600 = Color(0xFF0284C7)
+        }
+        object Member {
+            val sky = Color(0xFF0EA5E9)
+            val emerald = Color(0xFF10B981)
+        }
+    }
+    object Spacing {
+        val _1 = 4.dp
+        val _4 = 16.dp
+    }
+    object Radius {
+        val md = 8.dp
+    }
+    object Touch {
+        val min = 44.dp
+    }
+}
+```
+
+### 16.4 Style Dictionary Configuration
+
+```javascript
+// design-tokens/config.js
+module.exports = {
+  source: ['tokens.json'],
+  platforms: {
+    css: {
+      transformGroup: 'css',
+      buildPath: 'build/css/',
+      files: [{
+        destination: 'tokens.css',
+        format: 'css/variables',
+        options: { outputReferences: true }
+      }]
+    },
+    swift: {
+      transformGroup: 'swift',
+      buildPath: 'build/swift/',
+      files: [{
+        destination: 'DesignTokens.swift',
+        format: 'swift/class.swift',
+        className: 'DesignTokens'
+      }]
+    },
+    kotlin: {
+      transformGroup: 'compose',
+      buildPath: 'build/kotlin/',
+      files: [{
+        destination: 'DesignTokens.kt',
+        format: 'compose/object',
+        packageName: 'com.luminous.design'
+      }]
+    },
+    tailwind: {
+      transformGroup: 'js',
+      buildPath: 'build/tailwind/',
+      files: [{
+        destination: 'tokens.js',
+        format: 'javascript/module'
+      }]
+    }
+  }
+};
+```
+
+### 16.5 CI/CD Integration
+
+Tokens are rebuilt automatically when the source file changes:
+
+```yaml
+# .github/workflows/design-tokens.yml
+name: Build Design Tokens
+
+on:
+  push:
+    paths:
+      - 'design-tokens/tokens.json'
+      - 'design-tokens/config.js'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Style Dictionary
+        run: npm install -g style-dictionary
+
+      - name: Build tokens
+        run: cd design-tokens && style-dictionary build
+
+      - name: Commit generated tokens
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add design-tokens/build/
+          git diff --staged --quiet || git commit -m "🎨 chore: Regenerate design tokens"
+          git push
+```
+
+### 16.6 Platform Usage
+
+#### Angular (Web/Display)
+
+```typescript
+// Import generated CSS in styles.css
+@import '../../../design-tokens/build/css/tokens.css';
+
+// Use in components
+.button-primary {
+  background: var(--color-accent-600);
+  border-radius: var(--radius-md);
+  min-height: var(--touch-min);
+}
+```
+
+#### iOS (SwiftUI)
+
+```swift
+import SwiftUI
+
+struct PrimaryButton: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .frame(minHeight: DesignTokens.Touch.min)
+            .background(DesignTokens.Color.Accent._600)
+            .cornerRadius(DesignTokens.Radius.md)
+    }
+}
+```
+
+#### Android (Compose)
+
+```kotlin
+import com.luminous.design.DesignTokens
+
+@Composable
+fun PrimaryButton(title: String, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier.heightIn(min = DesignTokens.Touch.min),
+        shape = RoundedCornerShape(DesignTokens.Radius.md),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = DesignTokens.Colors.Accent._600
+        )
+    ) {
+        Text(title)
+    }
+}
+```
+
+### 16.7 Token Categories
+
+| Category | Description | Platforms |
+|----------|-------------|-----------|
+| **Colors** | Canvas, surface, text, accent, semantic, member | All |
+| **Spacing** | 4px base unit scale (1-20) | All |
+| **Typography** | Font sizes, weights, line heights | All |
+| **Radii** | Border radius scale | All |
+| **Shadows** | Elevation scale | Web, Display |
+| **Motion** | Duration, easing curves | Web, Display |
+| **Touch** | Minimum touch targets | All |
+
+---
+
 ## Changelog
 
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0.0 | January 2026 | Initial specification |
+| 1.1.0 | January 2026 | Added multi-platform token export (Section 16) |
 
 ---
 

@@ -104,11 +104,36 @@ Phase 6: Intelligence & Ecosystem
 |-------|------|-------|------------------|--------|
 | **0** | Foundation | Infrastructure | Azure IaC, .NET solution, Angular shell, Passwordless Auth, Local Dev, CI/CD, Docs | ✅ Complete |
 | **1** | Core Platform | Multi-tenancy | Family sign-up, device linking, CosmosDB, web MVP | ✅ Complete |
-| **2** | Display & Calendar | Calendar visibility | Display app, calendar integration, SignalR sync | 🔄 In Progress |
-| **3** | Native Mobile | Mobile apps | iOS (Swift), Android (Kotlin), push notifications | ⬜ Not Started |
-| **4** | Task Management | Chores and routines | Task creation, completion tracking, rewards | ⬜ Not Started |
-| **5** | Household Features | Expanded features | Profiles, meals, lists, caregiver portal | ⬜ Not Started |
+| **2** | Display & Calendar | Calendar visibility | Display app, calendar integration, SignalR sync, cross-platform infrastructure | 🔄 In Progress |
+| **3** | Native Mobile | Mobile apps | iOS (Swift), Android (Kotlin), push notifications, feature parity | ⬜ Not Started |
+| **4** | Task Management | Chores and routines | Task creation, completion tracking, rewards (all platforms) | ⬜ Not Started |
+| **5** | Household Features | Expanded features | Profiles, meals, lists, caregiver portal (all platforms) | ⬜ Not Started |
 | **6** | Intelligence & Ecosystem | AI and extensions | Magic import, suggestions, third-party APIs | ⬜ Not Started |
+
+### Cross-Platform Development Strategy
+
+Starting from Phase 3, all features follow a **phased rollout** across platforms to maximize code reuse and ensure consistent quality:
+
+| Week | Platform | Activities |
+|------|----------|------------|
+| 1 | **Web App** | Feature development, validation, user testing |
+| 2 | **Display App** | Adapt from shared Angular code (~70% reuse) |
+| 3 | **iOS App** | Native implementation using generated API client |
+| 4 | **Android App** | Native implementation using generated API client |
+
+**Benefits:**
+- Early validation of features before native investment
+- Consistent API contracts via OpenAPI-generated clients
+- Shared design tokens ensure visual consistency
+- Reduced duplicate effort through shared Angular library
+
+**Platform Optimization:**
+
+| Platform | Optimized For | Examples |
+|----------|---------------|----------|
+| **Web** | Complex tasks, keyboard input | Bulk scheduling, calendar OAuth, detailed settings |
+| **Display** | Glanceable info, touch | "What's next" view, task completion, ambient info |
+| **Mobile** | Quick actions, notifications | Push alerts, quick add, on-the-go checks |
 
 ---
 
@@ -556,6 +581,55 @@ Deliver the display application with calendar integration, real-time sync, and g
 - [ ] **2.6.2** Privacy mode (wallpaper only)
 - [ ] **2.6.3** Sleep mode (scheduled)
 
+#### 2.7 Cross-Platform Infrastructure
+
+Establish shared code infrastructure before Phase 3 to maximize code reuse and ensure consistent behavior across platforms.
+
+##### 2.7.1 Shared Angular Library
+
+- [ ] **2.7.1.1** Create `clients/shared/` Angular library project structure
+- [ ] **2.7.1.2** Extract shared models from web and display apps
+  - User, Family, Device, Event, Invitation, CalendarConnection models
+- [ ] **2.7.1.3** Extract shared services
+  - ApiService, AuthService, FamilyService, StorageService, CanvasService
+- [ ] **2.7.1.4** Extract shared UI components
+  - Avatar, Button, Card, Input, Spinner, Alert, Toast, Progress, Toggle, EmptyState
+- [ ] **2.7.1.5** Extract shared interceptors
+  - AuthInterceptor, ErrorInterceptor, ApiResponseInterceptor
+- [ ] **2.7.1.6** Update web app to consume shared library
+- [ ] **2.7.1.7** Update display app to consume shared library
+- [ ] **2.7.1.8** Configure npm workspace for local development
+
+##### 2.7.2 OpenAPI Client Generation Pipeline
+
+- [ ] **2.7.2.1** Configure API to export OpenAPI specification on build
+- [ ] **2.7.2.2** Set up openapi-typescript for TypeScript client generation
+- [ ] **2.7.2.3** Set up swift-openapi-generator for iOS client generation
+- [ ] **2.7.2.4** Set up openapi-generator (kotlin) for Android client generation
+- [ ] **2.7.2.5** Create GitHub Actions workflow to generate clients on API changes
+- [ ] **2.7.2.6** Integrate generated TypeScript client into shared library
+
+##### 2.7.3 Design Token Pipeline
+
+- [ ] **2.7.3.1** Create `design-tokens/tokens.json` master token file
+  - Colors (canvas, surface, text, accent, member colors)
+  - Spacing (4px base unit scale)
+  - Typography (sizes, weights, line heights)
+  - Radii, shadows, motion, touch targets
+- [ ] **2.7.3.2** Set up Style Dictionary for token transformation
+- [ ] **2.7.3.3** Generate CSS custom properties for Angular apps
+- [ ] **2.7.3.4** Generate Swift extensions for iOS
+- [ ] **2.7.3.5** Generate Kotlin constants for Android
+- [ ] **2.7.3.6** Generate Tailwind CSS configuration
+- [ ] **2.7.3.7** Create GitHub Actions workflow to build tokens on change
+- [ ] **2.7.3.8** Update Angular apps to use generated CSS tokens
+
+**Exit Criteria for 2.7:**
+- Shared Angular library published and consumed by web and display apps
+- OpenAPI clients generated automatically on API changes
+- Design tokens exported to all platform formats
+- No duplicate models or services between web and display apps
+
 ### Exit Criteria
 
 - Display app runs in kiosk mode on various hardware
@@ -563,6 +637,7 @@ Deliver the display application with calendar integration, real-time sync, and g
 - Real-time updates via SignalR
 - Offline mode works with cached data
 - WCAG 2.1 AA compliance verified
+- Cross-platform infrastructure ready for Phase 3
 
 ---
 
@@ -570,27 +645,35 @@ Deliver the display application with calendar integration, real-time sync, and g
 
 ### Objective
 
-Deliver native iOS and Android apps with full feature access and push notifications.
+Deliver native iOS and Android apps with full feature access and push notifications, leveraging the cross-platform infrastructure established in Phase 2.7.
+
+### Prerequisites
+
+- Phase 2.7 complete (shared library, OpenAPI clients, design tokens)
+- Generated API clients available for Swift and Kotlin
+- Design tokens exported to Swift and Kotlin formats
 
 ### Scope
 
 #### 3.1 iOS App (Swift/SwiftUI)
 
 - [ ] **3.1.1** Xcode project with SwiftUI
-- [ ] **3.1.2** Passkey integration with ASAuthorizationController
-- [ ] **3.1.3** API client with async/await
-- [ ] **3.1.4** Core Data for offline caching
-- [ ] **3.1.5** Navigation structure (TabView)
-- [ ] **3.1.6** Push notifications (APNs)
+- [ ] **3.1.2** Integrate generated OpenAPI Swift client
+- [ ] **3.1.3** Import design tokens (colors, spacing, typography)
+- [ ] **3.1.4** Passkey integration with ASAuthorizationController
+- [ ] **3.1.5** Core Data for offline caching
+- [ ] **3.1.6** Navigation structure (TabView)
+- [ ] **3.1.7** Push notifications (APNs)
 
 #### 3.2 Android App (Kotlin/Compose)
 
 - [ ] **3.2.1** Android Studio project with Jetpack Compose
-- [ ] **3.2.2** Passkey integration with Credential Manager API
-- [ ] **3.2.3** Retrofit API client with coroutines
-- [ ] **3.2.4** Room for offline caching
-- [ ] **3.2.5** Navigation component
-- [ ] **3.2.6** Push notifications (FCM)
+- [ ] **3.2.2** Integrate generated OpenAPI Kotlin client
+- [ ] **3.2.3** Import design tokens (colors, spacing, typography)
+- [ ] **3.2.4** Passkey integration with Credential Manager API
+- [ ] **3.2.5** Room for offline caching
+- [ ] **3.2.6** Navigation component
+- [ ] **3.2.7** Push notifications (FCM)
 
 #### 3.3 Mobile Calendar Features
 
@@ -810,19 +893,51 @@ These features are under consideration for future development:
 ```
 Phase 0 (Foundation)
     │
-    └──▶ Phase 1 (Core Display)
+    └──▶ Phase 1 (Core Platform)
               │
-              ├──▶ Phase 2 (Task Management)
-              │         │
-              │         └──▶ Phase 3 (Mobile Companion)
-              │                   │
-              │                   └──▶ Phase 4 (Household)
-              │                             │
-              │                             └──▶ Phase 5 (Intelligence)
-              │                                       │
-              │                                       └──▶ Phase 6 (Ecosystem)
-              │
-              └──▶ (Parallel) Web App MVP
+              └──▶ Phase 2 (Display & Calendar)
+                        │
+                        ├──▶ 2.1-2.6 Display Features
+                        │
+                        └──▶ 2.7 Cross-Platform Infrastructure ◀──── CRITICAL GATE
+                                  │
+                                  │  (Shared library, OpenAPI clients, Design tokens)
+                                  │
+                                  └──▶ Phase 3 (Native Mobile)
+                                            │
+                                            └──▶ Phase 4 (Task Management)
+                                                      │    All platforms in parallel:
+                                                      │    Web → Display → iOS → Android
+                                                      │
+                                                      └──▶ Phase 5 (Household Features)
+                                                                │
+                                                                └──▶ Phase 6 (Intelligence)
+```
+
+### Cross-Platform Infrastructure as Gate
+
+Phase 2.7 (Cross-Platform Infrastructure) is a **critical gate** before Phase 3:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                     PHASE 2.7 GATE REQUIREMENTS                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  Before starting Phase 3 (Native Mobile), these must be complete:        │
+│                                                                          │
+│  ☐ clients/shared/ Angular library extracted and published               │
+│  ☐ Web and Display apps consuming shared library                        │
+│  ☐ OpenAPI spec exported from API on build                              │
+│  ☐ TypeScript, Swift, and Kotlin clients generated                      │
+│  ☐ Design tokens exported to CSS, Swift, Kotlin formats                 │
+│  ☐ CI/CD pipelines for client and token generation                      │
+│                                                                          │
+│  This gate ensures:                                                      │
+│  - Mobile apps have type-safe API clients from day 1                    │
+│  - Design consistency via shared tokens                                  │
+│  - No duplicate code between web and display                            │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Critical Path
@@ -830,18 +945,28 @@ Phase 0 (Foundation)
 The critical path for MVP delivery:
 
 ```
-0.1 Dev Environment → 0.3 Core Structure → 0.5 Domain Models →
-1.1 Display Shell → 1.2 Calendar Integration → 1.3 Calendar Views →
-1.7 Offline → MVP Release
+0.1 Infrastructure → 0.2 .NET Solution → 0.3 Angular Shell →
+1.1 Multi-Tenant API → 1.2 Device Linking → 1.4 Web Dashboard →
+2.1 Display App → 2.2 Calendar Integration → 2.3 Calendar Views →
+MVP Release (Display + Web)
 ```
 
-### Optional Parallel Tracks
+The critical path for full platform delivery:
 
-These can be developed in parallel after Phase 0:
+```
+2.7 Cross-Platform Infrastructure → 3.1 iOS App → 3.2 Android App →
+4.x Task Management (all platforms) → Full Platform Release
+```
 
-- **Web App MVP**: Basic web access (Phase 1 parallel)
-- **Additional Calendar Providers**: Outlook, iCloud (Phase 1+)
-- **Sync Server**: Multi-device sync (Phase 3 parallel)
+### Parallel Development Tracks
+
+After Phase 2.7 is complete, feature development can proceed in parallel:
+
+| Track | Lead Platform | Followers |
+|-------|---------------|-----------|
+| **New Features** | Web App | Display → iOS → Android |
+| **Bug Fixes** | All platforms simultaneously | - |
+| **Platform-Specific** | Target platform only | - |
 
 ---
 
@@ -854,8 +979,10 @@ These can be developed in parallel after Phase 0:
 | **Electron performance on Pi** | High | Medium | Evaluate Tauri early; optimize bundle |
 | **Calendar API rate limits** | Medium | Medium | Aggressive caching; exponential backoff |
 | **Sync conflicts** | High | Medium | CRDT-based design; extensive testing |
-| **SQLite limitations on web** | Medium | Low | OPFS fallback; sql.js optimization |
-| **React Native compatibility** | Medium | Medium | Pin versions; thorough device testing |
+| **OpenAPI client drift** | Medium | Low | CI/CD regenerates clients on API changes; breaking change detection |
+| **Shared library versioning** | Medium | Medium | Semantic versioning; npm workspace for local dev |
+| **Design token inconsistency** | Low | Low | Single source of truth; automated builds; visual regression tests |
+| **Feature parity lag** | Medium | High | Clear rollout schedule; feature flags for partial releases |
 
 ### Product Risks
 
@@ -906,3 +1033,4 @@ These can be developed in parallel after Phase 0:
 | 3.2.0 | 2025-12-27 | Luminous Team | Added email services (Azure ACS, Handlebars templates, config-based service selection) |
 | 3.3.0 | 2026-01-01 | Luminous Team | Phase 2.1 Display Application (Angular + Electron) completed |
 | 3.4.0 | 2026-01-07 | Luminous Team | Phase 2.3 Calendar Views completed (Day, Week, Month, Agenda views + Profile filtering) |
+| 3.5.0 | 2026-01-08 | Luminous Team | Added Phase 2.7 Cross-Platform Infrastructure, feature parity strategy, updated dependency map |

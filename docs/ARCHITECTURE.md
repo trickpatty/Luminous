@@ -378,10 +378,23 @@ luminous/
 |   +-- Luminous.Shared/              # Shared DTOs, contracts
 |
 +-- clients/
+|   +-- shared/                       # Shared Angular library (see below)
+|   |   +-- models/                   # TypeScript interfaces (API contracts)
+|   |   +-- services/                 # Common services (API client, state)
+|   |   +-- components/               # Reusable UI components
+|   |   +-- utils/                    # Shared utilities
+|   |   +-- styles/                   # Design tokens, base styles
 |   +-- web/                          # Angular web application
 |   +-- display/                      # Angular + Electron display app
 |   +-- ios/                          # Native iOS app (Swift)
 |   +-- android/                      # Native Android app (Kotlin)
+|
++-- design-tokens/                    # Single source of truth for design tokens
+|   +-- tokens.json                   # Master token definitions
+|   +-- build/                        # Generated outputs
+|       +-- css/                      # CSS custom properties
+|       +-- swift/                    # Swift extensions
+|       +-- kotlin/                   # Kotlin constants
 |
 +-- infra/
 |   +-- bicep/                        # Bicep IaC with AVMs
@@ -400,6 +413,214 @@ luminous/
 |
 +-- Luminous.sln
 ```
+
+### Cross-Platform Client Architecture
+
+Luminous supports four client platforms with a strategy to maximize code sharing while maintaining platform-optimal experiences.
+
+#### Platform Philosophy
+
+| Platform | Primary Purpose | Optimization Focus |
+|----------|-----------------|-------------------|
+| **Web App** | Admin console, desktop-first management | Complex tasks, keyboard input, large screens |
+| **Display App** | Always-on family hub, glanceable info | Touch, readability, 24/7 operation |
+| **iOS App** | On-the-go management, notifications | Native UX, push notifications, widgets |
+| **Android App** | On-the-go management, notifications | Native UX, push notifications, widgets |
+
+#### Feature Parity Strategy
+
+All platforms support all features, but each is optimized for its context:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        FEATURE PARITY MODEL                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  FULL FEATURE ACCESS (All Platforms)                                     │
+│  ├── Calendar views (day, week, month, agenda)                          │
+│  ├── Event creation and editing                                          │
+│  ├── Task/chore management                                               │
+│  ├── Family member management                                            │
+│  ├── Profile management                                                  │
+│  ├── List management                                                     │
+│  └── Settings and preferences                                            │
+│                                                                          │
+│  PLATFORM-OPTIMIZED FEATURES                                             │
+│  ├── Web: Complex scheduling, bulk operations, calendar OAuth setup      │
+│  ├── Display: Glanceable views, kiosk mode, ambient information         │
+│  ├── Mobile: Push notifications, widgets, biometric auth, quick actions │
+│  └── Mobile: Device linking via code entry                               │
+│                                                                          │
+│  PLATFORM-EXCLUSIVE FEATURES                                             │
+│  ├── Display: Kiosk mode, watchdog, auto-start                          │
+│  ├── iOS: APNs push, iOS widgets, ShareSheet                            │
+│  └── Android: FCM push, Android widgets, app shortcuts                  │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Phased Feature Rollout
+
+New features follow a phased rollout to reduce development burden:
+
+```
+Week 1: Web App (fastest iteration, validation)
+    ↓
+Week 2: Display App (shared Angular code, ~70% reuse)
+    ↓
+Week 3: iOS App (native implementation)
+    ↓
+Week 4: Android App (native implementation)
+```
+
+This approach allows:
+- Early validation of features on web before native investment
+- Shared code between web and display via `clients/shared/`
+- Consistent API contracts via OpenAPI-generated clients
+
+#### Shared Angular Library (`clients/shared/`)
+
+The web and display apps share common code via an Angular library:
+
+```
+clients/shared/
+├── ng-package.json              # Angular library configuration
+├── src/
+│   ├── lib/
+│   │   ├── models/              # TypeScript interfaces
+│   │   │   ├── user.model.ts
+│   │   │   ├── family.model.ts
+│   │   │   ├── event.model.ts
+│   │   │   ├── device.model.ts
+│   │   │   └── index.ts
+│   │   │
+│   │   ├── services/            # Common services
+│   │   │   ├── api.service.ts           # Base HTTP client
+│   │   │   ├── auth.service.ts          # Authentication state
+│   │   │   ├── family.service.ts        # Family operations
+│   │   │   ├── event.service.ts         # Calendar events
+│   │   │   ├── storage.service.ts       # Local storage abstraction
+│   │   │   ├── canvas.service.ts        # Time-based theming
+│   │   │   └── index.ts
+│   │   │
+│   │   ├── components/          # Reusable UI components
+│   │   │   ├── avatar/
+│   │   │   ├── button/
+│   │   │   ├── card/
+│   │   │   ├── input/
+│   │   │   ├── spinner/
+│   │   │   ├── alert/
+│   │   │   ├── toast/
+│   │   │   └── index.ts
+│   │   │
+│   │   ├── interceptors/        # HTTP interceptors
+│   │   │   ├── auth.interceptor.ts
+│   │   │   ├── error.interceptor.ts
+│   │   │   └── index.ts
+│   │   │
+│   │   └── utils/               # Shared utilities
+│   │       ├── date.utils.ts
+│   │       ├── validation.utils.ts
+│   │       └── index.ts
+│   │
+│   └── public-api.ts            # Library exports
+```
+
+**Estimated Code Sharing:**
+- Models: 100% shared
+- Services: 80% shared (display has device-specific services)
+- Components: 70% shared (display has larger variants)
+- Interceptors: 90% shared
+
+#### OpenAPI Client Generation
+
+API clients are generated from the OpenAPI specification to ensure type safety and contract synchronization:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      OPENAPI CLIENT GENERATION                           │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  Luminous.Api (ASP.NET Core)                                            │
+│       │                                                                  │
+│       ▼                                                                  │
+│  openapi.json (generated at build)                                      │
+│       │                                                                  │
+│       ├────────────────┬────────────────┬────────────────┐              │
+│       ▼                ▼                ▼                ▼              │
+│  TypeScript         Swift           Kotlin          C# Client           │
+│  (Angular)          (iOS)           (Android)       (Testing)           │
+│                                                                          │
+│  Tools:                                                                  │
+│  - TypeScript: openapi-typescript + openapi-fetch                       │
+│  - Swift: swift-openapi-generator                                       │
+│  - Kotlin: openapi-generator (kotlin)                                   │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**CI/CD Integration:**
+```yaml
+# .github/workflows/api-clients.yml
+on:
+  push:
+    paths:
+      - 'src/Luminous.Api/**'
+
+jobs:
+  generate-clients:
+    steps:
+      - name: Build API and export OpenAPI spec
+        run: dotnet build && dotnet run --project src/Luminous.Api -- --export-openapi
+
+      - name: Generate TypeScript client
+        run: npx openapi-typescript openapi.json -o clients/shared/src/lib/api/schema.d.ts
+
+      - name: Generate Swift client
+        run: swift-openapi-generator generate openapi.json --output clients/ios/Generated
+
+      - name: Generate Kotlin client
+        run: openapi-generator generate -i openapi.json -g kotlin -o clients/android/generated
+```
+
+#### Design Token Export
+
+Design tokens are defined once and exported to all platforms:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                       DESIGN TOKEN PIPELINE                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  design-tokens/tokens.json (Single Source of Truth)                     │
+│       │                                                                  │
+│       ▼                                                                  │
+│  Style Dictionary (build tool)                                          │
+│       │                                                                  │
+│       ├─────────────────┬─────────────────┬─────────────────┐           │
+│       ▼                 ▼                 ▼                 ▼           │
+│  CSS Variables      Swift Extensions   Kotlin Object    Tailwind        │
+│  (Angular)          (iOS)              (Android)        Config          │
+│                                                                          │
+│  Output Examples:                                                        │
+│                                                                          │
+│  CSS:    --color-accent-500: #0EA5E9;                                   │
+│  Swift:  static let accent500 = Color(hex: "0EA5E9")                    │
+│  Kotlin: val accent500 = Color(0xFF0EA5E9)                              │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**Token Categories:**
+| Category | Examples | Platforms |
+|----------|----------|-----------|
+| Colors | Canvas, surface, text, accent, member colors | All |
+| Spacing | 4px base unit scale | All |
+| Typography | Font sizes, weights, line heights | All |
+| Radii | Border radius scale | All |
+| Shadows | Elevation scale | Web, Display |
+| Motion | Duration, easing | Web, Display |
+| Touch | Minimum touch targets | All |
 
 ---
 
@@ -761,6 +982,9 @@ services:
 | [ADR-010](./adr/ADR-010-passwordless-authentication.md) | In-House Passwordless Auth | Accepted | 2025-12-21 |
 | [ADR-011](./adr/ADR-011-secure-registration-flow.md) | Secure Registration with Email Verification | Accepted | 2025-12-28 |
 | [ADR-012](./adr/ADR-012-native-openapi.md) | Native ASP.NET Core OpenAPI | Accepted | 2025-12-28 |
+| [ADR-013](./adr/ADR-013-shared-angular-library.md) | Shared Angular Library for Web/Display | Accepted | 2026-01-08 |
+| [ADR-014](./adr/ADR-014-cross-platform-feature-parity.md) | Cross-Platform Feature Parity Strategy | Accepted | 2026-01-08 |
+| [ADR-015](./adr/ADR-015-design-token-pipeline.md) | Design Token Export Pipeline | Accepted | 2026-01-08 |
 
 ---
 
@@ -785,3 +1009,4 @@ services:
 | 2.2.0 | 2025-12-22 | Luminous Team | Added CI/CD documentation reference |
 | 2.3.0 | 2025-12-23 | Luminous Team | Phase 0 complete: Updated status to Active |
 | 2.4.0 | 2025-12-28 | Luminous Team | Added secure registration flow, native OpenAPI |
+| 2.5.0 | 2026-01-08 | Luminous Team | Added cross-platform client architecture, shared Angular library, OpenAPI client generation, design token pipeline |
