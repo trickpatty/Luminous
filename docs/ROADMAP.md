@@ -1,7 +1,7 @@
 # Luminous Development Roadmap
 
-> **Document Version:** 3.4.0
-> **Last Updated:** 2026-01-07
+> **Document Version:** 3.7.0
+> **Last Updated:** 2026-01-09
 > **Status:** Active
 > **TOGAF Phase:** Phase E/F (Opportunities, Solutions & Migration Planning)
 
@@ -561,12 +561,32 @@ Deliver the display application with calendar integration, real-time sync, and g
 - [x] Computed filtered events based on member selection
 - [x] Navigation between calendar views with state preservation
 
-#### 2.4 Display Widgets
+#### 2.4 Display Widgets ✅ COMPLETED
 
-- [ ] **2.4.1** "What's Next" widget
-- [ ] **2.4.2** Countdown widget for major events
-- [ ] **2.4.3** Weather widget
-- [ ] **2.4.4** Clock widget
+- [x] **2.4.1** "What's Next" widget
+  - *Implemented: WhatsNextWidgetComponent shows next upcoming event*
+  - *Features: Event title, time, location, time-until countdown, member avatars*
+  - *Auto-updates every minute; empty state when no upcoming events*
+- [x] **2.4.2** Countdown widget for major events
+  - *Implemented: CountdownWidgetComponent shows countdowns to upcoming events*
+  - *Features: Days remaining, event emoji detection (birthday, holiday, etc.)*
+  - *Displays up to 3 events within 90 days, sorted by days remaining*
+- [x] **2.4.3** Weather widget
+  - *Implemented: WeatherWidgetComponent with WeatherService*
+  - *API: Open-Meteo (free, no API key required)*
+  - *Features: Current temperature, conditions, feels-like, humidity, wind speed*
+  - *Features: 4-day forecast with high/low temps, precipitation probability*
+  - *Features: Weather alerts display, compact mode for header*
+  - *Supports: Geolocation, Fahrenheit/Celsius units, auto-refresh every 30 minutes*
+- [x] **2.4.4** Clock widget
+  - *Implemented: ClockWidgetComponent (already existed from Phase 2.1)*
+  - *Features: Time display (12h/24h), date display, updates every second*
+
+**Additional deliverables:**
+- [x] Widgets panel in Display component (schedule view)
+- [x] Compact weather widget in display header
+- [x] Upcoming events loading for countdown widget (90-day range)
+- [x] Widget index file for easy imports
 
 #### 2.5 Real-time Sync (SignalR)
 
@@ -1092,3 +1112,4 @@ After Phase 2.7 is complete, feature development can proceed in parallel:
 | 3.4.0 | 2026-01-07 | Luminous Team | Phase 2.3 Calendar Views completed (Day, Week, Month, Agenda views + Profile filtering) |
 | 3.5.0 | 2026-01-08 | Luminous Team | Added Phase 2.7 Cross-Platform Infrastructure, feature parity strategy, updated dependency map |
 | 3.6.0 | 2026-01-08 | Luminous Team | Added Phase 5.6 Managed Accounts for children/non-email users (ADR-016) |
+| 3.7.0 | 2026-01-09 | Luminous Team | Phase 2.4 Display Widgets completed (What's Next, Countdown, Weather, Clock widgets) |

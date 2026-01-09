@@ -6,6 +6,9 @@ import { DeviceAuthService } from '../../core/services/device-auth.service';
 import { CacheService, ScheduleEvent, TaskData, MemberData } from '../../core/services/cache.service';
 import { EventService } from '../../core/services/event.service';
 import { ClockWidgetComponent } from './components/clock-widget/clock-widget.component';
+import { WhatsNextWidgetComponent } from './components/whats-next-widget/whats-next-widget.component';
+import { CountdownWidgetComponent } from './components/countdown-widget/countdown-widget.component';
+import { WeatherWidgetComponent } from './components/weather-widget/weather-widget.component';
 import { ScheduleViewComponent } from './components/schedule-view/schedule-view.component';
 import { TasksViewComponent } from './components/tasks-view/tasks-view.component';
 import {
@@ -26,6 +29,9 @@ type CalendarViewMode = 'day' | 'week' | 'month' | 'agenda';
   imports: [
     CommonModule,
     ClockWidgetComponent,
+    WhatsNextWidgetComponent,
+    CountdownWidgetComponent,
+    WeatherWidgetComponent,
     ScheduleViewComponent,
     TasksViewComponent,
     DayViewComponent,
@@ -38,7 +44,12 @@ type CalendarViewMode = 'day' | 'week' | 'month' | 'agenda';
     <div class="display-container">
       <!-- Header with clock and weather -->
       <header class="display-header">
-        <app-clock-widget />
+        <div class="header-left">
+          <app-clock-widget />
+        </div>
+        <div class="header-center">
+          <app-weather-widget [compact]="true" />
+        </div>
         <div class="header-actions">
           <button
             class="header-nav-btn"
@@ -219,6 +230,21 @@ type CalendarViewMode = 'day' | 'week' | 'month' | 'agenda';
         }
       </main>
 
+      <!-- Widgets Panel (shown on schedule view) -->
+      @if (currentView() === 'schedule') {
+        <aside class="widgets-panel">
+          <app-whats-next-widget
+            [events]="todayEvents()"
+            [members]="members()"
+          />
+          <app-countdown-widget
+            [events]="allUpcomingEvents()"
+            [members]="members()"
+            [maxItems]="3"
+          />
+        </aside>
+      }
+
       <!-- Footer -->
       <footer class="display-footer">
         <div class="footer-family-name">
@@ -244,11 +270,22 @@ type CalendarViewMode = 'day' | 'week' | 'month' | 'agenda';
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
+      gap: var(--space-4);
+    }
+
+    .header-left {
+      flex-shrink: 0;
+    }
+
+    .header-center {
+      flex: 1;
+      max-width: 320px;
     }
 
     .header-actions {
       display: flex;
       gap: var(--space-3);
+      flex-shrink: 0;
     }
 
     .header-nav-btn {
@@ -359,6 +396,19 @@ type CalendarViewMode = 'day' | 'week' | 'month' | 'agenda';
       overflow: hidden;
     }
 
+    .widgets-panel {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-4);
+      padding: var(--space-4) 0;
+    }
+
+    @media (max-width: 768px) {
+      .widgets-panel {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .display-footer {
       display: flex;
       align-items: center;
@@ -406,10 +456,21 @@ export class DisplayComponent implements OnInit, OnDestroy {
   // Data
   protected readonly todayEvents = signal<ScheduleEvent[]>([]);
   protected readonly calendarEvents = signal<ScheduleEvent[]>([]);
+  protected readonly upcomingEvents = signal<ScheduleEvent[]>([]); // For countdown widget
   protected readonly tasks = signal<TaskData[]>([]);
   protected readonly members = signal<MemberData[]>([]);
 
   protected readonly familyName = this.authService.familyName;
+
+  // Computed: All upcoming events for countdown widget (combine today + upcoming)
+  protected readonly allUpcomingEvents = computed(() => {
+    const today = this.todayEvents();
+    const upcoming = this.upcomingEvents();
+    // Merge and deduplicate by id
+    const all = [...today, ...upcoming];
+    const uniqueMap = new Map(all.map(e => [e.id, e]));
+    return Array.from(uniqueMap.values());
+  });
 
   // Computed: filtered calendar events based on selected members
   protected readonly filteredCalendarEvents = computed(() => {
@@ -458,6 +519,9 @@ export class DisplayComponent implements OnInit, OnDestroy {
     try {
       await this.loadFromCache();
 
+      // Load upcoming events for countdown widget (next 90 days)
+      await this.loadUpcomingEvents();
+
       // Load calendar events if in calendar view
       if (this.currentView() === 'calendar') {
         await this.loadCalendarEvents();
@@ -468,6 +532,19 @@ export class DisplayComponent implements OnInit, OnDestroy {
       await this.loadFromCache();
     } finally {
       this.isLoading.set(false);
+    }
+  }
+
+  private async loadUpcomingEvents(): Promise<void> {
+    try {
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + 90); // Next 90 days
+
+      const events = await this.eventService.fetchEvents({ startDate, endDate });
+      this.upcomingEvents.set(events);
+    } catch (error) {
+      console.error('Failed to load upcoming events:', error);
     }
   }
 
