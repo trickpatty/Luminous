@@ -25,17 +25,33 @@ public sealed class Event : Entity
     public string? Description { get; set; }
 
     /// <summary>
-    /// Gets or sets the event start time.
+    /// Gets or sets the event start time (for timed events).
+    /// Null for all-day events - use StartDate instead.
     /// </summary>
-    public DateTime StartTime { get; set; }
+    public DateTime? StartTime { get; set; }
 
     /// <summary>
-    /// Gets or sets the event end time.
+    /// Gets or sets the event end time (for timed events).
+    /// Null for all-day events - use EndTime instead.
     /// </summary>
-    public DateTime EndTime { get; set; }
+    public DateTime? EndTime { get; set; }
+
+    /// <summary>
+    /// Gets or sets the event start date (for all-day events).
+    /// Null for timed events - use StartTime instead.
+    /// </summary>
+    public DateOnly? StartDate { get; set; }
+
+    /// <summary>
+    /// Gets or sets the event end date (for all-day events, exclusive).
+    /// Null for timed events - use EndTime instead.
+    /// For a single-day event, EndDate = StartDate + 1 day.
+    /// </summary>
+    public DateOnly? EndDate { get; set; }
 
     /// <summary>
     /// Gets or sets whether this is an all-day event.
+    /// When true, StartDate/EndDate are used; when false, StartTime/EndTime are used.
     /// </summary>
     public bool IsAllDay { get; set; }
 
@@ -95,15 +111,14 @@ public sealed class Event : Entity
     public bool IsExternal => Source != CalendarProvider.Internal;
 
     /// <summary>
-    /// Creates a new internal event.
+    /// Creates a new timed event.
     /// </summary>
-    public static Event Create(
+    public static Event CreateTimed(
         string familyId,
         string title,
         DateTime startTime,
         DateTime endTime,
-        string createdBy,
-        bool isAllDay = false)
+        string createdBy)
     {
         if (string.IsNullOrWhiteSpace(familyId))
             throw new ArgumentException("Family ID is required.", nameof(familyId));
@@ -118,9 +133,68 @@ public sealed class Event : Entity
             Title = title.Trim(),
             StartTime = startTime,
             EndTime = endTime,
-            IsAllDay = isAllDay,
+            IsAllDay = false,
             Source = CalendarProvider.Internal,
             CreatedBy = createdBy
         };
+    }
+
+    /// <summary>
+    /// Creates a new all-day event.
+    /// </summary>
+    /// <param name="familyId">The family ID.</param>
+    /// <param name="title">The event title.</param>
+    /// <param name="startDate">The start date (inclusive).</param>
+    /// <param name="endDate">The end date (exclusive). For a single-day event, this should be startDate + 1 day.</param>
+    /// <param name="createdBy">The creator's ID.</param>
+    public static Event CreateAllDay(
+        string familyId,
+        string title,
+        DateOnly startDate,
+        DateOnly endDate,
+        string createdBy)
+    {
+        if (string.IsNullOrWhiteSpace(familyId))
+            throw new ArgumentException("Family ID is required.", nameof(familyId));
+        if (string.IsNullOrWhiteSpace(title))
+            throw new ArgumentException("Title is required.", nameof(title));
+        if (endDate < startDate)
+            throw new ArgumentException("End date must be on or after start date.", nameof(endDate));
+
+        return new Event
+        {
+            FamilyId = familyId,
+            Title = title.Trim(),
+            StartDate = startDate,
+            EndDate = endDate,
+            IsAllDay = true,
+            Source = CalendarProvider.Internal,
+            CreatedBy = createdBy
+        };
+    }
+
+    /// <summary>
+    /// Creates a new internal event (legacy method for backward compatibility).
+    /// </summary>
+    [Obsolete("Use CreateTimed or CreateAllDay instead.")]
+    public static Event Create(
+        string familyId,
+        string title,
+        DateTime startTime,
+        DateTime endTime,
+        string createdBy,
+        bool isAllDay = false)
+    {
+        if (isAllDay)
+        {
+            return CreateAllDay(
+                familyId,
+                title,
+                DateOnly.FromDateTime(startTime),
+                DateOnly.FromDateTime(endTime),
+                createdBy);
+        }
+
+        return CreateTimed(familyId, title, startTime, endTime, createdBy);
     }
 }

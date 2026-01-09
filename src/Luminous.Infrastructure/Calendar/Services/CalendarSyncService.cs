@@ -261,10 +261,6 @@ public sealed class CalendarSyncService : ICalendarSyncService
         var updated = 0;
         var deleted = 0;
 
-        // Get family timezone for proper all-day event conversion
-        var family = await _unitOfWork.Families.GetByIdAsync(connection.FamilyId, cancellationToken);
-        var familyTimezone = GetTimeZoneInfo(family?.Timezone);
-
         // Process deleted events
         foreach (var deletedId in result.DeletedEventIds)
         {
@@ -301,14 +297,14 @@ public sealed class CalendarSyncService : ICalendarSyncService
             if (existingEvent is null)
             {
                 // Create new event
-                var newEvent = CreateEventFromExternal(connection, externalEvent, familyTimezone);
+                var newEvent = CreateEventFromExternal(connection, externalEvent);
                 await _unitOfWork.Events.AddAsync(newEvent, cancellationToken);
                 added++;
             }
             else
             {
                 // Update existing event
-                UpdateEventFromExternal(existingEvent, connection, externalEvent, familyTimezone);
+                UpdateEventFromExternal(existingEvent, connection, externalEvent);
                 await _unitOfWork.Events.UpdateAsync(existingEvent, cancellationToken);
                 updated++;
             }
@@ -319,19 +315,34 @@ public sealed class CalendarSyncService : ICalendarSyncService
 
     private static Event CreateEventFromExternal(
         CalendarConnection connection,
-        ExternalCalendarEvent externalEvent,
-        TimeZoneInfo familyTimezone)
+        ExternalCalendarEvent externalEvent)
     {
-        // Convert times for all-day events to proper UTC
-        var (startTime, endTime) = ConvertEventTimes(externalEvent, familyTimezone);
+        Event domainEvent;
 
-        var domainEvent = Event.Create(
-            connection.FamilyId,
-            externalEvent.Title,
-            startTime,
-            endTime,
-            "system",
-            externalEvent.IsAllDay);
+        if (externalEvent.IsAllDay)
+        {
+            // For all-day events, store dates only (no timezone conversion needed)
+            // The dates from the external calendar represent the calendar dates directly
+            var startDate = DateOnly.FromDateTime(externalEvent.StartTime);
+            var endDate = DateOnly.FromDateTime(externalEvent.EndTime);
+
+            domainEvent = Event.CreateAllDay(
+                connection.FamilyId,
+                externalEvent.Title,
+                startDate,
+                endDate,
+                "system");
+        }
+        else
+        {
+            // For timed events, store the UTC times
+            domainEvent = Event.CreateTimed(
+                connection.FamilyId,
+                externalEvent.Title,
+                externalEvent.StartTime.ToUniversalTime(),
+                externalEvent.EndTime.ToUniversalTime(),
+                "system");
+        }
 
         domainEvent.Description = externalEvent.Description;
         domainEvent.LocationText = externalEvent.Location;
@@ -356,19 +367,30 @@ public sealed class CalendarSyncService : ICalendarSyncService
     private static void UpdateEventFromExternal(
         Event domainEvent,
         CalendarConnection connection,
-        ExternalCalendarEvent externalEvent,
-        TimeZoneInfo familyTimezone)
+        ExternalCalendarEvent externalEvent)
     {
-        // Convert times for all-day events to proper UTC
-        var (startTime, endTime) = ConvertEventTimes(externalEvent, familyTimezone);
-
         domainEvent.Title = externalEvent.Title;
         domainEvent.Description = externalEvent.Description;
-        domainEvent.StartTime = startTime;
-        domainEvent.EndTime = endTime;
         domainEvent.IsAllDay = externalEvent.IsAllDay;
         domainEvent.LocationText = externalEvent.Location;
         domainEvent.Color = externalEvent.Color ?? connection.Color;
+
+        if (externalEvent.IsAllDay)
+        {
+            // For all-day events, store dates only
+            domainEvent.StartDate = DateOnly.FromDateTime(externalEvent.StartTime);
+            domainEvent.EndDate = DateOnly.FromDateTime(externalEvent.EndTime);
+            domainEvent.StartTime = null;
+            domainEvent.EndTime = null;
+        }
+        else
+        {
+            // For timed events, store UTC times
+            domainEvent.StartTime = externalEvent.StartTime.ToUniversalTime();
+            domainEvent.EndTime = externalEvent.EndTime.ToUniversalTime();
+            domainEvent.StartDate = null;
+            domainEvent.EndDate = null;
+        }
 
         if (externalEvent.Reminders.Count > 0)
             domainEvent.Reminders = externalEvent.Reminders;
@@ -461,97 +483,5 @@ public sealed class CalendarSyncService : ICalendarSyncService
                message.Contains("401") ||
                message.Contains("invalid_grant") ||
                message.Contains("token") && message.Contains("expired");
-    }
-
-    /// <summary>
-    /// Gets the TimeZoneInfo for a timezone string (IANA or Windows format).
-    /// Falls back to UTC if the timezone cannot be found.
-    /// </summary>
-    private static TimeZoneInfo GetTimeZoneInfo(string? timezone)
-    {
-        if (string.IsNullOrEmpty(timezone))
-            return TimeZoneInfo.Utc;
-
-        try
-        {
-            // Try direct lookup first (works for Windows timezone IDs)
-            return TimeZoneInfo.FindSystemTimeZoneById(timezone);
-        }
-        catch (TimeZoneNotFoundException)
-        {
-            // Try to convert IANA timezone to Windows timezone
-            // Common IANA to Windows timezone mappings
-            var windowsTimezone = timezone switch
-            {
-                "America/New_York" => "Eastern Standard Time",
-                "America/Chicago" => "Central Standard Time",
-                "America/Denver" => "Mountain Standard Time",
-                "America/Los_Angeles" => "Pacific Standard Time",
-                "America/Phoenix" => "US Mountain Standard Time",
-                "America/Anchorage" => "Alaskan Standard Time",
-                "Pacific/Honolulu" => "Hawaiian Standard Time",
-                "Europe/London" => "GMT Standard Time",
-                "Europe/Paris" => "Romance Standard Time",
-                "Europe/Berlin" => "W. Europe Standard Time",
-                "Asia/Tokyo" => "Tokyo Standard Time",
-                "Asia/Shanghai" => "China Standard Time",
-                "Australia/Sydney" => "AUS Eastern Standard Time",
-                _ => null
-            };
-
-            if (windowsTimezone is not null)
-            {
-                try
-                {
-                    return TimeZoneInfo.FindSystemTimeZoneById(windowsTimezone);
-                }
-                catch (TimeZoneNotFoundException)
-                {
-                    // Fall through to UTC
-                }
-            }
-
-            return TimeZoneInfo.Utc;
-        }
-    }
-
-    /// <summary>
-    /// Converts event times to proper UTC, handling all-day events specially.
-    /// All-day events have dates without times, which should be interpreted as
-    /// midnight in the family's timezone, then converted to UTC.
-    /// </summary>
-    private static (DateTime StartTime, DateTime EndTime) ConvertEventTimes(
-        ExternalCalendarEvent externalEvent,
-        TimeZoneInfo familyTimezone)
-    {
-        if (!externalEvent.IsAllDay)
-        {
-            // For timed events, assume they're already in UTC or have been converted
-            // by the provider (ICS provider uses .AsUtc, others should too)
-            return (externalEvent.StartTime.ToUniversalTime(), externalEvent.EndTime.ToUniversalTime());
-        }
-
-        // For all-day events, the start/end times are dates with midnight time
-        // but no timezone info. We need to treat them as being in the family's timezone.
-        //
-        // Example: An all-day event on "January 15th" for a family in EST should be:
-        // - Start: Jan 15 00:00:00 EST = Jan 15 05:00:00 UTC
-        // - End: Jan 16 00:00:00 EST = Jan 16 05:00:00 UTC
-        //
-        // This ensures that when the frontend queries for "today" (Jan 14 in EST),
-        // using the range Jan 14 05:00 UTC to Jan 15 05:00 UTC, the event
-        // at Jan 15 05:00 UTC correctly falls into "tomorrow" (Jan 15 in EST).
-
-        var startDate = externalEvent.StartTime.Date;
-        var endDate = externalEvent.EndTime.Date;
-
-        // Create DateTime with the date in the family's timezone, then convert to UTC
-        var startLocal = new DateTime(startDate.Year, startDate.Month, startDate.Day, 0, 0, 0, DateTimeKind.Unspecified);
-        var endLocal = new DateTime(endDate.Year, endDate.Month, endDate.Day, 0, 0, 0, DateTimeKind.Unspecified);
-
-        var startUtc = TimeZoneInfo.ConvertTimeToUtc(startLocal, familyTimezone);
-        var endUtc = TimeZoneInfo.ConvertTimeToUtc(endLocal, familyTimezone);
-
-        return (startUtc, endUtc);
     }
 }

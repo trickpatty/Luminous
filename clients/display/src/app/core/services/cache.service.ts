@@ -32,8 +32,15 @@ interface CacheEntry<T> {
 export interface ScheduleEvent {
   id: string;
   title: string;
-  startTime: string;
-  endTime?: string;
+  /** Start time for timed events (ISO 8601). Null for all-day events. */
+  startTime?: string | null;
+  /** End time for timed events (ISO 8601). Null for all-day events. */
+  endTime?: string | null;
+  /** Start date for all-day events (YYYY-MM-DD). Null for timed events. */
+  startDate?: string | null;
+  /** End date for all-day events (YYYY-MM-DD, exclusive). Null for timed events. */
+  endDate?: string | null;
+  isAllDay: boolean;
   location?: string;
   memberIds: string[];
   color?: string;

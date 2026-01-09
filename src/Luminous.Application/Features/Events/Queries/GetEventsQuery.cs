@@ -67,11 +67,14 @@ public sealed class GetEventsQueryHandler : IRequestHandler<GetEventsQuery, IRea
         {
             Id = e.Id,
             Title = e.Title,
-            StartTime = e.StartTime,
-            EndTime = e.EndTime,
+            StartTime = e.IsAllDay ? null : e.StartTime,
+            EndTime = e.IsAllDay ? null : e.EndTime,
+            StartDate = e.IsAllDay ? e.StartDate?.ToString("yyyy-MM-dd") : null,
+            EndDate = e.IsAllDay ? e.EndDate?.ToString("yyyy-MM-dd") : null,
             IsAllDay = e.IsAllDay,
             AssigneeIds = e.Assignees,
-            Color = e.Color
+            Color = e.Color,
+            LocationText = e.LocationText
         }).ToList();
     }
 }
