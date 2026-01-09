@@ -327,7 +327,8 @@ export class AgendaViewComponent {
     const eventsByDate = new Map<string, ScheduleEvent[]>();
 
     for (const event of this.events) {
-      const dateKey = this.getDateKey(new Date(event.startTime));
+      const dateKey = this.getEventDateKey(event);
+      if (!dateKey) continue;
       const existing = eventsByDate.get(dateKey) || [];
       eventsByDate.set(dateKey, [...existing, event]);
     }
@@ -336,10 +337,12 @@ export class AgendaViewComponent {
     for (const [dateKey, dateEvents] of eventsByDate) {
       eventsByDate.set(dateKey, dateEvents.sort((a, b) => {
         // All-day events first
-        const aAllDay = this.isAllDayEvent(a) ? 0 : 1;
-        const bAllDay = this.isAllDayEvent(b) ? 0 : 1;
-        if (aAllDay !== bAllDay) return aAllDay - bAllDay;
-        return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
+        if (a.isAllDay && !b.isAllDay) return -1;
+        if (!a.isAllDay && b.isAllDay) return 1;
+        if (a.isAllDay && b.isAllDay) {
+          return (a.startDate || '') < (b.startDate || '') ? -1 : 1;
+        }
+        return new Date(a.startTime!).getTime() - new Date(b.startTime!).getTime();
       }));
     }
 
@@ -386,7 +389,8 @@ export class AgendaViewComponent {
     return 'var(--accent-500)';
   }
 
-  formatTime(isoTime: string): string {
+  formatTime(isoTime: string | null | undefined): string {
+    if (!isoTime) return '';
     try {
       const date = new Date(isoTime);
       return date.toLocaleTimeString('en-US', {
@@ -400,24 +404,45 @@ export class AgendaViewComponent {
   }
 
   isAllDayEvent(event: ScheduleEvent): boolean {
-    const start = new Date(event.startTime);
-    const end = event.endTime ? new Date(event.endTime) : null;
-    if (!end) return false;
-    const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-    return hours >= 23;
+    return event.isAllDay;
   }
 
   isEventNow(event: ScheduleEvent): boolean {
     const now = new Date();
-    const start = new Date(event.startTime);
-    const end = event.endTime ? new Date(event.endTime) : new Date(start.getTime() + 60 * 60 * 1000);
-    return now >= start && now <= end;
+
+    if (event.isAllDay && event.startDate) {
+      const todayStr = this.getDateKey(now);
+      const endDate = event.endDate || event.startDate;
+      return event.startDate <= todayStr && todayStr < endDate;
+    } else if (event.startTime) {
+      const start = new Date(event.startTime);
+      const end = event.endTime ? new Date(event.endTime) : new Date(start.getTime() + 60 * 60 * 1000);
+      return now >= start && now <= end;
+    }
+    return false;
   }
 
   isEventPast(event: ScheduleEvent): boolean {
     const now = new Date();
-    const end = event.endTime ? new Date(event.endTime) : new Date(event.startTime);
-    return end < now;
+
+    if (event.isAllDay && event.endDate) {
+      const todayStr = this.getDateKey(now);
+      return event.endDate <= todayStr;
+    } else if (event.endTime) {
+      return new Date(event.endTime) < now;
+    } else if (event.startTime) {
+      return new Date(event.startTime) < now;
+    }
+    return false;
+  }
+
+  private getEventDateKey(event: ScheduleEvent): string | null {
+    if (event.isAllDay && event.startDate) {
+      return event.startDate;
+    } else if (event.startTime) {
+      return this.getDateKey(new Date(event.startTime));
+    }
+    return null;
   }
 
   private formatDateLabel(date: Date): string {

@@ -356,7 +356,7 @@ export class DayViewComponent implements OnInit, OnDestroy {
     const selectedDateStr = this.getDateKey(this.selectedDate);
 
     // Add all-day events slot at the top
-    const allDayEvents = this.events.filter(e => this.isAllDayEvent(e));
+    const allDayEvents = this.events.filter(e => e.isAllDay);
     if (allDayEvents.length > 0) {
       slots.push({
         hour: -1,
@@ -368,7 +368,8 @@ export class DayViewComponent implements OnInit, OnDestroy {
 
     for (let hour = this.startHour; hour <= this.endHour; hour++) {
       const hourEvents = this.events.filter(event => {
-        if (this.isAllDayEvent(event)) return false;
+        if (event.isAllDay) return false;
+        if (!event.startTime) return false;
         const eventDate = new Date(event.startTime);
         return eventDate.getHours() === hour &&
                this.getDateKey(eventDate) === selectedDateStr;
@@ -448,7 +449,8 @@ export class DayViewComponent implements OnInit, OnDestroy {
     return 'var(--accent-500)';
   }
 
-  formatTime(isoTime: string): string {
+  formatTime(isoTime: string | null | undefined): string {
+    if (!isoTime) return '';
     try {
       const date = new Date(isoTime);
       return date.toLocaleTimeString('en-US', {
@@ -462,27 +464,36 @@ export class DayViewComponent implements OnInit, OnDestroy {
   }
 
   isAllDayEvent(event: ScheduleEvent): boolean {
-    // Check if event spans full day or is marked as all-day
-    const start = new Date(event.startTime);
-    const end = event.endTime ? new Date(event.endTime) : null;
-
-    if (!end) return false;
-
-    const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-    return hours >= 23;
+    return event.isAllDay;
   }
 
   isEventNow(event: ScheduleEvent): boolean {
     const now = new Date();
-    const start = new Date(event.startTime);
-    const end = event.endTime ? new Date(event.endTime) : new Date(start.getTime() + 60 * 60 * 1000);
-    return now >= start && now <= end;
+
+    if (event.isAllDay && event.startDate) {
+      const todayStr = this.getDateKey(now);
+      const endDate = event.endDate || event.startDate;
+      return event.startDate <= todayStr && todayStr < endDate;
+    } else if (event.startTime) {
+      const start = new Date(event.startTime);
+      const end = event.endTime ? new Date(event.endTime) : new Date(start.getTime() + 60 * 60 * 1000);
+      return now >= start && now <= end;
+    }
+    return false;
   }
 
   isEventPast(event: ScheduleEvent): boolean {
     const now = new Date();
-    const end = event.endTime ? new Date(event.endTime) : new Date(event.startTime);
-    return end < now;
+
+    if (event.isAllDay && event.endDate) {
+      const todayStr = this.getDateKey(now);
+      return event.endDate <= todayStr;
+    } else if (event.endTime) {
+      return new Date(event.endTime) < now;
+    } else if (event.startTime) {
+      return new Date(event.startTime) < now;
+    }
+    return false;
   }
 
   private formatHour(hour: number): string {

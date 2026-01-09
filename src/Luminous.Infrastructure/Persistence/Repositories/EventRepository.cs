@@ -26,14 +26,36 @@ public sealed class EventRepository : CosmosRepositoryBase<Event>, IEventReposit
         DateTime end,
         CancellationToken cancellationToken = default)
     {
+        // Convert DateTime to date strings for all-day event comparison
+        // Use the local date from the UTC times (frontend sends local midnight as UTC)
+        var startDateStr = DateOnly.FromDateTime(start).ToString("yyyy-MM-dd");
+        var endDateStr = DateOnly.FromDateTime(end).ToString("yyyy-MM-dd");
+
+        // Query for both timed events and all-day events:
+        // - Timed events: compare startTime/endTime with the query range
+        // - All-day events: compare startDate/endDate with the query date range
         var query = new QueryDefinition(
             @"SELECT * FROM c
               WHERE c.familyId = @familyId
-              AND ((c.startTime >= @start AND c.startTime < @end) OR (c.endTime > @start AND c.endTime <= @end))
-              ORDER BY c.startTime")
+              AND (
+                  (c.isAllDay = false AND (
+                      (c.startTime >= @start AND c.startTime < @end)
+                      OR (c.endTime > @start AND c.endTime <= @end)
+                      OR (c.startTime <= @start AND c.endTime >= @end)
+                  ))
+                  OR
+                  (c.isAllDay = true AND (
+                      (c.startDate >= @startDate AND c.startDate < @endDate)
+                      OR (c.endDate > @startDate AND c.endDate <= @endDate)
+                      OR (c.startDate <= @startDate AND c.endDate >= @endDate)
+                  ))
+              )
+              ORDER BY c.isAllDay DESC, c.startDate, c.startTime")
             .WithParameter("@familyId", familyId)
             .WithParameter("@start", start)
-            .WithParameter("@end", end);
+            .WithParameter("@end", end)
+            .WithParameter("@startDate", startDateStr)
+            .WithParameter("@endDate", endDateStr);
 
         return await QueryAsync(query, familyId, cancellationToken);
     }
@@ -45,16 +67,34 @@ public sealed class EventRepository : CosmosRepositoryBase<Event>, IEventReposit
         DateTime end,
         CancellationToken cancellationToken = default)
     {
+        // Convert DateTime to date strings for all-day event comparison
+        var startDateStr = DateOnly.FromDateTime(start).ToString("yyyy-MM-dd");
+        var endDateStr = DateOnly.FromDateTime(end).ToString("yyyy-MM-dd");
+
         var query = new QueryDefinition(
             @"SELECT * FROM c
               WHERE c.familyId = @familyId
               AND ARRAY_CONTAINS(c.assignees, @assigneeId)
-              AND ((c.startTime >= @start AND c.startTime < @end) OR (c.endTime > @start AND c.endTime <= @end))
-              ORDER BY c.startTime")
+              AND (
+                  (c.isAllDay = false AND (
+                      (c.startTime >= @start AND c.startTime < @end)
+                      OR (c.endTime > @start AND c.endTime <= @end)
+                      OR (c.startTime <= @start AND c.endTime >= @end)
+                  ))
+                  OR
+                  (c.isAllDay = true AND (
+                      (c.startDate >= @startDate AND c.startDate < @endDate)
+                      OR (c.endDate > @startDate AND c.endDate <= @endDate)
+                      OR (c.startDate <= @startDate AND c.endDate >= @endDate)
+                  ))
+              )
+              ORDER BY c.isAllDay DESC, c.startDate, c.startTime")
             .WithParameter("@familyId", familyId)
             .WithParameter("@assigneeId", assigneeId)
             .WithParameter("@start", start)
-            .WithParameter("@end", end);
+            .WithParameter("@end", end)
+            .WithParameter("@startDate", startDateStr)
+            .WithParameter("@endDate", endDateStr);
 
         return await QueryAsync(query, familyId, cancellationToken);
     }

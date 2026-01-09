@@ -387,15 +387,17 @@ export class WeekViewComponent {
 
       const dayEvents = this.events
         .filter(event => {
-          const eventDateKey = this.getDateKey(new Date(event.startTime));
+          const eventDateKey = this.getEventDateKey(event);
           return eventDateKey === dateKey;
         })
         .sort((a, b) => {
           // All-day events first, then by start time
-          const aAllDay = this.isAllDayEvent(a) ? 0 : 1;
-          const bAllDay = this.isAllDayEvent(b) ? 0 : 1;
-          if (aAllDay !== bAllDay) return aAllDay - bAllDay;
-          return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
+          if (a.isAllDay && !b.isAllDay) return -1;
+          if (!a.isAllDay && b.isAllDay) return 1;
+          if (a.isAllDay && b.isAllDay) {
+            return (a.startDate || '') < (b.startDate || '') ? -1 : 1;
+          }
+          return new Date(a.startTime!).getTime() - new Date(b.startTime!).getTime();
         });
 
       days.push({
@@ -470,7 +472,8 @@ export class WeekViewComponent {
     return 'var(--accent-500)';
   }
 
-  formatTime(isoTime: string): string {
+  formatTime(isoTime: string | null | undefined): string {
+    if (!isoTime) return '';
     try {
       const date = new Date(isoTime);
       return date.toLocaleTimeString('en-US', {
@@ -484,11 +487,16 @@ export class WeekViewComponent {
   }
 
   isAllDayEvent(event: ScheduleEvent): boolean {
-    const start = new Date(event.startTime);
-    const end = event.endTime ? new Date(event.endTime) : null;
-    if (!end) return false;
-    const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-    return hours >= 23;
+    return event.isAllDay;
+  }
+
+  private getEventDateKey(event: ScheduleEvent): string | null {
+    if (event.isAllDay && event.startDate) {
+      return event.startDate;
+    } else if (event.startTime) {
+      return this.getDateKey(new Date(event.startTime));
+    }
+    return null;
   }
 
   private getWeekStart(date: Date): Date {

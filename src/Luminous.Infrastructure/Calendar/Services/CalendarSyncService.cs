@@ -317,13 +317,32 @@ public sealed class CalendarSyncService : ICalendarSyncService
         CalendarConnection connection,
         ExternalCalendarEvent externalEvent)
     {
-        var domainEvent = Event.Create(
-            connection.FamilyId,
-            externalEvent.Title,
-            externalEvent.StartTime,
-            externalEvent.EndTime,
-            "system",
-            externalEvent.IsAllDay);
+        Event domainEvent;
+
+        if (externalEvent.IsAllDay)
+        {
+            // For all-day events, store dates only (no timezone conversion needed)
+            // The dates from the external calendar represent the calendar dates directly
+            var startDate = DateOnly.FromDateTime(externalEvent.StartTime);
+            var endDate = DateOnly.FromDateTime(externalEvent.EndTime);
+
+            domainEvent = Event.CreateAllDay(
+                connection.FamilyId,
+                externalEvent.Title,
+                startDate,
+                endDate,
+                "system");
+        }
+        else
+        {
+            // For timed events, store the UTC times
+            domainEvent = Event.CreateTimed(
+                connection.FamilyId,
+                externalEvent.Title,
+                externalEvent.StartTime.ToUniversalTime(),
+                externalEvent.EndTime.ToUniversalTime(),
+                "system");
+        }
 
         domainEvent.Description = externalEvent.Description;
         domainEvent.LocationText = externalEvent.Location;
@@ -352,11 +371,26 @@ public sealed class CalendarSyncService : ICalendarSyncService
     {
         domainEvent.Title = externalEvent.Title;
         domainEvent.Description = externalEvent.Description;
-        domainEvent.StartTime = externalEvent.StartTime;
-        domainEvent.EndTime = externalEvent.EndTime;
         domainEvent.IsAllDay = externalEvent.IsAllDay;
         domainEvent.LocationText = externalEvent.Location;
         domainEvent.Color = externalEvent.Color ?? connection.Color;
+
+        if (externalEvent.IsAllDay)
+        {
+            // For all-day events, store dates only
+            domainEvent.StartDate = DateOnly.FromDateTime(externalEvent.StartTime);
+            domainEvent.EndDate = DateOnly.FromDateTime(externalEvent.EndTime);
+            domainEvent.StartTime = null;
+            domainEvent.EndTime = null;
+        }
+        else
+        {
+            // For timed events, store UTC times
+            domainEvent.StartTime = externalEvent.StartTime.ToUniversalTime();
+            domainEvent.EndTime = externalEvent.EndTime.ToUniversalTime();
+            domainEvent.StartDate = null;
+            domainEvent.EndDate = null;
+        }
 
         if (externalEvent.Reminders.Count > 0)
             domainEvent.Reminders = externalEvent.Reminders;

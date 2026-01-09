@@ -11,8 +11,14 @@ import { CacheService, ScheduleEvent, MemberData } from './cache.service';
 export interface EventSummaryDto {
   id: string;
   title: string;
-  startTime: string;
-  endTime: string;
+  /** Start time for timed events (ISO 8601). Null for all-day events. */
+  startTime?: string | null;
+  /** End time for timed events (ISO 8601). Null for all-day events. */
+  endTime?: string | null;
+  /** Start date for all-day events (YYYY-MM-DD). Null for timed events. */
+  startDate?: string | null;
+  /** End date for all-day events (YYYY-MM-DD, exclusive). Null for timed events. */
+  endDate?: string | null;
   isAllDay: boolean;
   assigneeIds: string[];
   color?: string;
@@ -81,16 +87,27 @@ export class EventService {
     const grouped = new Map<string, ScheduleEvent[]>();
 
     for (const event of events) {
-      const dateKey = this.getDateKey(new Date(event.startTime));
-      const existing = grouped.get(dateKey) || [];
-      grouped.set(dateKey, [...existing, event]);
+      // For all-day events, use startDate; for timed events, use startTime
+      const dateKey = event.isAllDay && event.startDate
+        ? event.startDate
+        : (event.startTime ? this.getDateKey(new Date(event.startTime)) : '');
+
+      if (dateKey) {
+        const existing = grouped.get(dateKey) || [];
+        grouped.set(dateKey, [...existing, event]);
+      }
     }
 
-    // Sort events within each date
+    // Sort events within each date: all-day first, then by time
     for (const [key, dateEvents] of grouped) {
-      grouped.set(key, dateEvents.sort((a, b) =>
-        new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
-      ));
+      grouped.set(key, dateEvents.sort((a, b) => {
+        if (a.isAllDay && !b.isAllDay) return -1;
+        if (!a.isAllDay && b.isAllDay) return 1;
+        if (a.isAllDay && b.isAllDay) {
+          return (a.startDate || '') < (b.startDate || '') ? -1 : 1;
+        }
+        return new Date(a.startTime!).getTime() - new Date(b.startTime!).getTime();
+      }));
     }
 
     return grouped;
@@ -238,10 +255,18 @@ export class EventService {
   getUpcomingEvents(hours: number): ScheduleEvent[] {
     const now = new Date();
     const endTime = new Date(now.getTime() + hours * 60 * 60 * 1000);
+    const todayStr = this.formatDateStr(now);
+    const endDateStr = this.formatDateStr(endTime);
 
     return this.filteredEvents().filter(event => {
-      const eventStart = new Date(event.startTime);
-      return eventStart >= now && eventStart <= endTime;
+      if (event.isAllDay && event.startDate) {
+        // Include all-day events that overlap with the time range
+        return event.startDate <= endDateStr && (event.endDate || event.startDate) > todayStr;
+      } else if (event.startTime) {
+        const eventStart = new Date(event.startTime);
+        return eventStart >= now && eventStart <= endTime;
+      }
+      return false;
     });
   }
 
@@ -250,10 +275,18 @@ export class EventService {
    */
   isEventNow(event: ScheduleEvent): boolean {
     const now = new Date();
-    const start = new Date(event.startTime);
-    const end = event.endTime ? new Date(event.endTime) : new Date(start.getTime() + 60 * 60 * 1000);
 
-    return now >= start && now <= end;
+    if (event.isAllDay && event.startDate) {
+      // All-day events are "now" if today falls within the event's date range
+      const todayStr = this.formatDateStr(now);
+      const endDate = event.endDate || event.startDate;
+      return event.startDate <= todayStr && todayStr < endDate;
+    } else if (event.startTime) {
+      const start = new Date(event.startTime);
+      const end = event.endTime ? new Date(event.endTime) : new Date(start.getTime() + 60 * 60 * 1000);
+      return now >= start && now <= end;
+    }
+    return false;
   }
 
   /**
@@ -261,8 +294,17 @@ export class EventService {
    */
   isEventPast(event: ScheduleEvent): boolean {
     const now = new Date();
-    const end = event.endTime ? new Date(event.endTime) : new Date(event.startTime);
-    return end < now;
+
+    if (event.isAllDay && event.endDate) {
+      // All-day event is past if end date is before today
+      const todayStr = this.formatDateStr(now);
+      return event.endDate <= todayStr;
+    } else if (event.endTime) {
+      return new Date(event.endTime) < now;
+    } else if (event.startTime) {
+      return new Date(event.startTime) < now;
+    }
+    return false;
   }
 
   /**
@@ -280,7 +322,8 @@ export class EventService {
   /**
    * Format time for display
    */
-  formatTime(isoTime: string, format: '12h' | '24h' = '12h'): string {
+  formatTime(isoTime: string | null | undefined, format: '12h' | '24h' = '12h'): string {
+    if (!isoTime) return '';
     try {
       const date = new Date(isoTime);
       if (format === '24h') {
@@ -297,6 +340,16 @@ export class EventService {
     } catch {
       return isoTime;
     }
+  }
+
+  /**
+   * Format a Date to YYYY-MM-DD string (local date)
+   */
+  formatDateStr(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   /**
@@ -339,8 +392,11 @@ export class EventService {
     return dtos.map(dto => ({
       id: dto.id,
       title: dto.title,
-      startTime: dto.startTime,
-      endTime: dto.endTime,
+      startTime: dto.startTime ?? null,
+      endTime: dto.endTime ?? null,
+      startDate: dto.startDate ?? null,
+      endDate: dto.endDate ?? null,
+      isAllDay: dto.isAllDay,
       location: dto.locationText,
       memberIds: dto.assigneeIds || [],
       color: dto.color,
@@ -352,9 +408,15 @@ export class EventService {
     const eventsByDay = new Map<string, ScheduleEvent[]>();
 
     for (const event of events) {
-      const dateKey = this.getDateKey(new Date(event.startTime));
-      const existing = eventsByDay.get(dateKey) || [];
-      eventsByDay.set(dateKey, [...existing, event]);
+      // For all-day events, use startDate; for timed events, use startTime
+      const dateKey = event.isAllDay && event.startDate
+        ? event.startDate
+        : (event.startTime ? this.getDateKey(new Date(event.startTime)) : null);
+
+      if (dateKey) {
+        const existing = eventsByDay.get(dateKey) || [];
+        eventsByDay.set(dateKey, [...existing, event]);
+      }
     }
 
     // Cache each day

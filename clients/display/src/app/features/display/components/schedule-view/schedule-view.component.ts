@@ -37,7 +37,7 @@ import { ScheduleEvent, MemberData } from '../../../../core/services/cache.servi
           @for (event of events; track event.id) {
             <div class="display-event" [style.--member-color]="getEventColor(event)">
               <div class="display-event-time">
-                {{ formatTime(event.startTime) }}
+                {{ event.isAllDay ? 'All Day' : formatTime(event.startTime) }}
               </div>
               <div class="display-event-content">
                 <div class="display-event-title">
@@ -135,7 +135,8 @@ export class ScheduleViewComponent {
   @Input() members: MemberData[] = [];
   @Input() isLoading = false;
 
-  formatTime(isoTime: string): string {
+  formatTime(isoTime: string | null | undefined): string {
+    if (!isoTime) return '';
     try {
       const date = new Date(isoTime);
       return date.toLocaleTimeString('en-US', {

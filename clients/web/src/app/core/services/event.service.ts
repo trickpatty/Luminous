@@ -11,8 +11,14 @@ import { AuthService } from './auth.service';
 export interface EventSummaryDto {
   id: string;
   title: string;
-  startTime: string;
-  endTime: string;
+  /** Start time for timed events (ISO 8601). Null for all-day events. */
+  startTime?: string | null;
+  /** End time for timed events (ISO 8601). Null for all-day events. */
+  endTime?: string | null;
+  /** Start date for all-day events (YYYY-MM-DD). Null for timed events. */
+  startDate?: string | null;
+  /** End date for all-day events (YYYY-MM-DD, exclusive). Null for timed events. */
+  endDate?: string | null;
   isAllDay: boolean;
   assigneeIds: string[];
   color?: string;
@@ -25,12 +31,18 @@ export interface EventSummaryDto {
 export interface ScheduleEvent {
   id: string;
   title: string;
-  startTime: string;
-  endTime: string;
+  /** Start time for timed events (ISO 8601). Null for all-day events. */
+  startTime?: string | null;
+  /** End time for timed events (ISO 8601). Null for all-day events. */
+  endTime?: string | null;
+  /** Start date for all-day events (YYYY-MM-DD). Null for timed events. */
+  startDate?: string | null;
+  /** End date for all-day events (YYYY-MM-DD, exclusive). Null for timed events. */
+  endDate?: string | null;
   location?: string;
   memberIds: string[];
   color?: string;
-  isAllDay?: boolean;
+  isAllDay: boolean;
 }
 
 /**
@@ -69,13 +81,31 @@ export class EventService {
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
+    const todayStr = this.formatDateStr(today);
 
     return events
       .filter(event => {
-        const eventStart = new Date(event.startTime);
-        return eventStart >= today && eventStart < tomorrow;
+        if (event.isAllDay && event.startDate) {
+          // For all-day events, compare date strings directly
+          // Event is on "today" if startDate <= today < endDate
+          const endDate = event.endDate || event.startDate;
+          return event.startDate <= todayStr && todayStr < endDate;
+        } else if (event.startTime) {
+          // For timed events, compare timestamps
+          const eventStart = new Date(event.startTime);
+          return eventStart >= today && eventStart < tomorrow;
+        }
+        return false;
       })
-      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+      .sort((a, b) => {
+        // Sort all-day events first, then by time
+        if (a.isAllDay && !b.isAllDay) return -1;
+        if (!a.isAllDay && b.isAllDay) return 1;
+        if (a.isAllDay && b.isAllDay) {
+          return (a.startDate || '') < (b.startDate || '') ? -1 : 1;
+        }
+        return new Date(a.startTime!).getTime() - new Date(b.startTime!).getTime();
+      });
   });
 
   // Computed: upcoming events (next 24 hours)
@@ -83,13 +113,28 @@ export class EventService {
     const events = this._events();
     const now = new Date();
     const in24Hours = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const todayStr = this.formatDateStr(now);
+    const tomorrowStr = this.formatDateStr(in24Hours);
 
     return events
       .filter(event => {
-        const eventStart = new Date(event.startTime);
-        return eventStart >= now && eventStart <= in24Hours;
+        if (event.isAllDay && event.startDate) {
+          // Include all-day events for today and tomorrow
+          return event.startDate <= tomorrowStr && (event.endDate || event.startDate) > todayStr;
+        } else if (event.startTime) {
+          const eventStart = new Date(event.startTime);
+          return eventStart >= now && eventStart <= in24Hours;
+        }
+        return false;
       })
-      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+      .sort((a, b) => {
+        if (a.isAllDay && !b.isAllDay) return -1;
+        if (!a.isAllDay && b.isAllDay) return 1;
+        if (a.isAllDay && b.isAllDay) {
+          return (a.startDate || '') < (b.startDate || '') ? -1 : 1;
+        }
+        return new Date(a.startTime!).getTime() - new Date(b.startTime!).getTime();
+      });
   });
 
   /**
@@ -177,7 +222,8 @@ export class EventService {
   /**
    * Format time for display
    */
-  formatTime(isoTime: string, format: '12h' | '24h' = '12h'): string {
+  formatTime(isoTime: string | null | undefined, format: '12h' | '24h' = '12h'): string {
+    if (!isoTime) return '';
     try {
       const date = new Date(isoTime);
       if (format === '24h') {
@@ -194,6 +240,16 @@ export class EventService {
     } catch {
       return isoTime;
     }
+  }
+
+  /**
+   * Format a Date to YYYY-MM-DD string (local date)
+   */
+  formatDateStr(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   /**
@@ -224,10 +280,18 @@ export class EventService {
    */
   isEventNow(event: ScheduleEvent): boolean {
     const now = new Date();
-    const start = new Date(event.startTime);
-    const end = event.endTime ? new Date(event.endTime) : new Date(start.getTime() + 60 * 60 * 1000);
 
-    return now >= start && now <= end;
+    if (event.isAllDay && event.startDate) {
+      // All-day events are "now" if today falls within the event's date range
+      const todayStr = this.formatDateStr(now);
+      const endDate = event.endDate || event.startDate;
+      return event.startDate <= todayStr && todayStr < endDate;
+    } else if (event.startTime) {
+      const start = new Date(event.startTime);
+      const end = event.endTime ? new Date(event.endTime) : new Date(start.getTime() + 60 * 60 * 1000);
+      return now >= start && now <= end;
+    }
+    return false;
   }
 
   /**
@@ -235,8 +299,17 @@ export class EventService {
    */
   isEventPast(event: ScheduleEvent): boolean {
     const now = new Date();
-    const end = event.endTime ? new Date(event.endTime) : new Date(event.startTime);
-    return end < now;
+
+    if (event.isAllDay && event.endDate) {
+      // All-day event is past if end date is before today
+      const todayStr = this.formatDateStr(now);
+      return event.endDate <= todayStr;
+    } else if (event.endTime) {
+      return new Date(event.endTime) < now;
+    } else if (event.startTime) {
+      return new Date(event.startTime) < now;
+    }
+    return false;
   }
 
   // ============================================
@@ -251,8 +324,10 @@ export class EventService {
     return dtos.map(dto => ({
       id: dto.id,
       title: dto.title,
-      startTime: dto.startTime,
-      endTime: dto.endTime,
+      startTime: dto.startTime ?? null,
+      endTime: dto.endTime ?? null,
+      startDate: dto.startDate ?? null,
+      endDate: dto.endDate ?? null,
       location: dto.locationText,
       memberIds: dto.assigneeIds || [],
       color: dto.color,
