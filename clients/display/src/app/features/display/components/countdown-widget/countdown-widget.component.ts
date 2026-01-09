@@ -61,7 +61,7 @@ const EVENT_EMOJIS: Record<string, string> = {
               <div class="countdown-emoji">{{ item.emoji }}</div>
               <div class="countdown-info">
                 <div class="countdown-title">{{ item.event.title }}</div>
-                <div class="countdown-date">{{ formatDate(item.event.startTime) }}</div>
+                <div class="countdown-date">{{ formatEventDate(item.event) }}</div>
               </div>
               <div class="countdown-days">
                 <div class="days-number">{{ item.daysRemaining }}</div>
@@ -211,9 +211,20 @@ export class CountdownWidgetComponent implements OnInit, OnDestroy {
     const items: CountdownItem[] = [];
 
     for (const event of this.events) {
-      const eventDate = new Date(event.startTime);
-      const eventMidnight = new Date(eventDate);
-      eventMidnight.setHours(0, 0, 0, 0);
+      let eventMidnight: Date;
+
+      if (event.isAllDay && event.startDate) {
+        // All-day event: parse the date string
+        const [year, month, day] = event.startDate.split('-').map(Number);
+        eventMidnight = new Date(year, month - 1, day);
+      } else if (event.startTime) {
+        // Timed event: use startTime
+        const eventDate = new Date(event.startTime);
+        eventMidnight = new Date(eventDate);
+        eventMidnight.setHours(0, 0, 0, 0);
+      } else {
+        continue; // Skip events without start info
+      }
 
       // Only include future events within range
       if (eventMidnight >= today && eventMidnight <= maxDate) {
@@ -251,8 +262,19 @@ export class CountdownWidgetComponent implements OnInit, OnDestroy {
     }
   }
 
-  protected formatDate(isoTime: string): string {
-    const date = new Date(isoTime);
+  protected formatEventDate(event: ScheduleEvent): string {
+    let date: Date;
+
+    if (event.isAllDay && event.startDate) {
+      // Parse the YYYY-MM-DD date string
+      const [year, month, day] = event.startDate.split('-').map(Number);
+      date = new Date(year, month - 1, day);
+    } else if (event.startTime) {
+      date = new Date(event.startTime);
+    } else {
+      return '';
+    }
+
     return date.toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',

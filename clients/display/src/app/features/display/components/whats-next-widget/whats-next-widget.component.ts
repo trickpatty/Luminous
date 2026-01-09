@@ -19,7 +19,7 @@ import { ElectronService } from '../../../../core/services/electron.service';
         <div class="widget-label">Up Next</div>
         <div class="event-content">
           <div class="event-time-wrapper">
-            <div class="event-time">{{ formatTime(event.startTime) }}</div>
+            <div class="event-time">{{ event.isAllDay ? 'All Day' : formatTime(event.startTime) }}</div>
             @if (timeUntil()) {
               <div class="time-until">{{ timeUntil() }}</div>
             }
@@ -216,15 +216,43 @@ export class WhatsNextWidgetComponent implements OnInit, OnDestroy {
    */
   protected readonly nextEvent = computed(() => {
     const now = new Date();
+    const todayStr = this.formatDateStr(now);
+
     const upcoming = this.events
       .filter(event => {
-        const endTime = event.endTime ? new Date(event.endTime) : new Date(event.startTime);
-        return endTime > now;
+        if (event.isAllDay && event.startDate) {
+          // All-day event: check if end date is today or later
+          const endDate = event.endDate || event.startDate;
+          return endDate > todayStr;
+        } else if (event.startTime) {
+          // Timed event: check if end time is in the future
+          const endTime = event.endTime ? new Date(event.endTime) : new Date(event.startTime);
+          return endTime > now;
+        }
+        return false;
       })
-      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+      .sort((a, b) => {
+        // All-day events first, then by start time/date
+        if (a.isAllDay && !b.isAllDay) return -1;
+        if (!a.isAllDay && b.isAllDay) return 1;
+        if (a.isAllDay && b.isAllDay) {
+          return (a.startDate || '') < (b.startDate || '') ? -1 : 1;
+        }
+        return new Date(a.startTime!).getTime() - new Date(b.startTime!).getTime();
+      });
 
     return upcoming[0] || null;
   });
+
+  /**
+   * Format a Date to YYYY-MM-DD string (local date)
+   */
+  private formatDateStr(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
 
   /**
    * Get the members assigned to the next event
@@ -260,13 +288,24 @@ export class WhatsNextWidgetComponent implements OnInit, OnDestroy {
     }
   }
 
-  protected formatTime(isoTime: string): string {
+  protected formatTime(isoTime: string | null | undefined): string {
     return this.eventService.formatTime(isoTime, this.use24Hour ? '24h' : '12h');
   }
 
   private updateTimeUntil(): void {
     const event = this.nextEvent();
     if (!event) {
+      this.timeUntil.set('');
+      return;
+    }
+
+    // For all-day events, don't show "time until"
+    if (event.isAllDay) {
+      this.timeUntil.set('');
+      return;
+    }
+
+    if (!event.startTime) {
       this.timeUntil.set('');
       return;
     }
