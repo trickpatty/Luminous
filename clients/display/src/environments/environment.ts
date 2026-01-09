@@ -16,7 +16,7 @@ export const environment = {
   apiUrl: 'http://localhost:5000/api',
 
   // SignalR URL: Local development server
-  signalRUrl: 'http://localhost:5000/hubs',
+  signalRUrl: 'http://localhost:5000/hubs/sync',
 
   auth: {
     deviceTokenStorageKey: 'luminous_device_token',
@@ -30,5 +30,10 @@ export const environment = {
   cache: {
     maxAge: 3600000, // 1 hour
     storeName: 'luminous-display-cache',
+  },
+  sync: {
+    reconnectIntervalMs: 5000,
+    maxReconnectAttempts: 10,
+    maxReconnectDelayMs: 30000,
   },
 };

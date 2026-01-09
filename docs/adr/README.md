@@ -24,6 +24,10 @@ New ADRs should follow the template in [ADR-000-template.md](./ADR-000-template.
 | [ADR-008](./ADR-008-magic-import-approval.md) | Magic Import Requires Approval | Accepted | 2025-12-21 |
 | [ADR-009](./ADR-009-zero-distraction-principle.md) | Zero-Distraction Design Principle | Accepted | 2025-12-21 |
 | [ADR-010](./ADR-010-passwordless-authentication.md) | In-House Passwordless Authentication | Accepted | 2025-12-21 |
+| [ADR-011](./ADR-011-secure-registration-flow.md) | Secure Registration Flow | Accepted | 2025-12-24 |
+| [ADR-012](./ADR-012-native-openapi.md) | Native OpenAPI Clients | Accepted | 2026-01-08 |
+| [ADR-016](./ADR-016-managed-accounts.md) | Managed Accounts for Children | Accepted | 2026-01-08 |
+| [ADR-017](./ADR-017-realtime-sync-signalr.md) | Real-time Sync with SignalR | Accepted | 2026-01-09 |
 
 ## Superseded ADRs (Historical Reference)
 

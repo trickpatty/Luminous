@@ -79,7 +79,7 @@ function updateEnvironmentFile(env, staticWebAppUrl, appServiceUrl) {
 
   // Replace the SignalR URL placeholder
   const oldSignalRUrlPattern = /signalRUrl:\s*'[^']+'/;
-  const newSignalRUrl = `signalRUrl: 'https://${appServiceUrl}/hubs'`;
+  const newSignalRUrl = `signalRUrl: 'https://${appServiceUrl}/hubs/sync'`;
   content = content.replace(oldSignalRUrlPattern, newSignalRUrl);
 
   fs.writeFileSync(filePath, content, 'utf-8');
@@ -172,7 +172,7 @@ function main() {
     console.log('Configuration updated successfully!');
     console.log('');
     console.log(`API URL:     https://${staticWebAppUrl}/api`);
-    console.log(`SignalR URL: https://${appServiceUrl}/hubs`);
+    console.log(`SignalR URL: https://${appServiceUrl}/hubs/sync`);
     console.log('');
     console.log(`You can now build the display app for ${env}:`);
     console.log(`  npm run build:${env === 'prd' ? 'prod' : env}`);

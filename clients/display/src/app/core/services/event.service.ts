@@ -1,9 +1,11 @@
-import { Injectable, inject, signal, computed } from '@angular/core';
+import { Injectable, inject, signal, computed, OnDestroy } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { DeviceAuthService } from './device-auth.service';
 import { CacheService, ScheduleEvent, MemberData } from './cache.service';
+import { SyncService, SyncMessageType, EventSyncMessage } from './sync.service';
 
 /**
  * Event summary DTO from API
@@ -47,10 +49,11 @@ export interface DateRange {
 @Injectable({
   providedIn: 'root',
 })
-export class EventService {
+export class EventService implements OnDestroy {
   private readonly http = inject(HttpClient);
   private readonly authService = inject(DeviceAuthService);
   private readonly cacheService = inject(CacheService);
+  private readonly syncService = inject(SyncService);
 
   // State
   private readonly _events = signal<ScheduleEvent[]>([]);
@@ -58,6 +61,21 @@ export class EventService {
   private readonly _error = signal<string | null>(null);
   private readonly _selectedDate = signal<Date>(new Date());
   private readonly _selectedMemberIds = signal<string[]>([]);
+
+  // Track the current date range for re-fetching
+  private currentDateRange: DateRange | null = null;
+
+  // Destroy subject for cleanup
+  private readonly destroy$ = new Subject<void>();
+
+  constructor() {
+    this.setupSyncSubscriptions();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   // Public signals
   readonly events = this._events.asReadonly();
@@ -199,6 +217,9 @@ export class EventService {
   async fetchEvents(range: DateRange): Promise<ScheduleEvent[]> {
     this._isLoading.set(true);
     this._error.set(null);
+
+    // Store the current date range for re-fetching on sync updates
+    this.currentDateRange = range;
 
     try {
       const familyId = this.getFamilyId();
@@ -373,6 +394,100 @@ export class EventService {
           weekday: 'short',
         });
     }
+  }
+
+  // ============================================
+  // Real-time Sync Methods
+  // ============================================
+
+  /**
+   * Setup subscriptions to sync service for real-time updates
+   */
+  private setupSyncSubscriptions(): void {
+    // Handle event changes (created, updated, deleted)
+    this.syncService.onEventChanged()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((message) => this.handleEventChange(message));
+
+    // Handle events refreshed (calendar sync completed)
+    this.syncService.onEventsRefreshed()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.refreshEvents());
+
+    // Handle full sync required
+    this.syncService.onFullSyncRequired()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.refreshEvents());
+
+    // Handle calendar sync completed
+    this.syncService.onCalendarSyncCompleted()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.refreshEvents());
+  }
+
+  /**
+   * Handle individual event changes from sync
+   */
+  private handleEventChange(message: EventSyncMessage): void {
+    const currentEvents = this._events();
+
+    switch (message.type) {
+      case SyncMessageType.EventCreated:
+        if (message.event) {
+          const newEvent = this.mapSyncEventToScheduleEvent(message.event);
+          // Only add if not already in list
+          if (!currentEvents.find(e => e.id === newEvent.id)) {
+            this._events.set([...currentEvents, newEvent]);
+          }
+        }
+        break;
+
+      case SyncMessageType.EventUpdated:
+        if (message.event) {
+          const updatedEvent = this.mapSyncEventToScheduleEvent(message.event);
+          this._events.set(
+            currentEvents.map(e => e.id === message.eventId ? updatedEvent : e)
+          );
+        }
+        break;
+
+      case SyncMessageType.EventDeleted:
+        this._events.set(currentEvents.filter(e => e.id !== message.eventId));
+        break;
+    }
+  }
+
+  /**
+   * Refresh events by re-fetching the current date range
+   */
+  async refreshEvents(): Promise<void> {
+    if (this.currentDateRange) {
+      await this.fetchEvents(this.currentDateRange);
+    } else {
+      // Default to fetching week from today
+      await this.fetchEventsForWeek(new Date());
+    }
+  }
+
+  /**
+   * Map sync event summary to ScheduleEvent
+   */
+  private mapSyncEventToScheduleEvent(event: EventSyncMessage['event']): ScheduleEvent {
+    if (!event) {
+      throw new Error('Event data is required');
+    }
+    return {
+      id: event.id,
+      title: event.title,
+      startTime: event.startTime ?? null,
+      endTime: event.endTime ?? null,
+      startDate: event.startDate ?? null,
+      endDate: event.endDate ?? null,
+      isAllDay: event.isAllDay,
+      location: event.locationText,
+      memberIds: event.assigneeIds || [],
+      color: event.color,
+    };
   }
 
   // ============================================
