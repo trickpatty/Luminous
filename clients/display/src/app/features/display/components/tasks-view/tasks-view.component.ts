@@ -90,6 +90,8 @@ import { TaskData, MemberData } from '../../../../core/services/cache.service';
       display: flex;
       flex-direction: column;
       gap: var(--space-6);
+      min-height: 0;
+      overflow: hidden;
     }
 
     .tasks-header {
@@ -120,6 +122,7 @@ import { TaskData, MemberData } from '../../../../core/services/cache.service';
       gap: var(--space-4);
       overflow-y: auto;
       padding: var(--space-4);
+      min-height: 0;
     }
 
     .display-task {

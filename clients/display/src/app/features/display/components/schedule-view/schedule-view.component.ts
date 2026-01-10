@@ -76,6 +76,8 @@ import { ScheduleEvent, MemberData } from '../../../../core/services/cache.servi
       display: flex;
       flex-direction: column;
       gap: var(--space-6);
+      min-height: 0;
+      overflow: hidden;
     }
 
     .schedule-header {
@@ -94,6 +96,7 @@ import { ScheduleEvent, MemberData } from '../../../../core/services/cache.servi
     .schedule-list {
       flex: 1;
       overflow-y: auto;
+      min-height: 0;
     }
 
     .display-event {

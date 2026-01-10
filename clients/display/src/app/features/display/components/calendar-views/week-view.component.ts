@@ -134,6 +134,8 @@ interface DayColumn {
       display: flex;
       flex-direction: column;
       gap: var(--space-4);
+      min-height: 0;
+      overflow: hidden;
     }
 
     .week-view-header {
