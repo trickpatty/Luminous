@@ -2,6 +2,7 @@ using System.Text;
 using Fido2NetLib;
 using Luminous.Api.Configuration;
 using Luminous.Api.Helpers;
+using Luminous.Api.Hubs;
 using Luminous.Api.Middleware;
 using Luminous.Api.Services;
 using Luminous.Application;
@@ -92,6 +93,39 @@ else
     }
 }
 
+// Configure SignalR settings
+builder.Services.Configure<SignalRSettings>(
+    builder.Configuration.GetSection(SignalRSettings.SectionName));
+
+// Register SignalR with Azure SignalR Service support
+var signalRSettings = builder.Configuration.GetSection(SignalRSettings.SectionName).Get<SignalRSettings>();
+var signalRBuilder = builder.Services.AddSignalR()
+    .AddJsonProtocol(options =>
+    {
+        // Use same JSON settings as controllers
+        options.PayloadSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        options.PayloadSerializerOptions.PropertyNameCaseInsensitive = true;
+        options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
+
+// Use Azure SignalR Service if connection string is configured
+// Otherwise, use self-hosted SignalR (for local development)
+var signalRConnectionString = signalRSettings?.ConnectionString
+    ?? builder.Configuration.GetValue<string>("SignalR:ConnectionString");
+
+if (!string.IsNullOrEmpty(signalRConnectionString))
+{
+    signalRBuilder.AddAzureSignalR(signalRConnectionString);
+    Log.Information("SignalR configured with Azure SignalR Service");
+}
+else
+{
+    Log.Information("SignalR configured with self-hosted mode (local development)");
+}
+
+// Register SyncNotificationService for broadcasting to SignalR groups
+builder.Services.AddScoped<ISyncNotificationService, SyncNotificationService>();
+
 // Register WebAuthn/FIDO2 service
 builder.Services.AddScoped<IWebAuthnService, WebAuthnService>();
 
@@ -138,6 +172,22 @@ builder.Services.AddAuthentication(options =>
 
     options.Events = new JwtBearerEvents
     {
+        OnMessageReceived = context =>
+        {
+            // Support SignalR authentication via query string
+            // The client sends: /hubs/sync?access_token=<token>
+            var accessToken = context.Request.Query["access_token"];
+
+            // If the request is for a SignalR hub, get the token from the query string
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) &&
+                path.StartsWithSegments("/hubs"))
+            {
+                context.Token = accessToken;
+            }
+
+            return Task.CompletedTask;
+        },
         OnAuthenticationFailed = context =>
         {
             if (context.Exception is SecurityTokenExpiredException)
@@ -246,6 +296,9 @@ app.UseTenantValidation();
 app.MapControllers();
 app.MapHealthChecks("/health");
 
+// Map SignalR hub for real-time sync
+app.MapHub<SyncHub>("/hubs/sync");
+
 // Log startup information
 Log.Information("Luminous API started in {Environment} mode", app.Environment.EnvironmentName);
 if (app.Environment.IsDevelopment())
@@ -254,6 +307,7 @@ if (app.Environment.IsDevelopment())
     Log.Information("  - Swagger UI: http://localhost:5000/swagger");
     Log.Information("  - Dev Auth: POST http://localhost:5000/api/devauth/token");
     Log.Information("  - Health Check: http://localhost:5000/health");
+    Log.Information("  - SignalR Hub: ws://localhost:5000/hubs/sync");
 }
 
 app.Run();

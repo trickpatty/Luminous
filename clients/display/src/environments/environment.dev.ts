@@ -24,7 +24,7 @@ export const environment = {
 
   // SignalR URL: Direct connection to App Service for WebSocket support
   // Replace {SUFFIX} with your actual Azure deployment suffix
-  signalRUrl: 'https://app-lum-dev-{SUFFIX}.azurewebsites.net/hubs',
+  signalRUrl: 'https://app-lum-dev-{SUFFIX}.azurewebsites.net/hubs/sync',
 
   auth: {
     deviceTokenStorageKey: 'luminous_device_token',
@@ -38,5 +38,10 @@ export const environment = {
   cache: {
     maxAge: 3600000, // 1 hour
     storeName: 'luminous-display-cache',
+  },
+  sync: {
+    reconnectIntervalMs: 5000,
+    maxReconnectAttempts: 10,
+    maxReconnectDelayMs: 30000,
   },
 };

@@ -1,6 +1,6 @@
 # Luminous Development Roadmap
 
-> **Document Version:** 3.7.0
+> **Document Version:** 3.8.0
 > **Last Updated:** 2026-01-09
 > **Status:** Active
 > **TOGAF Phase:** Phase E/F (Opportunities, Solutions & Migration Planning)
@@ -588,12 +588,34 @@ Deliver the display application with calendar integration, real-time sync, and g
 - [x] Upcoming events loading for countdown widget (90-day range)
 - [x] Widget index file for easy imports
 
-#### 2.5 Real-time Sync (SignalR)
+#### 2.5 Real-time Sync (SignalR) ✅ COMPLETED
 
-- [ ] **2.5.1** Azure SignalR Service integration
-- [ ] **2.5.2** Family-scoped message groups
-- [ ] **2.5.3** Push updates to connected displays
-- [ ] **2.5.4** Connection recovery handling
+- [x] **2.5.1** Azure SignalR Service integration
+  - *Implemented: SyncHub with Azure SignalR Service support (connection string configuration)*
+  - *API: /hubs/sync endpoint with JWT authentication via query string*
+  - *Infrastructure: SignalR Service already provisioned in Bicep (Phase 0.1)*
+- [x] **2.5.2** Family-scoped message groups
+  - *Implemented: Family groups using `family:{familyId}` naming convention*
+  - *Auto-join on connect via JWT `family_id` claim*
+  - *Message types: EventChanged, ChoreChanged, UserChanged, FamilyChanged, CalendarSyncCompleted, DeviceChanged, FullSyncRequired*
+- [x] **2.5.3** Push updates to connected displays
+  - *Implemented: ISyncNotificationService interface and SyncNotificationService*
+  - *Methods: NotifyEventCreated/Updated/Deleted, NotifyChoreCreated/Updated/Deleted/Completed, NotifyCalendarSyncCompleted, etc.*
+  - *Display app: EventService subscribes to sync messages and updates state in real-time*
+- [x] **2.5.4** Connection recovery handling
+  - *Implemented: Exponential backoff reconnection (base 5s, max 30s, 10 attempts)*
+  - *Features: Network online/offline detection, automatic reconnect, connection state signals*
+  - *Both web and display apps: SyncService with full connection lifecycle management*
+
+**Additional deliverables:**
+- [x] SyncHub.cs - SignalR hub with Ping, JoinFamilyGroup, LeaveFamilyGroup methods
+- [x] SignalRSettings.cs - Configuration class for SignalR options
+- [x] SyncMessageDto.cs - DTOs for all sync message types
+- [x] sync.service.ts (web) - Angular SignalR service with RxJS observables
+- [x] sync.service.ts (display) - Angular SignalR service with cache invalidation
+- [x] ADR-017: Real-time Sync with SignalR architecture decision record
+- [x] Program.cs updated with SignalR configuration and JWT authentication for WebSocket
+- [x] Environment files updated with signalRUrl and sync settings
 
 #### 2.6 Display Modes
 
@@ -1113,3 +1135,4 @@ After Phase 2.7 is complete, feature development can proceed in parallel:
 | 3.5.0 | 2026-01-08 | Luminous Team | Added Phase 2.7 Cross-Platform Infrastructure, feature parity strategy, updated dependency map |
 | 3.6.0 | 2026-01-08 | Luminous Team | Added Phase 5.6 Managed Accounts for children/non-email users (ADR-016) |
 | 3.7.0 | 2026-01-09 | Luminous Team | Phase 2.4 Display Widgets completed (What's Next, Countdown, Weather, Clock widgets) |
+| 3.8.0 | 2026-01-09 | Luminous Team | Phase 2.5 Real-time Sync (SignalR) completed (SyncHub, family-scoped groups, push updates, connection recovery) |

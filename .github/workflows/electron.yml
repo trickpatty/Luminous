@@ -164,7 +164,7 @@ jobs:
 
           echo "Configuring environment for: $ENV"
           echo "  API URL: https://$SWA_URL/api"
-          echo "  SignalR URL: https://$APP_URL/hubs"
+          echo "  SignalR URL: https://$APP_URL/hubs/sync"
 
           # Determine which environment file to update
           if [ "$ENV" == "prd" ]; then
@@ -175,7 +175,7 @@ jobs:
 
           # Update the environment file with actual URLs
           sed -i "s|apiUrl:.*|apiUrl: 'https://$SWA_URL/api',|" "$ENV_FILE"
-          sed -i "s|signalRUrl:.*|signalRUrl: 'https://$APP_URL/hubs',|" "$ENV_FILE"
+          sed -i "s|signalRUrl:.*|signalRUrl: 'https://$APP_URL/hubs/sync',|" "$ENV_FILE"
 
           echo "Updated $ENV_FILE:"
           grep -E "(apiUrl|signalRUrl)" "$ENV_FILE"
@@ -224,7 +224,7 @@ jobs:
 
           echo "Configuring environment for: $ENV"
           echo "  API URL: https://$SWA_URL/api"
-          echo "  SignalR URL: https://$APP_URL/hubs"
+          echo "  SignalR URL: https://$APP_URL/hubs/sync"
 
           # Determine which environment file to update
           if [ "$ENV" == "prd" ]; then
@@ -235,7 +235,7 @@ jobs:
 
           # Update the environment file with actual URLs
           sed -i "s|apiUrl:.*|apiUrl: 'https://$SWA_URL/api',|" "$ENV_FILE"
-          sed -i "s|signalRUrl:.*|signalRUrl: 'https://$APP_URL/hubs',|" "$ENV_FILE"
+          sed -i "s|signalRUrl:.*|signalRUrl: 'https://$APP_URL/hubs/sync',|" "$ENV_FILE"
 
           echo "Updated $ENV_FILE:"
           grep -E "(apiUrl|signalRUrl)" "$ENV_FILE"
@@ -310,7 +310,7 @@ jobs:
 
           Write-Host "Configuring environment for: $ENV"
           Write-Host "  API URL: https://$SWA_URL/api"
-          Write-Host "  SignalR URL: https://$APP_URL/hubs"
+          Write-Host "  SignalR URL: https://$APP_URL/hubs/sync"
 
           # Determine which environment file to update
           if ($ENV -eq "prd") {
@@ -324,7 +324,7 @@ jobs:
 
           # Update the URLs
           $content = $content -replace "apiUrl:.*", "apiUrl: 'https://$SWA_URL/api',"
-          $content = $content -replace "signalRUrl:.*", "signalRUrl: 'https://$APP_URL/hubs',"
+          $content = $content -replace "signalRUrl:.*", "signalRUrl: 'https://$APP_URL/hubs/sync',"
 
           # Write back
           Set-Content $ENV_FILE $content
@@ -409,7 +409,7 @@ jobs:
 
           echo "Configuring environment for: $ENV"
           echo "  API URL: https://$SWA_URL/api"
-          echo "  SignalR URL: https://$APP_URL/hubs"
+          echo "  SignalR URL: https://$APP_URL/hubs/sync"
 
           # Determine which environment file to update
           if [ "$ENV" == "prd" ]; then
@@ -420,7 +420,7 @@ jobs:
 
           # Update the environment file with actual URLs (macOS sed syntax)
           sed -i '' "s|apiUrl:.*|apiUrl: 'https://$SWA_URL/api',|" "$ENV_FILE"
-          sed -i '' "s|signalRUrl:.*|signalRUrl: 'https://$APP_URL/hubs',|" "$ENV_FILE"
+          sed -i '' "s|signalRUrl:.*|signalRUrl: 'https://$APP_URL/hubs/sync',|" "$ENV_FILE"
 
           echo "Updated $ENV_FILE:"
           grep -E "(apiUrl|signalRUrl)" "$ENV_FILE"
@@ -512,7 +512,7 @@ jobs:
 
           echo "Configuring environment for: $ENV"
           echo "  API URL: https://$SWA_URL/api"
-          echo "  SignalR URL: https://$APP_URL/hubs"
+          echo "  SignalR URL: https://$APP_URL/hubs/sync"
 
           # Determine which environment file to update
           if [ "$ENV" == "prd" ]; then
@@ -523,7 +523,7 @@ jobs:
 
           # Update the environment file with actual URLs (macOS sed syntax)
           sed -i '' "s|apiUrl:.*|apiUrl: 'https://$SWA_URL/api',|" "$ENV_FILE"
-          sed -i '' "s|signalRUrl:.*|signalRUrl: 'https://$APP_URL/hubs',|" "$ENV_FILE"
+          sed -i '' "s|signalRUrl:.*|signalRUrl: 'https://$APP_URL/hubs/sync',|" "$ENV_FILE"
 
           echo "Updated $ENV_FILE:"
           grep -E "(apiUrl|signalRUrl)" "$ENV_FILE"
