@@ -58,10 +58,15 @@ type CalendarViewMode = 'day' | 'week' | 'month' | 'agenda';
             aria-label="Today's schedule"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
-              <line x1="16" x2="16" y1="2" y2="6"/>
-              <line x1="8" x2="8" y1="2" y2="6"/>
-              <line x1="3" x2="21" y1="10" y2="10"/>
+              <circle cx="12" cy="12" r="4"/>
+              <path d="M12 2v2"/>
+              <path d="M12 20v2"/>
+              <path d="m4.93 4.93 1.41 1.41"/>
+              <path d="m17.66 17.66 1.41 1.41"/>
+              <path d="M2 12h2"/>
+              <path d="M20 12h2"/>
+              <path d="m6.34 17.66-1.41 1.41"/>
+              <path d="m19.07 4.93-1.41 1.41"/>
             </svg>
           </button>
           <button
@@ -393,6 +398,7 @@ type CalendarViewMode = 'day' | 'week' | 'month' | 'agenda';
 
     .display-content {
       flex: 1;
+      min-height: 0;
       overflow: hidden;
     }
 
@@ -519,6 +525,9 @@ export class DisplayComponent implements OnInit, OnDestroy {
     try {
       await this.loadFromCache();
 
+      // Load today's events from API
+      await this.loadTodayEvents();
+
       // Load upcoming events for countdown widget (next 90 days)
       await this.loadUpcomingEvents();
 
@@ -545,6 +554,19 @@ export class DisplayComponent implements OnInit, OnDestroy {
       this.upcomingEvents.set(events);
     } catch (error) {
       console.error('Failed to load upcoming events:', error);
+    }
+  }
+
+  private async loadTodayEvents(): Promise<void> {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const endOfToday = new Date(today);
+      endOfToday.setHours(23, 59, 59, 999);
+      const events = await this.eventService.fetchEvents({ startDate: today, endDate: endOfToday });
+      this.todayEvents.set(events);
+    } catch (error) {
+      console.error('Failed to load today events:', error);
     }
   }
 

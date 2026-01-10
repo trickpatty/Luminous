@@ -22,11 +22,14 @@ public sealed class CosmosDbContext : IAsyncDisposable
         _settings = settings.Value;
         _logger = logger;
 
+        // Use Gateway mode for emulator (localhost), Direct mode for production
+        var isEmulator = _settings.AccountEndpoint.Contains("localhost") || _settings.AccountEndpoint.Contains("127.0.0.1");
+
         var options = new CosmosClientOptions
         {
             // Use custom System.Text.Json serializer to properly handle [JsonInclude] on private setters
             Serializer = new SystemTextJsonCosmosSerializer(),
-            ConnectionMode = ConnectionMode.Direct,
+            ConnectionMode = isEmulator ? ConnectionMode.Gateway : ConnectionMode.Direct,
             MaxRetryAttemptsOnRateLimitedRequests = _settings.MaxRetryAttempts,
             MaxRetryWaitTimeOnRateLimitedRequests = TimeSpan.FromSeconds(_settings.MaxRetryWaitTimeSeconds)
         };

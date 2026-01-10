@@ -130,6 +130,8 @@ interface HourSlot {
       display: flex;
       flex-direction: column;
       gap: var(--space-4);
+      min-height: 0;
+      overflow: hidden;
     }
 
     .day-view-header {

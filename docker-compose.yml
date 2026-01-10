@@ -31,20 +31,16 @@ services:
   #             First startup may take 3-5 minutes on Apple Silicon.
   # ---------------------------------------------------------------------------
   cosmosdb:
-    image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:latest
+    image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:vnext-preview
+    platform: linux/arm64
     container_name: luminous-cosmosdb
     hostname: cosmosdb
-    # Platform auto-detected; explicitly set if needed:
-    # platform: linux/amd64  # Use Rosetta 2 emulation on Apple Silicon
-    # platform: linux/arm64  # Use native ARM64 (recommended for M1/M2/M3)
-    mem_limit: 3g
-    cpu_count: 2
     environment:
       - AZURE_COSMOS_EMULATOR_PARTITION_COUNT=10
       - AZURE_COSMOS_EMULATOR_ENABLE_DATA_PERSISTENCE=true
       - AZURE_COSMOS_EMULATOR_IP_ADDRESS_OVERRIDE=127.0.0.1
     ports:
-      - "8081:8081"      # HTTPS endpoint
+      - "8081:8081"      # HTTP endpoint
       - "10250:10250"    # Gateway port
       - "10251:10251"    # Data partition 1
       - "10252:10252"    # Data partition 2
@@ -52,15 +48,15 @@ services:
       - "10254:10254"    # Data partition 4
       - "10255:10255"    # Data partition 5
     volumes:
-      - cosmosdb_data:/tmp/cosmos/appdata
+      - cosmosdb_data:/data
+      - cosmosdb_logs:/logs
     networks:
       - luminous-network
     healthcheck:
-      test: ["CMD-SHELL", "curl -fks https://localhost:8081/_explorer/emulator.pem || exit 1"]
+      test: ["CMD", "curl", "-f", "http://localhost:8081/"]
       interval: 30s
-      timeout: 15s
-      retries: 15
-      start_period: 180s  # ARM64 may need longer startup time
+      timeout: 10s
+      retries: 5
 
   # ---------------------------------------------------------------------------
   # Azurite - Azure Storage Emulator
@@ -161,6 +157,8 @@ services:
 volumes:
   cosmosdb_data:
     name: luminous-cosmosdb-data
+  cosmosdb_logs:
+    name: luminous-cosmosdb-logs
   azurite_data:
     name: luminous-azurite-data
   redis_data:
