@@ -3,9 +3,9 @@
  * A stunning, unique authentication experience
  */
 
-// ============================================
-// LAYOUT
-// ============================================
+/* ============================================
+   LAYOUT
+   ============================================ */
 
 .auth-layout {
   min-height: 100vh;
@@ -13,15 +13,17 @@
   grid-template-columns: 1fr;
   position: relative;
   overflow: hidden;
+}
 
-  @media (min-width: 1024px) {
+@media (min-width: 1024px) {
+  .auth-layout {
     grid-template-columns: 1fr 1fr;
   }
 }
 
-// ============================================
-// ANIMATED BACKGROUND
-// ============================================
+/* ============================================
+   ANIMATED BACKGROUND
+   ============================================ */
 
 .auth-background {
   position: fixed;
@@ -36,35 +38,35 @@
   filter: blur(80px);
   opacity: 0.5;
   animation: morphOrb 20s ease-in-out infinite;
+}
 
-  &.orb-1 {
-    width: 500px;
-    height: 500px;
-    background: linear-gradient(135deg, var(--member-sky), var(--member-violet));
-    top: -10%;
-    left: -10%;
-    animation-delay: 0s;
-  }
+.gradient-orb.orb-1 {
+  width: 500px;
+  height: 500px;
+  background: linear-gradient(135deg, var(--member-sky), var(--member-violet));
+  top: -10%;
+  left: -10%;
+  animation-delay: 0s;
+}
 
-  &.orb-2 {
-    width: 400px;
-    height: 400px;
-    background: linear-gradient(135deg, var(--member-emerald), var(--member-teal));
-    bottom: -5%;
-    right: -5%;
-    animation-delay: 7s;
-    animation-duration: 25s;
-  }
+.gradient-orb.orb-2 {
+  width: 400px;
+  height: 400px;
+  background: linear-gradient(135deg, var(--member-emerald), var(--member-teal));
+  bottom: -5%;
+  right: -5%;
+  animation-delay: 7s;
+  animation-duration: 25s;
+}
 
-  &.orb-3 {
-    width: 350px;
-    height: 350px;
-    background: linear-gradient(135deg, var(--member-rose), var(--member-amber));
-    top: 40%;
-    left: 30%;
-    animation-delay: 3s;
-    animation-duration: 22s;
-  }
+.gradient-orb.orb-3 {
+  width: 350px;
+  height: 350px;
+  background: linear-gradient(135deg, var(--member-rose), var(--member-amber));
+  top: 40%;
+  left: 30%;
+  animation-delay: 3s;
+  animation-duration: 22s;
 }
 
 @keyframes morphOrb {
@@ -94,9 +96,9 @@
     radial-gradient(circle at 80% 70%, rgba(255,255,255,0.05) 0%, transparent 40%);
 }
 
-// ============================================
-// FLOATING ICONS
-// ============================================
+/* ============================================
+   FLOATING ICONS
+   ============================================ */
 
 .floating-icons {
   position: fixed;
@@ -116,36 +118,41 @@
   backdrop-filter: blur(8px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
   animation: floatIcon 8s ease-in-out infinite;
+}
 
-  svg {
-    width: 100%;
-    height: 100%;
-  }
+.floating-icon svg {
+  width: 100%;
+  height: 100%;
+}
 
-  &.icon-sky {
-    color: var(--member-sky);
-    border: 1px solid var(--member-sky-border);
-  }
-  &.icon-emerald {
-    color: var(--member-emerald);
-    border: 1px solid var(--member-emerald-border);
-  }
-  &.icon-amber {
-    color: var(--member-amber);
-    border: 1px solid var(--member-amber-border);
-  }
-  &.icon-rose {
-    color: var(--member-rose);
-    border: 1px solid var(--member-rose-border);
-  }
-  &.icon-violet {
-    color: var(--member-violet);
-    border: 1px solid var(--member-violet-border);
-  }
-  &.icon-teal {
-    color: var(--member-teal);
-    border: 1px solid var(--member-teal-border);
-  }
+.floating-icon.icon-sky {
+  color: var(--member-sky);
+  border: 1px solid var(--member-sky-border);
+}
+
+.floating-icon.icon-emerald {
+  color: var(--member-emerald);
+  border: 1px solid var(--member-emerald-border);
+}
+
+.floating-icon.icon-amber {
+  color: var(--member-amber);
+  border: 1px solid var(--member-amber-border);
+}
+
+.floating-icon.icon-rose {
+  color: var(--member-rose);
+  border: 1px solid var(--member-rose-border);
+}
+
+.floating-icon.icon-violet {
+  color: var(--member-violet);
+  border: 1px solid var(--member-violet-border);
+}
+
+.floating-icon.icon-teal {
+  color: var(--member-teal);
+  border: 1px solid var(--member-teal-border);
 }
 
 @keyframes floatIcon {
@@ -159,16 +166,18 @@
   }
 }
 
-// ============================================
-// SIDE DECORATION (Large screens)
-// ============================================
+/* ============================================
+   SIDE DECORATION (Large screens)
+   ============================================ */
 
 .auth-decoration {
   display: none;
   position: relative;
   z-index: 2;
+}
 
-  @media (min-width: 1024px) {
+@media (min-width: 1024px) {
+  .auth-decoration {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -183,7 +192,7 @@
   gap: var(--space-10);
 }
 
-// Mini display mockup
+/* Mini display mockup */
 .mini-display {
   width: 280px;
   background: var(--surface-primary);
@@ -236,26 +245,28 @@
   padding: var(--space-3);
   border-radius: var(--radius-lg);
   animation: itemSlide 500ms ease-out both;
-
-  &.item-sky {
-    background: var(--member-sky-light);
-    animation-delay: 200ms;
-
-    .item-dot { background: var(--member-sky); }
-  }
-  &.item-emerald {
-    background: var(--member-emerald-light);
-    animation-delay: 400ms;
-
-    .item-dot { background: var(--member-emerald); }
-  }
-  &.item-violet {
-    background: var(--member-violet-light);
-    animation-delay: 600ms;
-
-    .item-dot { background: var(--member-violet); }
-  }
 }
+
+.display-item.item-sky {
+  background: var(--member-sky-light);
+  animation-delay: 200ms;
+}
+
+.display-item.item-sky .item-dot { background: var(--member-sky); }
+
+.display-item.item-emerald {
+  background: var(--member-emerald-light);
+  animation-delay: 400ms;
+}
+
+.display-item.item-emerald .item-dot { background: var(--member-emerald); }
+
+.display-item.item-violet {
+  background: var(--member-violet-light);
+  animation-delay: 600ms;
+}
+
+.display-item.item-violet .item-dot { background: var(--member-violet); }
 
 @keyframes itemSlide {
   from {
@@ -303,22 +314,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
 
-  svg {
-    width: 12px;
-    height: 12px;
-    display: none;
-  }
+.task-check svg {
+  width: 12px;
+  height: 12px;
+  display: none;
+}
 
-  &.checked {
-    background: var(--success);
-    border-color: var(--success);
+.task-check.checked {
+  background: var(--success);
+  border-color: var(--success);
+}
 
-    svg {
-      display: block;
-      color: white;
-    }
-  }
+.task-check.checked svg {
+  display: block;
+  color: white;
 }
 
 .task-label {
@@ -333,35 +344,35 @@
   color: var(--member-amber);
   font-size: 0.875rem;
   font-weight: 600;
-
-  svg {
-    width: 18px;
-    height: 18px;
-  }
 }
 
-// Tagline
+.footer-stars svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Tagline */
 .decoration-tagline {
   text-align: center;
   max-width: 320px;
-
-  h2 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: var(--space-2);
-    line-height: 1.2;
-  }
-
-  p {
-    font-size: 1rem;
-    color: var(--text-secondary);
-  }
 }
 
-// ============================================
-// AUTH CONTAINER
-// ============================================
+.decoration-tagline h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+  line-height: 1.2;
+}
+
+.decoration-tagline p {
+  font-size: 1rem;
+  color: var(--text-secondary);
+}
+
+/* ============================================
+   AUTH CONTAINER
+   ============================================ */
 
 .auth-container {
   position: relative;
@@ -372,8 +383,10 @@
   justify-content: center;
   min-height: 100vh;
   padding: var(--space-6);
+}
 
-  @media (min-width: 1024px) {
+@media (min-width: 1024px) {
+  .auth-container {
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(20px);
     border-left: 1px solid rgba(255, 255, 255, 0.5);
@@ -394,16 +407,16 @@
   text-decoration: none;
   border-radius: var(--radius-md);
   transition: all 150ms ease;
+}
 
-  svg {
-    width: 18px;
-    height: 18px;
-  }
+.back-home svg {
+  width: 18px;
+  height: 18px;
+}
 
-  &:hover {
-    color: var(--text-primary);
-    background: var(--surface-interactive);
-  }
+.back-home:hover {
+  color: var(--text-primary);
+  background: var(--surface-interactive);
 }
 
 .auth-brand {

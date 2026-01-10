@@ -6,13 +6,16 @@
  * animations, and typography before Tailwind layers.
  */
 
-/* Design System Imports */
-@import 'styles/design-tokens.css';
-@import 'styles/animations.css';
-@import 'styles/typography.css';
+/* Design System Imports - must come first per CSS spec */
+@import './styles/design-tokens.css';
+@import './styles/animations.css';
+@import './styles/typography.css';
 
-/* Tailwind CSS v4 */
+/* Tailwind CSS v4 - must come after other imports */
 @import "tailwindcss";
+
+/* Tell Tailwind where to scan for utility class usage */
+@source "./**/*.{html,ts}";
 
 /* Tailwind Plugins */
 @plugin "@tailwindcss/forms";

@@ -15,7 +15,7 @@ interface Feature {
   standalone: true,
   imports: [CommonModule, RouterLink],
   templateUrl: './landing.component.html',
-  styleUrl: './landing.component.scss',
+  styleUrl: './landing.component.css',
 })
 export class LandingComponent implements OnInit, OnDestroy {
   currentTime = signal('');
