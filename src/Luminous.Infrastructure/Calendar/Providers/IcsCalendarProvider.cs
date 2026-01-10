@@ -146,6 +146,9 @@ public sealed class IcsCalendarProvider : ICalendarProvider
         {
             var calendar = Ical.Net.Calendar.Load(content);
 
+            if (calendar.Events is null)
+                return events;
+
             foreach (var calEvent in calendar.Events)
             {
                 try
@@ -218,8 +221,9 @@ public sealed class IcsCalendarProvider : ICalendarProvider
             Location = calEvent.Location,
             Color = null,
             RecurrenceRule = rrule,
-            // Ical.Net 5.x: RecurrenceId is deprecated, use RecurrenceIdentifier
-            RecurringEventId = calEvent.RecurrenceIdentifier?.AsUtc.ToString("yyyyMMddTHHmmssZ"),
+#pragma warning disable CS0618 // RecurrenceId is deprecated but RecurrenceIdentifier lacks AsUtc
+            RecurringEventId = calEvent.RecurrenceId?.AsUtc.ToString("yyyyMMddTHHmmssZ"),
+#pragma warning restore CS0618
             OriginalStartTime = null,
             IsCancelled = calEvent.Status?.Equals("CANCELLED", StringComparison.OrdinalIgnoreCase) ?? false,
             Reminders = reminders,
