@@ -35,12 +35,12 @@ const CONFIG = {
     preferredHeight: 1920, // Portrait mode
     forceOrientation: 'portrait',
   },
-  // File paths
+  // File paths (using getters because app.getPath() requires app to be ready)
   paths: {
-    userData: app.getPath('userData'),
-    deviceToken: path.join(app.getPath('userData'), 'device-token.json'),
-    settings: path.join(app.getPath('userData'), 'settings.json'),
-    crashLog: path.join(app.getPath('userData'), 'crash-log.json'),
+    get userData() { return app.getPath('userData'); },
+    get deviceToken() { return path.join(app.getPath('userData'), 'device-token.json'); },
+    get settings() { return path.join(app.getPath('userData'), 'settings.json'); },
+    get crashLog() { return path.join(app.getPath('userData'), 'crash-log.json'); },
   },
 };
 
@@ -359,10 +359,15 @@ function setupIPC() {
     return false;
   });
 
-  // Reload window
+  // Reload window - use loadURL/loadFile for reliability
   ipcMain.handle('reload-window', async () => {
     if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.reload();
+      const isDev = process.env.LUMINOUS_DEV === 'true';
+      if (isDev) {
+        mainWindow.loadURL('http://localhost:4200');
+      } else {
+        mainWindow.loadFile(path.join(__dirname, '../dist/display/browser/index.html'));
+      }
     }
   });
 
