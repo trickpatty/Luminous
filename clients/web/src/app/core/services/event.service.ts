@@ -87,9 +87,9 @@ export class EventService {
       .filter(event => {
         if (event.isAllDay && event.startDate) {
           // For all-day events, compare date strings directly
-          // Event is on "today" if startDate <= today < endDate
+          // Event is on "today" if startDate <= today <= endDate (inclusive for single-day events)
           const endDate = event.endDate || event.startDate;
-          return event.startDate <= todayStr && todayStr < endDate;
+          return event.startDate <= todayStr && todayStr <= endDate;
         } else if (event.startTime) {
           // For timed events, compare timestamps
           const eventStart = new Date(event.startTime);
