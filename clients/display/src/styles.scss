@@ -10,10 +10,12 @@
 @import 'styles/animations';
 @import 'styles/typography';
 
-/* Tailwind Layers */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Tailwind CSS v4 */
+@import "tailwindcss";
+
+/* Tailwind Plugins */
+@plugin "@tailwindcss/forms";
+@plugin "@tailwindcss/typography";
 
 /* ============================================
  * BASE LAYER

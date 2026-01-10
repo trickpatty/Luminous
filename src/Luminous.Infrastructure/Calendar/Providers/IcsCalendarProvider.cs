@@ -146,6 +146,9 @@ public sealed class IcsCalendarProvider : ICalendarProvider
         {
             var calendar = Ical.Net.Calendar.Load(content);
 
+            if (calendar?.Events is null)
+                return events;
+
             foreach (var calEvent in calendar.Events)
             {
                 try
@@ -194,9 +197,11 @@ public sealed class IcsCalendarProvider : ICalendarProvider
         {
             foreach (var alarm in calEvent.Alarms)
             {
-                if (alarm.Trigger?.Duration is not null)
+                if (alarm.Trigger?.Duration is { } duration)
                 {
-                    var minutes = (int)Math.Abs(alarm.Trigger.Duration.Value.TotalMinutes);
+                    // Ical.Net 5.x: Duration must be converted to TimeSpan
+                    var timeSpan = duration.ToTimeSpanUnspecified();
+                    var minutes = (int)Math.Abs(timeSpan.TotalMinutes);
                     if (minutes > 0 && minutes <= 10080) // Max 1 week
                     {
                         reminders.Add(minutes);
@@ -207,7 +212,7 @@ public sealed class IcsCalendarProvider : ICalendarProvider
 
         return new ExternalCalendarEvent
         {
-            ExternalId = calEvent.Uid,
+            ExternalId = calEvent.Uid ?? string.Empty,
             Title = calEvent.Summary ?? "(No title)",
             Description = calEvent.Description,
             StartTime = startTime,
@@ -216,7 +221,9 @@ public sealed class IcsCalendarProvider : ICalendarProvider
             Location = calEvent.Location,
             Color = null,
             RecurrenceRule = rrule,
+#pragma warning disable CS0618 // RecurrenceId is deprecated but RecurrenceIdentifier lacks AsUtc
             RecurringEventId = calEvent.RecurrenceId?.AsUtc.ToString("yyyyMMddTHHmmssZ"),
+#pragma warning restore CS0618
             OriginalStartTime = null,
             IsCancelled = calEvent.Status?.Equals("CANCELLED", StringComparison.OrdinalIgnoreCase) ?? false,
             Reminders = reminders,
