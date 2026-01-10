@@ -266,8 +266,6 @@ module.exports = {
       },
     },
   },
-  plugins: [
-    require('@tailwindcss/forms'),
-    require('@tailwindcss/typography'),
-  ],
+  // Plugins are now imported in styles.scss using @plugin directive (Tailwind v4)
+  plugins: [],
 }
