@@ -1,6 +1,6 @@
+// Tailwind CSS v4 requires @tailwindcss/postcss as the PostCSS plugin
+const tailwindcss = require("@tailwindcss/postcss");
+
 module.exports = {
-  plugins: {
-    // Tailwind CSS v4 uses @tailwindcss/postcss instead of tailwindcss
-    "@tailwindcss/postcss": {},
-  },
+  plugins: [tailwindcss],
 };
