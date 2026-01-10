@@ -1,0 +1,618 @@
+/**
+ * Register Component Styles
+ * Beautiful, unique registration experience
+ */
+
+/* ============================================
+   SHARED AUTH STYLES (from login)
+   ============================================ */
+
+.auth-card {
+  background: var(--surface-primary);
+  border-radius: var(--radius-2xl);
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.1),
+    0 12px 24px -8px rgba(0, 0, 0, 0.05);
+  padding: var(--space-8);
+  border: 1px solid var(--border-color-light);
+  animation: cardAppear 500ms ease-out;
+}
+
+@keyframes cardAppear {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.step-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+.step-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--border-color);
+  transition: all 300ms ease;
+}
+
+.step-dot.active {
+  background: linear-gradient(135deg, var(--accent-500), var(--member-violet));
+  box-shadow: 0 0 12px rgba(14, 165, 233, 0.4);
+  transform: scale(1.2);
+}
+
+.step-dot.completed {
+  background: var(--success);
+}
+
+.step-line {
+  width: 40px;
+  height: 2px;
+  background: var(--border-color);
+  border-radius: 1px;
+  transition: all 300ms ease;
+}
+
+.step-line.active {
+  background: linear-gradient(90deg, var(--success), var(--accent-500));
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: var(--space-6);
+}
+
+.auth-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+  letter-spacing: -0.02em;
+}
+
+.auth-subtitle {
+  font-size: 1rem;
+  color: var(--text-secondary);
+}
+
+.auth-subtitle strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.auth-error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--danger-light);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-radius: var(--radius-lg);
+  color: var(--danger-dark);
+  font-size: 0.875rem;
+  margin-bottom: var(--space-5);
+  animation: shakeError 400ms ease;
+}
+
+@keyframes shakeError {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+.error-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.error-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: var(--space-4);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  color: var(--text-tertiary);
+  pointer-events: none;
+  transition: color 200ms ease;
+}
+
+.auth-input {
+  width: 100%;
+  height: 52px;
+  padding: 0 var(--space-4) 0 var(--space-12);
+  font-size: 1rem;
+  background: var(--surface-secondary);
+  border: 2px solid transparent;
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
+  transition: all 200ms ease;
+}
+
+.auth-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.auth-input:hover {
+  background: var(--surface-interactive);
+}
+
+.auth-input:focus {
+  outline: none;
+  background: var(--surface-primary);
+  border-color: var(--accent-500);
+  box-shadow: 0 0 0 4px var(--accent-100);
+}
+
+.auth-input:focus + .input-icon,
+.auth-input:focus ~ .input-icon {
+  color: var(--accent-600);
+}
+
+.auth-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.otp-input-wrapper {
+  position: relative;
+}
+
+.otp-input {
+  width: 100%;
+  height: 64px;
+  padding: 0 var(--space-6);
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: 0.5em;
+  text-align: center;
+  background: var(--surface-secondary);
+  border: 2px solid transparent;
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  transition: all 200ms ease;
+}
+
+.otp-input::placeholder {
+  color: var(--text-tertiary);
+  letter-spacing: 0.3em;
+}
+
+.otp-input:hover {
+  background: var(--surface-interactive);
+}
+
+.otp-input:focus {
+  outline: none;
+  background: var(--surface-primary);
+  border-color: var(--accent-500);
+  box-shadow: 0 0 0 4px var(--accent-100);
+}
+
+.otp-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  width: 100%;
+  height: 52px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 250ms ease;
+}
+
+.auth-button svg {
+  width: 20px;
+  height: 20px;
+  transition: transform 200ms ease;
+}
+
+.auth-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.auth-button.primary {
+  background: linear-gradient(135deg, var(--accent-600), var(--accent-700));
+  color: white;
+  box-shadow:
+    0 4px 16px rgba(2, 132, 199, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.auth-button.primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 24px rgba(2, 132, 199, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.auth-button.primary:hover:not(:disabled) svg {
+  transform: translateX(4px);
+}
+
+.auth-button.primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.auth-button.passkey {
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+}
+
+.auth-button.passkey svg {
+  color: var(--member-violet);
+}
+
+.auth-button.passkey:hover:not(:disabled) {
+  background: var(--surface-primary);
+  border-color: var(--member-violet);
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+}
+
+.button-spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 800ms linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-color);
+}
+
+.auth-divider span {
+  font-size: 0.8125rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.auth-links {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.link-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.link-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.link-button:hover:not(:disabled) {
+  color: var(--text-primary);
+  background: var(--surface-interactive);
+}
+
+.link-button.accent {
+  color: var(--accent-600);
+}
+
+.link-button.accent:hover:not(:disabled) {
+  background: var(--accent-50);
+  color: var(--accent-700);
+}
+
+.link-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.auth-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border-color-light);
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+}
+
+.footer-link {
+  color: var(--accent-600);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.footer-link:hover {
+  color: var(--accent-700);
+  text-decoration: underline;
+}
+
+/* ============================================
+   ADDITIONAL REGISTER-SPECIFIC STYLES
+   ============================================ */
+
+/* Form hint text */
+.form-hint {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  margin-top: var(--space-1);
+}
+
+/* Attempts warning */
+.attempts-warning {
+  font-size: 0.75rem;
+  color: var(--warning);
+  font-weight: 500;
+  margin-top: var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.attempts-warning::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--warning);
+}
+
+/* Verify icon */
+.verify-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto var(--space-4);
+  padding: var(--space-4);
+  background: linear-gradient(135deg, var(--accent-100), var(--member-violet-light));
+  border-radius: var(--radius-2xl);
+  color: var(--accent-600);
+  animation: iconPop 500ms ease-out;
+}
+
+.verify-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes iconPop {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ============================================
+   PASSKEY SETUP STEP
+   ============================================ */
+
+.passkey-setup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  text-align: center;
+}
+
+.passkey-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+  padding: var(--space-5);
+  background: linear-gradient(135deg, var(--member-violet-light), var(--accent-100));
+  border-radius: var(--radius-2xl);
+  color: var(--member-violet);
+  animation: iconFloat 3s ease-in-out infinite;
+}
+
+.passkey-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes iconFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.passkey-info p {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.passkey-info p strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.passkey-benefits {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.benefit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  min-width: 100px;
+}
+
+.benefit svg {
+  width: 24px;
+  height: 24px;
+  color: var(--success);
+}
+
+.benefit span {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Ghost button for skip */
+.auth-button.ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+}
+
+.auth-button.ghost:hover:not(:disabled) {
+  background: var(--surface-interactive);
+  color: var(--text-primary);
+}
+
+/* ============================================
+   SUCCESS ANIMATION
+   ============================================ */
+
+.success-animation {
+  margin-bottom: var(--space-4);
+}
+
+.success-circle {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto;
+  background: linear-gradient(135deg, var(--success), var(--member-emerald));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: successPop 600ms var(--ease-spring);
+}
+
+.success-circle svg {
+  width: 40px;
+  height: 40px;
+  color: white;
+  animation: checkDraw 400ms ease-out 200ms both;
+  stroke-dasharray: 50;
+  stroke-dashoffset: 50;
+}
+
+@keyframes successPop {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes checkDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.complete-step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ============================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================ */
+
+@media (max-width: 480px) {
+  .passkey-benefits {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .benefit {
+    flex-direction: row;
+    width: 100%;
+    justify-content: center;
+    min-width: auto;
+  }
+}

@@ -12,7 +12,7 @@ type RegisterStep = 'details' | 'verify' | 'passkey' | 'complete';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './register.component.html',
-  styleUrl: './register.component.scss',
+  styleUrl: './register.component.css',
 })
 export class RegisterComponent {
   private readonly authService = inject(AuthService);

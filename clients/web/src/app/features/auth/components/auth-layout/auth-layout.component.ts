@@ -7,7 +7,7 @@ import { RouterOutlet, RouterLink } from '@angular/router';
   standalone: true,
   imports: [CommonModule, RouterOutlet, RouterLink],
   templateUrl: './auth-layout.component.html',
-  styleUrl: './auth-layout.component.scss',
+  styleUrl: './auth-layout.component.css',
 })
 export class AuthLayoutComponent implements OnInit, OnDestroy {
   currentTime = signal('');
