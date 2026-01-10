@@ -429,10 +429,13 @@
   /* Toggle switch */
   .toggle {
     position: relative;
+    display: flex;
+    align-items: center;
     width: 52px;
     height: 32px;
     background: var(--border-color-strong);
     border-radius: var(--radius-full);
+    border: none;
     padding: 4px;
     cursor: pointer;
     transition: background var(--duration-standard) var(--ease-in-out);
@@ -443,6 +446,7 @@
   }
 
   .toggle-knob {
+    display: block;
     width: 24px;
     height: 24px;
     background: white;
@@ -755,6 +759,11 @@
     /* Use padding-bottom for safe area, with min-height ensuring consistent layout */
     padding-bottom: env(safe-area-inset-bottom, 0px);
     z-index: var(--z-fixed);
+    /* Ensure tab bar stays fixed during view transitions and on mobile browsers */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: transform;
+    contain: layout;
   }
 
   .tab-bar-item {

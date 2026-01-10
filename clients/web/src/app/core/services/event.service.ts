@@ -204,9 +204,9 @@ export class EventService {
       .set('startDate', range.startDate.toISOString())
       .set('endDate', range.endDate.toISOString());
 
-    // API returns ApiResponse<EventSummaryDto[]> with data wrapped in a 'data' property
-    return this.api.get<{ success: boolean; data: EventSummaryDto[] }>(`events/family/${familyId}`, { params }).pipe(
-      map(response => this.mapDtoToScheduleEvents(response.data || [])),
+    // API response is automatically unwrapped by apiResponseInterceptor
+    return this.api.get<EventSummaryDto[]>(`events/family/${familyId}`, { params }).pipe(
+      map(events => this.mapDtoToScheduleEvents(events || [])),
       tap(events => {
         this._events.set(events);
         this._isLoading.set(false);

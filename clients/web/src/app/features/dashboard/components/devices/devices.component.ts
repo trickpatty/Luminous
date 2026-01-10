@@ -99,13 +99,13 @@ import { Device, DeviceType } from '../../../../models';
                   <div class="flex items-center gap-2">
                     <span
                       class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
-                      [class]="device.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'"
+                      [class]="isDeviceOnline(device) ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'"
                     >
                       <span
                         class="w-1.5 h-1.5 rounded-full"
-                        [class]="device.isActive ? 'bg-green-500' : 'bg-gray-400'"
+                        [class]="isDeviceOnline(device) ? 'bg-green-500' : 'bg-gray-400'"
                       ></span>
-                      {{ device.isActive ? 'Online' : 'Offline' }}
+                      {{ isDeviceOnline(device) ? 'Online' : 'Offline' }}
                     </span>
                   </div>
                 </div>
@@ -155,7 +155,7 @@ import { Device, DeviceType } from '../../../../models';
       @if (showLinkModal()) {
         <div class="fixed inset-0 z-50 overflow-y-auto">
           <div class="flex min-h-full items-center justify-center p-4">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75" (click)="closeLinkModal()"></div>
+            <div class="modal-overlay" (click)="closeLinkModal()"></div>
             <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6">
               <h3 class="text-lg font-semibold text-gray-900 mb-4">Link New Device</h3>
 
@@ -244,7 +244,7 @@ import { Device, DeviceType } from '../../../../models';
       @if (showEditModal()) {
         <div class="fixed inset-0 z-50 overflow-y-auto">
           <div class="flex min-h-full items-center justify-center p-4">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75" (click)="closeEditModal()"></div>
+            <div class="modal-overlay" (click)="closeEditModal()"></div>
             <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6">
               <h3 class="text-lg font-semibold text-gray-900 mb-4">Edit Device</h3>
 
@@ -282,7 +282,7 @@ import { Device, DeviceType } from '../../../../models';
       @if (showUnlinkModal()) {
         <div class="fixed inset-0 z-50 overflow-y-auto">
           <div class="flex min-h-full items-center justify-center p-4">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75" (click)="closeUnlinkModal()"></div>
+            <div class="modal-overlay" (click)="closeUnlinkModal()"></div>
             <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6">
               <h3 class="text-lg font-semibold text-gray-900 mb-4">Unlink Device</h3>
               <p class="text-sm text-gray-600 mb-4">
@@ -338,6 +338,17 @@ export class DevicesComponent implements OnInit {
     const role = this.authService.user()?.role;
     return role === 'Owner' || role === 'Admin';
   };
+
+  /**
+   * Determine if a device is online based on lastSeenAt timestamp.
+   * A device is considered online if it was seen within the last 5 minutes.
+   */
+  isDeviceOnline(device: Device): boolean {
+    if (!device.lastSeenAt) return false;
+    const lastSeen = new Date(device.lastSeenAt);
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    return lastSeen >= fiveMinutesAgo;
+  }
 
   ngOnInit(): void {
     const familyId = this.authService.user()?.familyId;
