@@ -231,14 +231,15 @@ export class EventService implements OnDestroy {
         .set('startDate', range.startDate.toISOString())
         .set('endDate', range.endDate.toISOString());
 
+      // API returns ApiResponse<EventSummaryDto[]> with data wrapped in a 'data' property
       const response = await firstValueFrom(
-        this.http.get<EventSummaryDto[]>(
+        this.http.get<{ success: boolean; data: EventSummaryDto[] }>(
           `${environment.apiUrl}/events/family/${familyId}`,
           { params }
         )
       );
 
-      const events = this.mapDtoToScheduleEvents(response);
+      const events = this.mapDtoToScheduleEvents(response.data || []);
       this._events.set(events);
 
       // Cache the events for each day
