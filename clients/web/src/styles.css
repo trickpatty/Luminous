@@ -7,9 +7,9 @@
  */
 
 /* Design System Imports */
-@use 'styles/design-tokens';
-@use 'styles/animations';
-@use 'styles/typography';
+@import 'styles/design-tokens.css';
+@import 'styles/animations.css';
+@import 'styles/typography.css';
 
 /* Tailwind CSS v4 */
 @import "tailwindcss";
