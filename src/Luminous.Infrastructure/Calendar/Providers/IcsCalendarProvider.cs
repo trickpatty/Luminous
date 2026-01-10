@@ -146,7 +146,7 @@ public sealed class IcsCalendarProvider : ICalendarProvider
         {
             var calendar = Ical.Net.Calendar.Load(content);
 
-            if (calendar.Events is null)
+            if (calendar?.Events is null)
                 return events;
 
             foreach (var calEvent in calendar.Events)
@@ -212,7 +212,7 @@ public sealed class IcsCalendarProvider : ICalendarProvider
 
         return new ExternalCalendarEvent
         {
-            ExternalId = calEvent.Uid,
+            ExternalId = calEvent.Uid ?? string.Empty,
             Title = calEvent.Summary ?? "(No title)",
             Description = calEvent.Description,
             StartTime = startTime,
