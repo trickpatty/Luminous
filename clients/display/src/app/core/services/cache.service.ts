@@ -287,6 +287,19 @@ export class CacheService {
   // ============================================
 
   /**
+   * Invalidate a specific cache store
+   */
+  async invalidate(store: 'schedule' | 'tasks' | 'family' | 'members'): Promise<void> {
+    try {
+      const db = await this.ensureDb();
+      await db.clear(store);
+      console.debug(`[CacheService] Invalidated ${store} cache`);
+    } catch (error) {
+      console.error(`Failed to invalidate ${store} cache:`, error);
+    }
+  }
+
+  /**
    * Clear all cached data
    */
   async clearAll(): Promise<void> {
