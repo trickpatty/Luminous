@@ -156,7 +156,7 @@ import { Device, DeviceType } from '../../../../models';
         <div class="fixed inset-0 z-50 overflow-y-auto">
           <div class="flex min-h-full items-center justify-center p-4">
             <div class="modal-overlay" (click)="closeLinkModal()"></div>
-            <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div class="relative z-modal bg-white rounded-xl shadow-xl max-w-md w-full p-6">
               <h3 class="text-lg font-semibold text-gray-900 mb-4">Link New Device</h3>
 
               @if (!linkSuccess()) {
@@ -245,7 +245,7 @@ import { Device, DeviceType } from '../../../../models';
         <div class="fixed inset-0 z-50 overflow-y-auto">
           <div class="flex min-h-full items-center justify-center p-4">
             <div class="modal-overlay" (click)="closeEditModal()"></div>
-            <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div class="relative z-modal bg-white rounded-xl shadow-xl max-w-md w-full p-6">
               <h3 class="text-lg font-semibold text-gray-900 mb-4">Edit Device</h3>
 
               <div class="space-y-4">
@@ -283,7 +283,7 @@ import { Device, DeviceType } from '../../../../models';
         <div class="fixed inset-0 z-50 overflow-y-auto">
           <div class="flex min-h-full items-center justify-center p-4">
             <div class="modal-overlay" (click)="closeUnlinkModal()"></div>
-            <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div class="relative z-modal bg-white rounded-xl shadow-xl max-w-md w-full p-6">
               <h3 class="text-lg font-semibold text-gray-900 mb-4">Unlink Device</h3>
               <p class="text-sm text-gray-600 mb-4">
                 Are you sure you want to unlink <strong>{{ selectedDevice()?.name }}</strong>?

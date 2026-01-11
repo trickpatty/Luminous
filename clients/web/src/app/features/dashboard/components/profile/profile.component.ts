@@ -362,7 +362,7 @@ import { User, UserRole, UpdateUserProfileRequest, PasskeyCredential, PasskeyReg
           <div class="fixed inset-0 z-50 overflow-y-auto">
             <div class="flex min-h-full items-center justify-center p-4">
               <div class="modal-overlay" (click)="closeAddPasskeyModal()"></div>
-              <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+              <div class="relative z-modal bg-white rounded-xl shadow-xl max-w-md w-full p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Add a Passkey</h3>
                 <p class="text-sm text-gray-600 mb-4">
                   Passkeys let you sign in securely without a password using your device's built-in authentication (Face ID, Touch ID, Windows Hello, etc.).
@@ -407,7 +407,7 @@ import { User, UserRole, UpdateUserProfileRequest, PasskeyCredential, PasskeyReg
           <div class="fixed inset-0 z-50 overflow-y-auto">
             <div class="flex min-h-full items-center justify-center p-4">
               <div class="modal-overlay" (click)="closeRemovePasskeyModal()"></div>
-              <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+              <div class="relative z-modal bg-white rounded-xl shadow-xl max-w-md w-full p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Remove Passkey</h3>
                 <p class="text-sm text-gray-600 mb-4">
                   Are you sure you want to remove the passkey <strong>"{{ passkeyToRemove()?.name || 'Passkey' }}"</strong>?
