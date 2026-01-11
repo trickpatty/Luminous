@@ -193,7 +193,7 @@ import { User, UserRole, Invitation, InvitationStatus } from '../../../../models
       @if (showInviteModal()) {
         <div class="fixed inset-0 z-50 overflow-y-auto">
           <div class="flex min-h-full items-center justify-center p-4">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75" (click)="closeInviteModal()"></div>
+            <div class="modal-overlay" (click)="closeInviteModal()"></div>
             <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6">
               <h3 class="text-lg font-semibold text-gray-900 mb-4">Invite Family Member</h3>
 
@@ -259,7 +259,7 @@ import { User, UserRole, Invitation, InvitationStatus } from '../../../../models
       @if (showRoleModal()) {
         <div class="fixed inset-0 z-50 overflow-y-auto">
           <div class="flex min-h-full items-center justify-center p-4">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75" (click)="closeRoleModal()"></div>
+            <div class="modal-overlay" (click)="closeRoleModal()"></div>
             <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6">
               <h3 class="text-lg font-semibold text-gray-900 mb-4">Change Role</h3>
               <p class="text-sm text-gray-600 mb-4">
@@ -301,7 +301,7 @@ import { User, UserRole, Invitation, InvitationStatus } from '../../../../models
       @if (showRemoveModal()) {
         <div class="fixed inset-0 z-50 overflow-y-auto">
           <div class="flex min-h-full items-center justify-center p-4">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75" (click)="closeRemoveModal()"></div>
+            <div class="modal-overlay" (click)="closeRemoveModal()"></div>
             <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6">
               <h3 class="text-lg font-semibold text-gray-900 mb-4">Remove Family Member</h3>
               <p class="text-sm text-gray-600 mb-4">
@@ -330,7 +330,7 @@ import { User, UserRole, Invitation, InvitationStatus } from '../../../../models
       @if (showCodeModal() && lastCreatedInvitation()) {
         <div class="fixed inset-0 z-50 overflow-y-auto">
           <div class="flex min-h-full items-center justify-center p-4">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75" (click)="closeCodeModal()"></div>
+            <div class="modal-overlay" (click)="closeCodeModal()"></div>
             <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6">
               <div class="text-center mb-6">
                 <div class="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
