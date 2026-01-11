@@ -194,7 +194,7 @@ import { User, UserRole, Invitation, InvitationStatus } from '../../../../models
         <div class="fixed inset-0 z-50 overflow-y-auto">
           <div class="flex min-h-full items-center justify-center p-4">
             <div class="modal-overlay" (click)="closeInviteModal()"></div>
-            <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div class="relative z-modal bg-white rounded-xl shadow-xl max-w-md w-full p-6">
               <h3 class="text-lg font-semibold text-gray-900 mb-4">Invite Family Member</h3>
 
               <div class="space-y-4">
@@ -260,7 +260,7 @@ import { User, UserRole, Invitation, InvitationStatus } from '../../../../models
         <div class="fixed inset-0 z-50 overflow-y-auto">
           <div class="flex min-h-full items-center justify-center p-4">
             <div class="modal-overlay" (click)="closeRoleModal()"></div>
-            <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div class="relative z-modal bg-white rounded-xl shadow-xl max-w-md w-full p-6">
               <h3 class="text-lg font-semibold text-gray-900 mb-4">Change Role</h3>
               <p class="text-sm text-gray-600 mb-4">
                 Change role for {{ selectedMember()?.displayName }}
@@ -302,7 +302,7 @@ import { User, UserRole, Invitation, InvitationStatus } from '../../../../models
         <div class="fixed inset-0 z-50 overflow-y-auto">
           <div class="flex min-h-full items-center justify-center p-4">
             <div class="modal-overlay" (click)="closeRemoveModal()"></div>
-            <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div class="relative z-modal bg-white rounded-xl shadow-xl max-w-md w-full p-6">
               <h3 class="text-lg font-semibold text-gray-900 mb-4">Remove Family Member</h3>
               <p class="text-sm text-gray-600 mb-4">
                 Are you sure you want to remove <strong>{{ selectedMember()?.displayName }}</strong> from your family?
@@ -331,7 +331,7 @@ import { User, UserRole, Invitation, InvitationStatus } from '../../../../models
         <div class="fixed inset-0 z-50 overflow-y-auto">
           <div class="flex min-h-full items-center justify-center p-4">
             <div class="modal-overlay" (click)="closeCodeModal()"></div>
-            <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div class="relative z-modal bg-white rounded-xl shadow-xl max-w-md w-full p-6">
               <div class="text-center mb-6">
                 <div class="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
                   <svg class="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">

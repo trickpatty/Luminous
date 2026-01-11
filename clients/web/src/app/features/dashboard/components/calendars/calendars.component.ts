@@ -249,7 +249,7 @@ type ModalStep = 'provider' | 'oauth-loading' | 'popup-blocked' | 'select-calend
         <div class="fixed inset-0 z-50 overflow-y-auto" (click)="closeConnectModal()">
           <div class="flex min-h-full items-center justify-center p-4">
             <div class="modal-overlay"></div>
-            <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full" (click)="$event.stopPropagation()">
+            <div class="relative z-modal bg-white rounded-xl shadow-xl max-w-md w-full" (click)="$event.stopPropagation()">
               <!-- Provider Selection -->
               @if (modalStep() === 'provider') {
                 <div class="p-6">
@@ -713,7 +713,7 @@ type ModalStep = 'provider' | 'oauth-loading' | 'popup-blocked' | 'select-calend
         <div class="fixed inset-0 z-50 overflow-y-auto" (click)="closeEditModal()">
           <div class="flex min-h-full items-center justify-center p-4">
             <div class="modal-overlay"></div>
-            <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6" (click)="$event.stopPropagation()">
+            <div class="relative z-modal bg-white rounded-xl shadow-xl max-w-md w-full p-6" (click)="$event.stopPropagation()">
               <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-semibold text-gray-900">Calendar Settings</h3>
                 <button
@@ -838,7 +838,7 @@ type ModalStep = 'provider' | 'oauth-loading' | 'popup-blocked' | 'select-calend
         <div class="fixed inset-0 z-50 overflow-y-auto" (click)="closeDisconnectModal()">
           <div class="flex min-h-full items-center justify-center p-4">
             <div class="modal-overlay"></div>
-            <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6" (click)="$event.stopPropagation()">
+            <div class="relative z-modal bg-white rounded-xl shadow-xl max-w-md w-full p-6" (click)="$event.stopPropagation()">
               <h3 class="text-lg font-semibold text-gray-900 mb-2">Disconnect Calendar?</h3>
               <p class="text-sm text-gray-600 mb-4">
                 Are you sure you want to disconnect <strong>{{ selectedConnection()?.name }}</strong>?
