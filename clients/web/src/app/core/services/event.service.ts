@@ -87,9 +87,15 @@ export class EventService {
       .filter(event => {
         if (event.isAllDay && event.startDate) {
           // For all-day events, compare date strings directly
-          // Event is on "today" if startDate <= today <= endDate (inclusive for single-day events)
-          const endDate = event.endDate || event.startDate;
-          return event.startDate <= todayStr && todayStr <= endDate;
+          // endDate is exclusive (iCal format): an event on Jan 11 has endDate="2026-01-12"
+          if (event.endDate) {
+            // Event spans multiple days or has explicit end date
+            // Today is within event if: startDate <= today < endDate
+            return event.startDate <= todayStr && todayStr < event.endDate;
+          } else {
+            // Single-day event without endDate, must match exactly
+            return event.startDate === todayStr;
+          }
         } else if (event.startTime) {
           // For timed events, compare timestamps
           const eventStart = new Date(event.startTime);
@@ -138,16 +144,26 @@ export class EventService {
   });
 
   /**
-   * Fetch events for today
+   * Fetch events for today.
+   * Expands query range by 1 day to handle timezone edge cases for all-day events.
+   * The todayEvents computed signal handles proper client-side filtering.
    */
   fetchEventsForToday(): Observable<ScheduleEvent[]> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const endOfDay = new Date(today);
-    endOfDay.setHours(23, 59, 59, 999);
+    // Expand query range by 1 day on each side to handle timezone edge cases.
+    // When local dates are converted to UTC via toISOString(), users in UTC+ timezones
+    // (e.g., Australia, Asia) may have their local midnight appear as the previous UTC day.
+    // The todayEvents computed signal filters to just today's events on the client side.
+    const queryStart = new Date(today);
+    queryStart.setDate(queryStart.getDate() - 1);
 
-    return this.fetchEvents({ startDate: today, endDate: endOfDay });
+    const queryEnd = new Date(today);
+    queryEnd.setDate(queryEnd.getDate() + 1);
+    queryEnd.setHours(23, 59, 59, 999);
+
+    return this.fetchEvents({ startDate: queryStart, endDate: queryEnd });
   }
 
   /**
@@ -285,8 +301,13 @@ export class EventService {
     if (event.isAllDay && event.startDate) {
       // All-day events are "now" if today falls within the event's date range
       const todayStr = this.formatDateStr(now);
-      const endDate = event.endDate || event.startDate;
-      return event.startDate <= todayStr && todayStr < endDate;
+      if (event.endDate) {
+        // Multi-day event: today must be >= start and < end (endDate is exclusive)
+        return event.startDate <= todayStr && todayStr < event.endDate;
+      } else {
+        // Single-day event without endDate: must match exactly
+        return event.startDate === todayStr;
+      }
     } else if (event.startTime) {
       const start = new Date(event.startTime);
       const end = event.endTime ? new Date(event.endTime) : new Date(start.getTime() + 60 * 60 * 1000);
@@ -301,10 +322,15 @@ export class EventService {
   isEventPast(event: ScheduleEvent): boolean {
     const now = new Date();
 
-    if (event.isAllDay && event.endDate) {
-      // All-day event is past if end date is before today
+    if (event.isAllDay && event.startDate) {
       const todayStr = this.formatDateStr(now);
-      return event.endDate <= todayStr;
+      if (event.endDate) {
+        // All-day event with endDate is past if endDate <= today (endDate is exclusive)
+        return event.endDate <= todayStr;
+      } else {
+        // Single-day event without endDate is past if startDate < today
+        return event.startDate < todayStr;
+      }
     } else if (event.endTime) {
       return new Date(event.endTime) < now;
     } else if (event.startTime) {

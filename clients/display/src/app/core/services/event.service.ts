@@ -165,16 +165,24 @@ export class EventService implements OnDestroy {
   }
 
   /**
-   * Fetch events for a specific day
+   * Fetch events for a specific day.
+   * Expands query range by 1 day to handle timezone edge cases for all-day events.
    */
   async fetchEventsForDay(date: Date): Promise<ScheduleEvent[]> {
-    const startOfDay = new Date(date);
-    startOfDay.setHours(0, 0, 0, 0);
+    const day = new Date(date);
+    day.setHours(0, 0, 0, 0);
 
-    const endOfDay = new Date(date);
-    endOfDay.setHours(23, 59, 59, 999);
+    // Expand query range by 1 day on each side to handle timezone edge cases.
+    // When local dates are converted to UTC via toISOString(), users in UTC+ timezones
+    // may have their local midnight appear as the previous UTC day.
+    const queryStart = new Date(day);
+    queryStart.setDate(queryStart.getDate() - 1);
 
-    return this.fetchEvents({ startDate: startOfDay, endDate: endOfDay });
+    const queryEnd = new Date(day);
+    queryEnd.setDate(queryEnd.getDate() + 1);
+    queryEnd.setHours(23, 59, 59, 999);
+
+    return this.fetchEvents({ startDate: queryStart, endDate: queryEnd });
   }
 
   /**
@@ -301,8 +309,13 @@ export class EventService implements OnDestroy {
     if (event.isAllDay && event.startDate) {
       // All-day events are "now" if today falls within the event's date range
       const todayStr = this.formatDateStr(now);
-      const endDate = event.endDate || event.startDate;
-      return event.startDate <= todayStr && todayStr < endDate;
+      if (event.endDate) {
+        // Multi-day event: today must be >= start and < end (endDate is exclusive)
+        return event.startDate <= todayStr && todayStr < event.endDate;
+      } else {
+        // Single-day event without endDate: must match exactly
+        return event.startDate === todayStr;
+      }
     } else if (event.startTime) {
       const start = new Date(event.startTime);
       const end = event.endTime ? new Date(event.endTime) : new Date(start.getTime() + 60 * 60 * 1000);
@@ -317,10 +330,15 @@ export class EventService implements OnDestroy {
   isEventPast(event: ScheduleEvent): boolean {
     const now = new Date();
 
-    if (event.isAllDay && event.endDate) {
-      // All-day event is past if end date is before today
+    if (event.isAllDay && event.startDate) {
       const todayStr = this.formatDateStr(now);
-      return event.endDate <= todayStr;
+      if (event.endDate) {
+        // All-day event with endDate is past if endDate <= today (endDate is exclusive)
+        return event.endDate <= todayStr;
+      } else {
+        // Single-day event without endDate is past if startDate < today
+        return event.startDate < todayStr;
+      }
     } else if (event.endTime) {
       return new Date(event.endTime) < now;
     } else if (event.startTime) {
