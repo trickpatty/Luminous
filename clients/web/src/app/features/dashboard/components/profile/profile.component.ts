@@ -361,7 +361,7 @@ import { User, UserRole, UpdateUserProfileRequest, PasskeyCredential, PasskeyReg
         @if (showAddPasskeyModal()) {
           <div class="fixed inset-0 z-50 overflow-y-auto">
             <div class="flex min-h-full items-center justify-center p-4">
-              <div class="fixed inset-0 bg-gray-500 bg-opacity-75" (click)="closeAddPasskeyModal()"></div>
+              <div class="modal-overlay" (click)="closeAddPasskeyModal()"></div>
               <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Add a Passkey</h3>
                 <p class="text-sm text-gray-600 mb-4">
@@ -406,7 +406,7 @@ import { User, UserRole, UpdateUserProfileRequest, PasskeyCredential, PasskeyReg
         @if (showRemovePasskeyModal()) {
           <div class="fixed inset-0 z-50 overflow-y-auto">
             <div class="flex min-h-full items-center justify-center p-4">
-              <div class="fixed inset-0 bg-gray-500 bg-opacity-75" (click)="closeRemovePasskeyModal()"></div>
+              <div class="modal-overlay" (click)="closeRemovePasskeyModal()"></div>
               <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Remove Passkey</h3>
                 <p class="text-sm text-gray-600 mb-4">

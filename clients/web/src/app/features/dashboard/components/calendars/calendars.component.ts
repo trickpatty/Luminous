@@ -248,7 +248,7 @@ type ModalStep = 'provider' | 'oauth-loading' | 'popup-blocked' | 'select-calend
       @if (showConnectModal()) {
         <div class="fixed inset-0 z-50 overflow-y-auto" (click)="closeConnectModal()">
           <div class="flex min-h-full items-center justify-center p-4">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
+            <div class="modal-overlay"></div>
             <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full" (click)="$event.stopPropagation()">
               <!-- Provider Selection -->
               @if (modalStep() === 'provider') {
@@ -712,7 +712,7 @@ type ModalStep = 'provider' | 'oauth-loading' | 'popup-blocked' | 'select-calend
       @if (showEditModal()) {
         <div class="fixed inset-0 z-50 overflow-y-auto" (click)="closeEditModal()">
           <div class="flex min-h-full items-center justify-center p-4">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
+            <div class="modal-overlay"></div>
             <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6" (click)="$event.stopPropagation()">
               <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-semibold text-gray-900">Calendar Settings</h3>
@@ -837,7 +837,7 @@ type ModalStep = 'provider' | 'oauth-loading' | 'popup-blocked' | 'select-calend
       @if (showDisconnectModal()) {
         <div class="fixed inset-0 z-50 overflow-y-auto" (click)="closeDisconnectModal()">
           <div class="flex min-h-full items-center justify-center p-4">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
+            <div class="modal-overlay"></div>
             <div class="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6" (click)="$event.stopPropagation()">
               <h3 class="text-lg font-semibold text-gray-900 mb-2">Disconnect Calendar?</h3>
               <p class="text-sm text-gray-600 mb-4">
