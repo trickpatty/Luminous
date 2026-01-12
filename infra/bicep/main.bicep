@@ -535,7 +535,7 @@ module staticWebApp 'br/public:avm/res/web/static-site:0.9.3' = {
 // For OSS users: Set customDomain parameter to your own domain.
 // After deployment, configure your domain registrar's nameservers to point to Azure DNS.
 
-module dnsZone 'br/public:avm/res/network/dns-zone:0.7.2' = if (hasCustomDomain && deployDnsZone) {
+module dnsZone 'br/public:avm/res/network/dns-zone:0.5.4' = if (hasCustomDomain && deployDnsZone) {
   name: 'deploy-dns-zone'
   params: {
     name: dnsZoneName
