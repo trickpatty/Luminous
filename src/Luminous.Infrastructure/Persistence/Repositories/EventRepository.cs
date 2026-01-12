@@ -34,6 +34,7 @@ public sealed class EventRepository : CosmosRepositoryBase<Event>, IEventReposit
         // Query for both timed events and all-day events:
         // - Timed events: compare startTime/endTime with the query range
         // - All-day events: compare startDate/endDate with the query date range
+        // Note: Sorting is done in memory to avoid requiring a composite index in CosmosDB
         var query = new QueryDefinition(
             @"SELECT * FROM c
               WHERE c.familyId = @familyId
@@ -49,15 +50,21 @@ public sealed class EventRepository : CosmosRepositoryBase<Event>, IEventReposit
                       OR (c.endDate > @startDate AND c.endDate <= @endDate)
                       OR (c.startDate <= @startDate AND c.endDate >= @endDate)
                   ))
-              )
-              ORDER BY c.isAllDay DESC, c.startDate, c.startTime")
+              )")
             .WithParameter("@familyId", familyId)
             .WithParameter("@start", start)
             .WithParameter("@end", end)
             .WithParameter("@startDate", startDateStr)
             .WithParameter("@endDate", endDateStr);
 
-        return await QueryAsync(query, familyId, cancellationToken);
+        var results = await QueryAsync(query, familyId, cancellationToken);
+
+        // Sort in memory: all-day events first, then by date/time
+        return results
+            .OrderByDescending(e => e.IsAllDay)
+            .ThenBy(e => e.StartDate)
+            .ThenBy(e => e.StartTime)
+            .ToList();
     }
 
     public async Task<IReadOnlyList<Event>> GetByAssigneeAsync(
@@ -71,6 +78,7 @@ public sealed class EventRepository : CosmosRepositoryBase<Event>, IEventReposit
         var startDateStr = DateOnly.FromDateTime(start).ToString("yyyy-MM-dd");
         var endDateStr = DateOnly.FromDateTime(end).ToString("yyyy-MM-dd");
 
+        // Note: Sorting is done in memory to avoid requiring a composite index in CosmosDB
         var query = new QueryDefinition(
             @"SELECT * FROM c
               WHERE c.familyId = @familyId
@@ -87,8 +95,7 @@ public sealed class EventRepository : CosmosRepositoryBase<Event>, IEventReposit
                       OR (c.endDate > @startDate AND c.endDate <= @endDate)
                       OR (c.startDate <= @startDate AND c.endDate >= @endDate)
                   ))
-              )
-              ORDER BY c.isAllDay DESC, c.startDate, c.startTime")
+              )")
             .WithParameter("@familyId", familyId)
             .WithParameter("@assigneeId", assigneeId)
             .WithParameter("@start", start)
@@ -96,7 +103,14 @@ public sealed class EventRepository : CosmosRepositoryBase<Event>, IEventReposit
             .WithParameter("@startDate", startDateStr)
             .WithParameter("@endDate", endDateStr);
 
-        return await QueryAsync(query, familyId, cancellationToken);
+        var results = await QueryAsync(query, familyId, cancellationToken);
+
+        // Sort in memory: all-day events first, then by date/time
+        return results
+            .OrderByDescending(e => e.IsAllDay)
+            .ThenBy(e => e.StartDate)
+            .ThenBy(e => e.StartTime)
+            .ToList();
     }
 
     public async Task<IReadOnlyList<Event>> GetByExternalCalendarAsync(
