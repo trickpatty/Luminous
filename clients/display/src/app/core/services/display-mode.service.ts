@@ -16,7 +16,7 @@ import {
 export type DisplayMode = 'normal' | 'privacy' | 'sleep';
 
 // Re-export types for convenience
-export { PrivacyModeSettings, SleepModeSettings } from './electron.service';
+export type { PrivacyModeSettings, SleepModeSettings } from './electron.service';
 
 /**
  * Default settings
