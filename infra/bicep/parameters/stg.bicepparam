@@ -32,8 +32,8 @@ param tags = {
 param cosmosDbServerless = false
 param cosmosDbConsistencyLevel = 'Session'
 
-// App Service - Standard tier for staging
-param appServiceSkuName = 'S1'
+// App Service - Basic tier for staging
+param appServiceSkuName = 'B1'
 
 // Redis - Standard tier for staging
 param redisSku = 'Standard'
