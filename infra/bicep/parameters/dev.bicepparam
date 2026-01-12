@@ -49,3 +49,8 @@ param staticWebAppSku = 'Standard'
 // Set to false if the deploying identity lacks User Access Administrator or Owner role
 // When false, role assignments must be created separately by a privileged identity
 // param deployRoleAssignments = true
+
+// Custom Domain Configuration (Optional for dev)
+// Leave commented to use Azure Static Web App default hostname
+// param customDomain = 'dev.luminousfamily.com'
+// param deployDnsZone = false

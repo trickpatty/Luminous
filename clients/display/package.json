@@ -5,10 +5,10 @@
   "author": "Luminous Team",
   "license": "AGPL-3.0",
   "main": "electron/main.js",
-  "homepage": "https://github.com/luminous-app/luminous",
+  "homepage": "https://github.com/trickpatty/Luminous",
   "repository": {
     "type": "git",
-    "url": "https://github.com/luminous-app/luminous.git"
+    "url": "https://github.com/trickpatty/Luminous.git"
   },
   "scripts": {
     "ng": "ng",
@@ -154,8 +154,8 @@
     },
     "publish": {
       "provider": "github",
-      "owner": "luminous-app",
-      "repo": "luminous",
+      "owner": "trickpatty",
+      "repo": "Luminous",
       "releaseType": "release"
     }
   }

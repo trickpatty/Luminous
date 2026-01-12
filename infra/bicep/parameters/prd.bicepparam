@@ -45,3 +45,10 @@ param signalRSku = 'Standard_S1'
 
 // Static Web App - Standard for production
 param staticWebAppSku = 'Standard'
+
+// Custom Domain Configuration
+// OSS Note: Replace 'luminousfamily.com' with your own domain
+// Set deployDnsZone=true to create Azure DNS zone (requires domain nameserver delegation)
+// See docs/PRODUCTION-DEPLOYMENT.md for complete setup instructions
+param customDomain = 'luminousfamily.com'
+param deployDnsZone = true

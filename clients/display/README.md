@@ -99,6 +99,28 @@ For signed macOS builds, configure these repository secrets:
 - `APPLE_APP_SPECIFIC_PASSWORD`: App-specific password
 - `APPLE_TEAM_ID`: Apple Developer Team ID
 
+### Production Release
+
+To create a production release for distribution:
+
+1. **Update Version**: Update `version` in `package.json`
+
+2. **Build for Production Environment**:
+   - Go to Actions → "Electron Display Build and Release"
+   - Click "Run workflow"
+   - Select `prd` environment
+   - Check "Create a GitHub release"
+   - Enter version (e.g., `1.0.0`)
+
+3. **Release Assets**: The workflow creates installers for all platforms:
+   - Windows: `.exe` installer
+   - macOS: `.dmg` for Intel and Apple Silicon
+   - Linux: `.AppImage`, `.deb`
+
+4. **Download Links**: Production releases point to `https://luminousfamily.com/api` by default.
+
+See [PRODUCTION-DEPLOYMENT.md](../../docs/PRODUCTION-DEPLOYMENT.md) for complete deployment instructions.
+
 ## Environment Variables
 
 | Variable | Description | Default |
