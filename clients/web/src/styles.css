@@ -901,6 +901,14 @@
     transform: translateX(-100%);
   }
 
+  /* Desktop navigation - always visible on lg+ screens */
+  @media (min-width: 1024px) {
+    .desktop-nav {
+      transform: translateX(0) !important;
+      position: sticky !important;
+    }
+  }
+
   /* Transition utilities */
   .transition-transform {
     transition-property: transform;
