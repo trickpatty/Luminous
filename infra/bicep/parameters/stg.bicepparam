@@ -44,3 +44,8 @@ param signalRSku = 'Standard_S1'
 
 // Static Web App - Standard for staging
 param staticWebAppSku = 'Standard'
+
+// Custom Domain Configuration (Optional for staging)
+// Uncomment to use a custom domain for staging (e.g., staging.luminousfamily.com)
+// param customDomain = 'staging.luminousfamily.com'
+// param deployDnsZone = false  // Use main production DNS zone for subdomains

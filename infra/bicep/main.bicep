@@ -79,6 +79,13 @@ param deployRoleAssignments bool = true
 @allowed(['Free', 'Standard'])
 param staticWebAppSku string = environment == 'prd' ? 'Standard' : 'Free'
 
+// Custom Domain Configuration
+@description('Custom domain for the Static Web App (e.g., luminousfamily.com). Leave empty to skip DNS zone creation.')
+param customDomain string = ''
+
+@description('Deploy DNS zone for custom domain. Set to true to create the DNS zone in Azure.')
+param deployDnsZone bool = false
+
 // =============================================================================
 // Variables
 // =============================================================================
@@ -120,6 +127,10 @@ var cosmosDbEndpoint = 'https://${names.cosmosDb}.documents.azure.com:443/'
 var builtInRoles = {
   keyVaultSecretsUser: '4633458b-17de-408a-b874-0445c86b69e6' // Key Vault Secrets User
 }
+
+// Custom domain configuration
+var hasCustomDomain = !empty(customDomain)
+var dnsZoneName = customDomain // DNS zone name is the root domain
 
 // Cosmos DB container configurations for multi-tenant data isolation
 var cosmosContainers = [
@@ -518,6 +529,59 @@ module staticWebApp 'br/public:avm/res/web/static-site:0.9.3' = {
 }
 
 // =============================================================================
+// DNS Zone & Custom Domain (Optional - for production deployments)
+// =============================================================================
+// Deploy DNS Zone if customDomain is specified and deployDnsZone is true.
+// For OSS users: Set customDomain parameter to your own domain.
+// After deployment, configure your domain registrar's nameservers to point to Azure DNS.
+
+module dnsZone 'br/public:avm/res/network/dns-zone:0.5.4' = if (hasCustomDomain && deployDnsZone) {
+  name: 'deploy-dns-zone'
+  params: {
+    name: dnsZoneName
+    location: 'global' // DNS zones are global resources
+    tags: tags
+  }
+}
+
+// Custom domain binding for Static Web App
+// NOTE: Custom domain validation requires either:
+// 1. A CNAME record pointing to the Static Web App default hostname
+// 2. A TXT record for domain validation
+// Azure Static Web Apps automatically provisions SSL certificates for custom domains.
+resource staticWebAppCustomDomain 'Microsoft.Web/staticSites/customDomains@2023-12-01' = if (hasCustomDomain) {
+  name: '${names.staticWebApp}/${customDomain}'
+  properties: {}
+  dependsOn: [staticWebApp]
+}
+
+// Create CNAME record in DNS zone pointing to Static Web App
+// This is only created if we're deploying the DNS zone
+resource wwwCname 'Microsoft.Network/dnsZones/CNAME@2023-07-01-preview' = if (hasCustomDomain && deployDnsZone) {
+  name: '${dnsZoneName}/www'
+  properties: {
+    TTL: 3600
+    CNAMERecord: {
+      cname: staticWebApp.outputs.defaultHostname
+    }
+  }
+  dependsOn: [dnsZone]
+}
+
+// Create A record with Azure alias for apex domain (root domain without www)
+// Static Web Apps support apex domains via Azure DNS ALIAS records
+resource apexAlias 'Microsoft.Network/dnsZones/A@2023-07-01-preview' = if (hasCustomDomain && deployDnsZone) {
+  name: '${dnsZoneName}/@'
+  properties: {
+    TTL: 3600
+    targetResource: {
+      id: staticWebApp.outputs.resourceId
+    }
+  }
+  dependsOn: [dnsZone]
+}
+
+// =============================================================================
 // Compute Services
 // =============================================================================
 
@@ -590,6 +654,9 @@ module appServiceSettings 'br/public:avm/res/web/site/config:0.1.1' = {
       Cors__AllowedOrigins__0: 'https://${staticWebApp.outputs.defaultHostname}'
       Cors__AllowedOrigins__1: 'http://localhost:4200'
       Cors__AllowedOrigins__2: 'https://localhost:4200'
+      // Custom domain CORS origins (only added if custom domain is configured)
+      Cors__AllowedOrigins__3: hasCustomDomain ? 'https://${customDomain}' : ''
+      Cors__AllowedOrigins__4: hasCustomDomain ? 'https://www.${customDomain}' : ''
       // Redis cache for distributed session/cache (WebAuthn sessions, etc.)
       // Connection string is securely stored in Key Vault by the Redis module
       Redis__ConnectionString: '@Microsoft.KeyVault(VaultName=${names.keyVault};SecretName=redis-connection-string)'
@@ -600,8 +667,9 @@ module appServiceSettings 'br/public:avm/res/web/site/config:0.1.1' = {
       // Sender address format: DoNotReply@<azure-managed-domain>.azurecomm.net
       Email__SenderAddress: 'DoNotReply@${emailDomainRef.properties.mailFromSenderDomain}'
       Email__SenderName: 'Luminous'
-      Email__BaseUrl: 'https://${staticWebApp.outputs.defaultHostname}'
-      Email__HelpUrl: 'https://${staticWebApp.outputs.defaultHostname}/help'
+      // Use custom domain for email links if configured
+      Email__BaseUrl: hasCustomDomain ? 'https://${customDomain}' : 'https://${staticWebApp.outputs.defaultHostname}'
+      Email__HelpUrl: hasCustomDomain ? 'https://${customDomain}/help' : 'https://${staticWebApp.outputs.defaultHostname}/help'
       // JWT settings for authentication
       Jwt__SecretKey: '@Microsoft.KeyVault(VaultName=${names.keyVault};SecretName=jwt-secret-key)'
       Jwt__Issuer: 'https://luminous.auth'
@@ -609,9 +677,13 @@ module appServiceSettings 'br/public:avm/res/web/site/config:0.1.1' = {
       Jwt__ExpirationMinutes: '60'
       Jwt__RefreshExpirationDays: '7'
       // FIDO2/WebAuthn settings for passkey authentication
-      Fido2__ServerDomain: staticWebApp.outputs.defaultHostname
+      // Use custom domain if configured, otherwise use Static Web App default hostname
+      Fido2__ServerDomain: hasCustomDomain ? customDomain : staticWebApp.outputs.defaultHostname
       Fido2__ServerName: 'Luminous Family Hub'
-      Fido2__Origins__0: 'https://${staticWebApp.outputs.defaultHostname}'
+      Fido2__Origins__0: hasCustomDomain ? 'https://${customDomain}' : 'https://${staticWebApp.outputs.defaultHostname}'
+      Fido2__Origins__1: hasCustomDomain ? 'https://www.${customDomain}' : ''
+      // Also allow the SWA default hostname for passkeys registered before custom domain setup
+      Fido2__Origins__2: hasCustomDomain ? 'https://${staticWebApp.outputs.defaultHostname}' : ''
       // Calendar OAuth settings - credentials stored securely in Key Vault
       // These must be populated after deployment with values from Google Cloud Console and Azure AD
       Calendar__Google__ClientId: '@Microsoft.KeyVault(VaultName=${names.keyVault};SecretName=calendar-google-client-id)'
@@ -619,7 +691,8 @@ module appServiceSettings 'br/public:avm/res/web/site/config:0.1.1' = {
       Calendar__Microsoft__ClientId: '@Microsoft.KeyVault(VaultName=${names.keyVault};SecretName=calendar-microsoft-client-id)'
       Calendar__Microsoft__ClientSecret: '@Microsoft.KeyVault(VaultName=${names.keyVault};SecretName=calendar-microsoft-client-secret)'
       Calendar__Microsoft__TenantId: 'common'
-      Calendar__DefaultRedirectUri: 'https://${staticWebApp.outputs.defaultHostname}/auth/calendar/callback'
+      // Use custom domain for OAuth redirect if configured
+      Calendar__DefaultRedirectUri: hasCustomDomain ? 'https://${customDomain}/auth/calendar/callback' : 'https://${staticWebApp.outputs.defaultHostname}/auth/calendar/callback'
     }
   }
   dependsOn: [
@@ -778,3 +851,9 @@ output logAnalyticsWorkspaceId string = logAnalytics.outputs.resourceId
 output communicationServicesName string = communicationServices.outputs.name
 output emailServiceName string = emailService.outputs.name
 output emailDomainResourceId string = emailService.outputs.domainResourceIds[0]
+
+// Custom Domain & DNS (only output if configured)
+output customDomainConfigured bool = hasCustomDomain
+output customDomainName string = hasCustomDomain ? customDomain : ''
+output dnsZoneNameServers array = dnsZone.?outputs.nameServers ?? []
+output webAppUrl string = hasCustomDomain ? 'https://${customDomain}' : 'https://${staticWebApp.outputs.defaultHostname}'

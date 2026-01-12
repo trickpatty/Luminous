@@ -1,7 +1,7 @@
 # Luminous Development Roadmap
 
-> **Document Version:** 3.9.0
-> **Last Updated:** 2026-01-11
+> **Document Version:** 4.0.0
+> **Last Updated:** 2026-01-12
 > **Status:** Active
 > **TOGAF Phase:** Phase E/F (Opportunities, Solutions & Migration Planning)
 
@@ -274,6 +274,7 @@ Establish the Azure infrastructure, .NET backend, Angular frontend, and developm
 - [x] CI-CD.md with GitHub Actions pipeline documentation
 - [x] ADR template (ADR-000-template.md) for future decisions
 - [x] CLAUDE.md with comprehensive development guidelines
+- [x] PRODUCTION-DEPLOYMENT.md with custom domain setup, DNS configuration, and release guide
 
 ### Exit Criteria
 
@@ -1157,3 +1158,4 @@ After Phase 2.7 is complete, feature development can proceed in parallel:
 | 3.7.0 | 2026-01-09 | Luminous Team | Phase 2.4 Display Widgets completed (What's Next, Countdown, Weather, Clock widgets) |
 | 3.8.0 | 2026-01-09 | Luminous Team | Phase 2.5 Real-time Sync (SignalR) completed (SyncHub, family-scoped groups, push updates, connection recovery) |
 | 3.9.0 | 2026-01-11 | Luminous Team | Phase 2.6 Display Modes completed (Normal, Privacy, Sleep modes with DisplayModeService, PrivacyModeComponent, SleepModeComponent) |
+| 4.0.0 | 2026-01-12 | Luminous Team | Added production deployment with custom domain (DNS zone, SWA custom domain binding), PRODUCTION-DEPLOYMENT.md guide |
