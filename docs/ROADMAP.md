@@ -1,7 +1,7 @@
 # Luminous Development Roadmap
 
-> **Document Version:** 3.8.0
-> **Last Updated:** 2026-01-09
+> **Document Version:** 3.9.0
+> **Last Updated:** 2026-01-11
 > **Status:** Active
 > **TOGAF Phase:** Phase E/F (Opportunities, Solutions & Migration Planning)
 
@@ -617,11 +617,31 @@ Deliver the display application with calendar integration, real-time sync, and g
 - [x] Program.cs updated with SignalR configuration and JWT authentication for WebSocket
 - [x] Environment files updated with signalRUrl and sync settings
 
-#### 2.6 Display Modes
+#### 2.6 Display Modes ✅ COMPLETED
 
-- [ ] **2.6.1** Normal display mode
-- [ ] **2.6.2** Privacy mode (wallpaper only)
-- [ ] **2.6.3** Sleep mode (scheduled)
+- [x] **2.6.1** Normal display mode
+  - *Implemented: DisplayModeService manages display mode state (normal, privacy, sleep)*
+  - *Normal mode shows full display with calendar, tasks, widgets*
+  - *Mode switching via header button or settings page*
+- [x] **2.6.2** Privacy mode (wallpaper only)
+  - *Implemented: PrivacyModeComponent with clock and optional weather display*
+  - *Features: One-tap privacy toggle, auto-privacy after configurable inactivity timeout*
+  - *Features: Slowly shifting gradient backgrounds, tap-to-return interaction*
+  - *Settings: Enable/disable, timeout (1-30 minutes), show clock, show weather*
+- [x] **2.6.3** Sleep mode (scheduled)
+  - *Implemented: SleepModeComponent with configurable dimming*
+  - *Features: Scheduled sleep hours (start/end time), configurable dim level (0-50%)*
+  - *Features: Wake on touch option, minimal clock display at higher dim levels*
+  - *Settings: Enable/disable, start/end time, dim level slider, wake on touch toggle*
+
+**Additional deliverables:**
+- [x] DisplayModeService - Central service for display mode management
+- [x] PrivacyModeSettings and SleepModeSettings interfaces in DisplaySettings
+- [x] Privacy and Sleep mode configuration in SettingsComponent
+- [x] Quick toggle buttons in SettingsComponent for testing modes
+- [x] Privacy countdown hint in footer (shows when auto-privacy approaching)
+- [x] Activity tracking for automatic privacy mode activation
+- [x] Scheduled mode checking for automatic sleep mode activation
 
 #### 2.7 Cross-Platform Infrastructure
 
@@ -1136,3 +1156,4 @@ After Phase 2.7 is complete, feature development can proceed in parallel:
 | 3.6.0 | 2026-01-08 | Luminous Team | Added Phase 5.6 Managed Accounts for children/non-email users (ADR-016) |
 | 3.7.0 | 2026-01-09 | Luminous Team | Phase 2.4 Display Widgets completed (What's Next, Countdown, Weather, Clock widgets) |
 | 3.8.0 | 2026-01-09 | Luminous Team | Phase 2.5 Real-time Sync (SignalR) completed (SyncHub, family-scoped groups, push updates, connection recovery) |
+| 3.9.0 | 2026-01-11 | Luminous Team | Phase 2.6 Display Modes completed (Normal, Privacy, Sleep modes with DisplayModeService, PrivacyModeComponent, SleepModeComponent) |
