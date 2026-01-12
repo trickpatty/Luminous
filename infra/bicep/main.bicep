@@ -545,13 +545,14 @@ module dnsZone 'br/public:avm/res/network/dns-zone:0.5.4' = if (hasCustomDomain 
 }
 
 // Custom domain binding for Static Web App
-// NOTE: Custom domain validation requires either:
-// 1. A CNAME record pointing to the Static Web App default hostname
-// 2. A TXT record for domain validation
+// NOTE: Apex domains (e.g., luminousfamily.com) MUST use 'dns-txt-token' validation.
+// Subdomains can use CNAME validation, but dns-txt-token works for both cases.
 // Azure Static Web Apps automatically provisions SSL certificates for custom domains.
 resource staticWebAppCustomDomain 'Microsoft.Web/staticSites/customDomains@2023-12-01' = if (hasCustomDomain) {
   name: '${names.staticWebApp}/${customDomain}'
-  properties: {}
+  properties: {
+    validationMethod: 'dns-txt-token'
+  }
   dependsOn: [staticWebApp]
 }
 
