@@ -892,20 +892,28 @@
     z-index: var(--z-toast);
   }
 
-  /* Transform utilities for mobile navigation */
-  .translate-x-0 {
+  /* Sidebar navigation - responsive behavior */
+  .sidebar-nav {
+    /* Mobile: fixed overlay sidebar */
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: var(--z-modal);
+    transform: translateX(-100%);
+    transition: transform var(--duration-moderate) var(--ease-out);
+  }
+
+  .sidebar-nav.sidebar-open {
     transform: translateX(0);
   }
 
-  .-translate-x-full {
-    transform: translateX(-100%);
-  }
-
-  /* Desktop navigation - always visible on lg+ screens */
+  /* Desktop: sticky sidebar always visible */
   @media (min-width: 1024px) {
-    .desktop-nav {
-      transform: translateX(0) !important;
-      position: sticky !important;
+    .sidebar-nav {
+      position: sticky;
+      top: 0;
+      z-index: auto;
+      transform: translateX(0);
     }
   }
 
