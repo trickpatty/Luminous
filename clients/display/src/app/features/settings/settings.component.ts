@@ -1,11 +1,38 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { ElectronService, DisplaySettings } from '../../core/services/electron.service';
+import {
+  ElectronService,
+  DisplaySettings,
+  PrivacyModeSettings,
+  SleepModeSettings,
+} from '../../core/services/electron.service';
 import { DeviceAuthService } from '../../core/services/device-auth.service';
 import { CacheService } from '../../core/services/cache.service';
 import { CanvasService } from '../../core/services/canvas.service';
+import { DisplayModeService } from '../../core/services/display-mode.service';
+
+/**
+ * Default privacy mode settings
+ */
+const DEFAULT_PRIVACY_SETTINGS: PrivacyModeSettings = {
+  enabled: true,
+  timeoutMinutes: 5,
+  showClock: true,
+  showWeather: false,
+};
+
+/**
+ * Default sleep mode settings
+ */
+const DEFAULT_SLEEP_SETTINGS: SleepModeSettings = {
+  enabled: false,
+  startTime: '22:00',
+  endTime: '06:00',
+  dimLevel: 10,
+  wakeOnTouch: true,
+};
 
 @Component({
   selector: 'app-settings',
@@ -101,6 +128,180 @@ import { CanvasService } from '../../core/services/canvas.service';
           </div>
         </section>
 
+        <!-- Privacy Mode Settings -->
+        <section class="settings-section">
+          <h2 class="settings-section-title">Privacy Mode</h2>
+
+          <div class="settings-card">
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-label">Enable Privacy Mode</span>
+                <span class="setting-description">Show clock/wallpaper after inactivity</span>
+              </div>
+              <button
+                class="toggle"
+                [attr.data-checked]="privacySettings().enabled"
+                (click)="togglePrivacyModeEnabled()"
+              >
+                <div class="toggle-knob"></div>
+              </button>
+            </div>
+
+            @if (privacySettings().enabled) {
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="setting-label">Auto-Privacy Timeout</span>
+                  <span class="setting-description">Switch to privacy mode after inactivity</span>
+                </div>
+                <select
+                  class="setting-select"
+                  [ngModel]="privacySettings().timeoutMinutes"
+                  (ngModelChange)="updatePrivacySetting('timeoutMinutes', $event)"
+                >
+                  <option [ngValue]="1">1 minute</option>
+                  <option [ngValue]="2">2 minutes</option>
+                  <option [ngValue]="5">5 minutes</option>
+                  <option [ngValue]="10">10 minutes</option>
+                  <option [ngValue]="15">15 minutes</option>
+                  <option [ngValue]="30">30 minutes</option>
+                </select>
+              </div>
+
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="setting-label">Show Clock</span>
+                  <span class="setting-description">Display time in privacy mode</span>
+                </div>
+                <button
+                  class="toggle"
+                  [attr.data-checked]="privacySettings().showClock"
+                  (click)="togglePrivacyShowClock()"
+                >
+                  <div class="toggle-knob"></div>
+                </button>
+              </div>
+
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="setting-label">Show Weather</span>
+                  <span class="setting-description">Display weather in privacy mode</span>
+                </div>
+                <button
+                  class="toggle"
+                  [attr.data-checked]="privacySettings().showWeather"
+                  (click)="togglePrivacyShowWeather()"
+                >
+                  <div class="toggle-knob"></div>
+                </button>
+              </div>
+            }
+
+            <!-- Quick action to toggle privacy mode now -->
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-label">Privacy Mode</span>
+                <span class="setting-description">{{ isPrivacyMode() ? 'Currently active' : 'Activate now' }}</span>
+              </div>
+              <button
+                class="setting-action-btn"
+                [class.active]="isPrivacyMode()"
+                (click)="togglePrivacyModeNow()"
+              >
+                {{ isPrivacyMode() ? 'Exit' : 'Activate' }}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Sleep Mode Settings -->
+        <section class="settings-section">
+          <h2 class="settings-section-title">Sleep Mode</h2>
+
+          <div class="settings-card">
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-label">Scheduled Sleep</span>
+                <span class="setting-description">Dim display during scheduled hours</span>
+              </div>
+              <button
+                class="toggle"
+                [attr.data-checked]="sleepSettings().enabled"
+                (click)="toggleSleepModeEnabled()"
+              >
+                <div class="toggle-knob"></div>
+              </button>
+            </div>
+
+            @if (sleepSettings().enabled) {
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="setting-label">Sleep Hours</span>
+                </div>
+                <div class="time-range">
+                  <input
+                    type="time"
+                    class="time-input"
+                    [value]="sleepSettings().startTime"
+                    (change)="updateSleepSetting('startTime', $any($event.target).value)"
+                  />
+                  <span>to</span>
+                  <input
+                    type="time"
+                    class="time-input"
+                    [value]="sleepSettings().endTime"
+                    (change)="updateSleepSetting('endTime', $any($event.target).value)"
+                  />
+                </div>
+              </div>
+
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="setting-label">Dim Level</span>
+                  <span class="setting-description">{{ sleepSettings().dimLevel }}% brightness</span>
+                </div>
+                <input
+                  type="range"
+                  class="dim-slider"
+                  min="0"
+                  max="50"
+                  step="5"
+                  [value]="sleepSettings().dimLevel"
+                  (input)="updateSleepSetting('dimLevel', +$any($event.target).value)"
+                />
+              </div>
+
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="setting-label">Wake on Touch</span>
+                  <span class="setting-description">Tap screen to exit sleep mode</span>
+                </div>
+                <button
+                  class="toggle"
+                  [attr.data-checked]="sleepSettings().wakeOnTouch"
+                  (click)="toggleSleepWakeOnTouch()"
+                >
+                  <div class="toggle-knob"></div>
+                </button>
+              </div>
+            }
+
+            <!-- Quick action to toggle sleep mode now -->
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-label">Sleep Mode</span>
+                <span class="setting-description">{{ isSleepMode() ? 'Currently active' : 'Activate now' }}</span>
+              </div>
+              <button
+                class="setting-action-btn"
+                [class.active]="isSleepMode()"
+                (click)="toggleSleepModeNow()"
+              >
+                {{ isSleepMode() ? 'Wake' : 'Sleep' }}
+              </button>
+            </div>
+          </div>
+        </section>
+
         <!-- Device info -->
         <section class="settings-section">
           <h2 class="settings-section-title">Device</h2>
@@ -162,7 +363,7 @@ import { CanvasService } from '../../core/services/canvas.service';
       <!-- Unlink confirmation dialog -->
       @if (showUnlinkConfirm) {
         <div class="confirm-overlay" (click)="showUnlinkConfirm = false">
-          <div class="confirm-dialog" (click)="$event.stopPropagation()">
+          <div class="confirm-dialog z-modal" (click)="$event.stopPropagation()">
             <h3 class="text-display-sm">Unlink Device?</h3>
             <p class="text-body-lg">
               This will disconnect this display from your family account.
@@ -347,10 +548,16 @@ import { CanvasService } from '../../core/services/canvas.service';
       border: none;
       border-radius: var(--radius-md);
       cursor: pointer;
+      transition: all var(--duration-quick) var(--ease-out);
     }
 
     .setting-action-btn:active {
       background: var(--surface-pressed);
+    }
+
+    .setting-action-btn.active {
+      background: var(--accent-100);
+      color: var(--accent-700);
     }
 
     .setting-danger-btn {
@@ -368,6 +575,37 @@ import { CanvasService } from '../../core/services/canvas.service';
     .setting-danger-btn:active {
       background: var(--danger);
       color: white;
+    }
+
+    .dim-slider {
+      width: 120px;
+      height: 8px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: var(--surface-secondary);
+      border-radius: var(--radius-full);
+      outline: none;
+    }
+
+    .dim-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      background: var(--accent-600);
+      border-radius: var(--radius-full);
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .dim-slider::-moz-range-thumb {
+      width: 24px;
+      height: 24px;
+      background: var(--accent-600);
+      border-radius: var(--radius-full);
+      cursor: pointer;
+      border: none;
+      box-shadow: var(--shadow-sm);
     }
 
     .version-info {
@@ -423,6 +661,7 @@ export class SettingsComponent implements OnInit {
   private readonly authService = inject(DeviceAuthService);
   private readonly cacheService = inject(CacheService);
   private readonly canvasService = inject(CanvasService);
+  private readonly displayModeService = inject(DisplayModeService);
 
   protected readonly settings = signal<DisplaySettings>({
     timeFormat: '12h',
@@ -432,8 +671,15 @@ export class SettingsComponent implements OnInit {
     defaultView: 'schedule',
   });
 
+  protected readonly privacySettings = signal<PrivacyModeSettings>(DEFAULT_PRIVACY_SETTINGS);
+  protected readonly sleepSettings = signal<SleepModeSettings>(DEFAULT_SLEEP_SETTINGS);
+
   protected readonly appInfo = this.electronService.appInfo;
   protected readonly familyName = this.authService.familyName;
+
+  // Display mode status from service
+  protected readonly isPrivacyMode = this.displayModeService.isPrivacyMode;
+  protected readonly isSleepMode = this.displayModeService.isSleepMode;
 
   protected showUnlinkConfirm = false;
 
@@ -447,11 +693,29 @@ export class SettingsComponent implements OnInit {
       ...this.settings(),
       ...savedSettings,
     });
+
+    // Load privacy and sleep settings
+    if (savedSettings.privacyModeSettings) {
+      this.privacySettings.set({
+        ...DEFAULT_PRIVACY_SETTINGS,
+        ...savedSettings.privacyModeSettings,
+      });
+    }
+    if (savedSettings.sleepModeSettings) {
+      this.sleepSettings.set({
+        ...DEFAULT_SLEEP_SETTINGS,
+        ...savedSettings.sleepModeSettings,
+      });
+    }
   }
 
   goBack(): void {
     this.router.navigate(['/display']);
   }
+
+  // ============================================
+  // Display Settings
+  // ============================================
 
   async updateSetting<K extends keyof DisplaySettings>(
     key: K,
@@ -473,6 +737,69 @@ export class SettingsComponent implements OnInit {
     const current = this.settings().nightDisplayEnabled ?? false;
     this.updateSetting('nightDisplayEnabled', !current);
   }
+
+  // ============================================
+  // Privacy Mode Settings
+  // ============================================
+
+  async updatePrivacySetting<K extends keyof PrivacyModeSettings>(
+    key: K,
+    value: PrivacyModeSettings[K]
+  ): Promise<void> {
+    const updated = { ...this.privacySettings(), [key]: value };
+    this.privacySettings.set(updated);
+    await this.displayModeService.updatePrivacySettings({ [key]: value });
+  }
+
+  togglePrivacyModeEnabled(): void {
+    const current = this.privacySettings().enabled;
+    this.updatePrivacySetting('enabled', !current);
+  }
+
+  togglePrivacyShowClock(): void {
+    const current = this.privacySettings().showClock;
+    this.updatePrivacySetting('showClock', !current);
+  }
+
+  togglePrivacyShowWeather(): void {
+    const current = this.privacySettings().showWeather;
+    this.updatePrivacySetting('showWeather', !current);
+  }
+
+  togglePrivacyModeNow(): void {
+    this.displayModeService.togglePrivacyMode();
+  }
+
+  // ============================================
+  // Sleep Mode Settings
+  // ============================================
+
+  async updateSleepSetting<K extends keyof SleepModeSettings>(
+    key: K,
+    value: SleepModeSettings[K]
+  ): Promise<void> {
+    const updated = { ...this.sleepSettings(), [key]: value };
+    this.sleepSettings.set(updated);
+    await this.displayModeService.updateSleepSettings({ [key]: value });
+  }
+
+  toggleSleepModeEnabled(): void {
+    const current = this.sleepSettings().enabled;
+    this.updateSleepSetting('enabled', !current);
+  }
+
+  toggleSleepWakeOnTouch(): void {
+    const current = this.sleepSettings().wakeOnTouch;
+    this.updateSleepSetting('wakeOnTouch', !current);
+  }
+
+  toggleSleepModeNow(): void {
+    this.displayModeService.toggleSleepMode();
+  }
+
+  // ============================================
+  // Device Actions
+  // ============================================
 
   async clearCache(): Promise<void> {
     await this.cacheService.clearAll();

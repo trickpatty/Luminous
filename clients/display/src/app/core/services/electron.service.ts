@@ -27,6 +27,27 @@ export interface DeviceTokenData {
   expiresAt?: string;
 }
 
+/**
+ * Privacy mode settings
+ */
+export interface PrivacyModeSettings {
+  enabled: boolean;
+  timeoutMinutes: number; // Auto-switch to privacy after inactivity
+  showClock: boolean;
+  showWeather: boolean;
+}
+
+/**
+ * Sleep mode settings
+ */
+export interface SleepModeSettings {
+  enabled: boolean;
+  startTime: string; // HH:mm
+  endTime: string; // HH:mm
+  dimLevel: number; // 0-100, 0 = fully off
+  wakeOnTouch: boolean;
+}
+
 export interface DisplaySettings {
   defaultView?: 'schedule' | 'tasks' | 'routines';
   autoRotate?: boolean;
@@ -37,6 +58,9 @@ export interface DisplaySettings {
   nightDisplayEnd?: string; // HH:mm
   timeFormat?: '12h' | '24h';
   dateFormat?: string;
+  // Display modes (Phase 2.6)
+  privacyModeSettings?: PrivacyModeSettings;
+  sleepModeSettings?: SleepModeSettings;
 }
 
 export interface AppInfo {

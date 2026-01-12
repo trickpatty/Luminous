@@ -5,12 +5,15 @@ import { interval, Subscription } from 'rxjs';
 import { DeviceAuthService } from '../../core/services/device-auth.service';
 import { CacheService, ScheduleEvent, TaskData, MemberData } from '../../core/services/cache.service';
 import { EventService } from '../../core/services/event.service';
+import { DisplayModeService } from '../../core/services/display-mode.service';
 import { ClockWidgetComponent } from './components/clock-widget/clock-widget.component';
 import { WhatsNextWidgetComponent } from './components/whats-next-widget/whats-next-widget.component';
 import { CountdownWidgetComponent } from './components/countdown-widget/countdown-widget.component';
 import { WeatherWidgetComponent } from './components/weather-widget/weather-widget.component';
 import { ScheduleViewComponent } from './components/schedule-view/schedule-view.component';
 import { TasksViewComponent } from './components/tasks-view/tasks-view.component';
+import { PrivacyModeComponent } from './components/privacy-mode/privacy-mode.component';
+import { SleepModeComponent } from './components/sleep-mode/sleep-mode.component';
 import {
   DayViewComponent,
   WeekViewComponent,
@@ -34,6 +37,8 @@ type CalendarViewMode = 'day' | 'week' | 'month' | 'agenda';
     WeatherWidgetComponent,
     ScheduleViewComponent,
     TasksViewComponent,
+    PrivacyModeComponent,
+    SleepModeComponent,
     DayViewComponent,
     WeekViewComponent,
     MonthViewComponent,
@@ -41,234 +46,267 @@ type CalendarViewMode = 'day' | 'week' | 'month' | 'agenda';
     ProfileFilterComponent,
   ],
   template: `
-    <div class="display-container">
-      <!-- Header with clock and weather -->
-      <header class="display-header">
-        <div class="header-left">
-          <app-clock-widget />
-        </div>
-        <div class="header-center">
-          <app-weather-widget [compact]="true" />
-        </div>
-        <div class="header-actions">
-          <button
-            class="header-nav-btn"
-            [class.active]="currentView() === 'schedule'"
-            (click)="setView('schedule')"
-            aria-label="Today's schedule"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="4"/>
-              <path d="M12 2v2"/>
-              <path d="M12 20v2"/>
-              <path d="m4.93 4.93 1.41 1.41"/>
-              <path d="m17.66 17.66 1.41 1.41"/>
-              <path d="M2 12h2"/>
-              <path d="M20 12h2"/>
-              <path d="m6.34 17.66-1.41 1.41"/>
-              <path d="m19.07 4.93-1.41 1.41"/>
-            </svg>
-          </button>
-          <button
-            class="header-nav-btn"
-            [class.active]="currentView() === 'calendar'"
-            (click)="setView('calendar')"
-            aria-label="Calendar views"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M8 2v4"/>
-              <path d="M16 2v4"/>
-              <rect width="18" height="18" x="3" y="4" rx="2"/>
-              <path d="M3 10h18"/>
-              <path d="M8 14h.01"/>
-              <path d="M12 14h.01"/>
-              <path d="M16 14h.01"/>
-              <path d="M8 18h.01"/>
-              <path d="M12 18h.01"/>
-              <path d="M16 18h.01"/>
-            </svg>
-          </button>
-          <button
-            class="header-nav-btn"
-            [class.active]="currentView() === 'tasks'"
-            (click)="setView('tasks')"
-            aria-label="Tasks"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
-              <path d="m9 12 2 2 4-4"/>
-            </svg>
-          </button>
-          <button
-            class="header-nav-btn"
-            (click)="openSettings()"
-            aria-label="Settings"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
-              <circle cx="12" cy="12" r="3"/>
-            </svg>
-          </button>
-        </div>
-      </header>
+    <!-- Privacy Mode Overlay -->
+    @if (isPrivacyMode()) {
+      <app-privacy-mode />
+    }
 
-      <!-- Calendar view mode selector (only when in calendar view) -->
-      @if (currentView() === 'calendar') {
-        <div class="calendar-controls">
-          <div class="view-mode-selector">
+    <!-- Sleep Mode Overlay -->
+    @if (isSleepMode()) {
+      <app-sleep-mode />
+    }
+
+    <!-- Normal Display (hidden when in privacy or sleep mode) -->
+    @if (isNormalMode()) {
+      <div class="display-container">
+        <!-- Header with clock and weather -->
+        <header class="display-header">
+          <div class="header-left">
+            <app-clock-widget />
+          </div>
+          <div class="header-center">
+            <app-weather-widget [compact]="true" />
+          </div>
+          <div class="header-actions">
+            <!-- Privacy mode quick toggle -->
             <button
-              class="mode-btn"
-              [class.active]="calendarMode() === 'day'"
-              (click)="setCalendarMode('day')"
+              class="header-nav-btn"
+              [class.active]="false"
+              (click)="togglePrivacyMode()"
+              aria-label="Privacy mode"
+              title="Privacy mode - hide family info"
             >
-              Day
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
             </button>
             <button
-              class="mode-btn"
-              [class.active]="calendarMode() === 'week'"
-              (click)="setCalendarMode('week')"
+              class="header-nav-btn"
+              [class.active]="currentView() === 'schedule'"
+              (click)="setView('schedule')"
+              aria-label="Today's schedule"
             >
-              Week
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="4"/>
+                <path d="M12 2v2"/>
+                <path d="M12 20v2"/>
+                <path d="m4.93 4.93 1.41 1.41"/>
+                <path d="m17.66 17.66 1.41 1.41"/>
+                <path d="M2 12h2"/>
+                <path d="M20 12h2"/>
+                <path d="m6.34 17.66-1.41 1.41"/>
+                <path d="m19.07 4.93-1.41 1.41"/>
+              </svg>
             </button>
             <button
-              class="mode-btn"
-              [class.active]="calendarMode() === 'month'"
-              (click)="setCalendarMode('month')"
+              class="header-nav-btn"
+              [class.active]="currentView() === 'calendar'"
+              (click)="setView('calendar')"
+              aria-label="Calendar views"
             >
-              Month
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 2v4"/>
+                <path d="M16 2v4"/>
+                <rect width="18" height="18" x="3" y="4" rx="2"/>
+                <path d="M3 10h18"/>
+                <path d="M8 14h.01"/>
+                <path d="M12 14h.01"/>
+                <path d="M16 14h.01"/>
+                <path d="M8 18h.01"/>
+                <path d="M12 18h.01"/>
+                <path d="M16 18h.01"/>
+              </svg>
             </button>
             <button
-              class="mode-btn"
-              [class.active]="calendarMode() === 'agenda'"
-              (click)="setCalendarMode('agenda')"
+              class="header-nav-btn"
+              [class.active]="currentView() === 'tasks'"
+              (click)="setView('tasks')"
+              aria-label="Tasks"
             >
-              Agenda
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+                <path d="m9 12 2 2 4-4"/>
+              </svg>
+            </button>
+            <button
+              class="header-nav-btn"
+              (click)="openSettings()"
+              aria-label="Settings"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </header>
+
+        <!-- Calendar view mode selector (only when in calendar view) -->
+        @if (currentView() === 'calendar') {
+          <div class="calendar-controls">
+            <div class="view-mode-selector">
+              <button
+                class="mode-btn"
+                [class.active]="calendarMode() === 'day'"
+                (click)="setCalendarMode('day')"
+              >
+                Day
+              </button>
+              <button
+                class="mode-btn"
+                [class.active]="calendarMode() === 'week'"
+                (click)="setCalendarMode('week')"
+              >
+                Week
+              </button>
+              <button
+                class="mode-btn"
+                [class.active]="calendarMode() === 'month'"
+                (click)="setCalendarMode('month')"
+              >
+                Month
+              </button>
+              <button
+                class="mode-btn"
+                [class.active]="calendarMode() === 'agenda'"
+                (click)="setCalendarMode('agenda')"
+              >
+                Agenda
+              </button>
+            </div>
+
+            <!-- Profile filter toggle -->
+            <button
+              class="filter-toggle-btn"
+              [class.active]="showProfileFilter()"
+              (click)="toggleProfileFilter()"
+              aria-label="Filter by family member"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              @if (selectedMemberIds().length > 0) {
+                <span class="filter-badge">{{ selectedMemberIds().length }}</span>
+              }
             </button>
           </div>
 
-          <!-- Profile filter toggle -->
-          <button
-            class="filter-toggle-btn"
-            [class.active]="showProfileFilter()"
-            (click)="toggleProfileFilter()"
-            aria-label="Filter by family member"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-            @if (selectedMemberIds().length > 0) {
-              <span class="filter-badge">{{ selectedMemberIds().length }}</span>
-            }
-          </button>
-        </div>
-
-        <!-- Profile filter panel -->
-        @if (showProfileFilter()) {
-          <app-profile-filter
-            [members]="members()"
-            [selectedMemberIds]="selectedMemberIds()"
-            (selectionChange)="onMemberFilterChange($event)"
-          />
+          <!-- Profile filter panel -->
+          @if (showProfileFilter()) {
+            <app-profile-filter
+              [members]="members()"
+              [selectedMemberIds]="selectedMemberIds()"
+              (selectionChange)="onMemberFilterChange($event)"
+            />
+          }
         }
-      }
 
-      <!-- Main content area -->
-      <main class="display-content">
-        @switch (currentView()) {
-          @case ('schedule') {
-            <app-schedule-view
+        <!-- Main content area -->
+        <main class="display-content">
+          @switch (currentView()) {
+            @case ('schedule') {
+              <app-schedule-view
+                [events]="todayEvents()"
+                [members]="members()"
+                [isLoading]="isLoading()"
+              />
+            }
+            @case ('calendar') {
+              @switch (calendarMode()) {
+                @case ('day') {
+                  <app-day-view
+                    [events]="filteredCalendarEvents()"
+                    [members]="members()"
+                    [isLoading]="isCalendarLoading()"
+                    [selectedDate]="selectedDate()"
+                    (dateChange)="onDateChange($event)"
+                  />
+                }
+                @case ('week') {
+                  <app-week-view
+                    [events]="filteredCalendarEvents()"
+                    [members]="members()"
+                    [isLoading]="isCalendarLoading()"
+                    [selectedDate]="selectedDate()"
+                    (dateChange)="onDateChange($event)"
+                    (daySelect)="onDaySelect($event)"
+                  />
+                }
+                @case ('month') {
+                  <app-month-view
+                    [events]="filteredCalendarEvents()"
+                    [members]="members()"
+                    [isLoading]="isCalendarLoading()"
+                    [selectedDate]="selectedDate()"
+                    (dateChange)="onDateChange($event)"
+                    (daySelect)="onDaySelect($event)"
+                  />
+                }
+                @case ('agenda') {
+                  <app-agenda-view
+                    [events]="filteredCalendarEvents()"
+                    [members]="members()"
+                    [isLoading]="isCalendarLoading()"
+                  />
+                }
+              }
+            }
+            @case ('tasks') {
+              <app-tasks-view
+                [tasks]="tasks()"
+                [members]="members()"
+                [isLoading]="isLoading()"
+              />
+            }
+          }
+        </main>
+
+        <!-- Widgets Panel (shown on schedule view) -->
+        @if (currentView() === 'schedule') {
+          <aside class="widgets-panel">
+            <app-whats-next-widget
               [events]="todayEvents()"
               [members]="members()"
-              [isLoading]="isLoading()"
             />
-          }
-          @case ('calendar') {
-            @switch (calendarMode()) {
-              @case ('day') {
-                <app-day-view
-                  [events]="filteredCalendarEvents()"
-                  [members]="members()"
-                  [isLoading]="isCalendarLoading()"
-                  [selectedDate]="selectedDate()"
-                  (dateChange)="onDateChange($event)"
-                />
-              }
-              @case ('week') {
-                <app-week-view
-                  [events]="filteredCalendarEvents()"
-                  [members]="members()"
-                  [isLoading]="isCalendarLoading()"
-                  [selectedDate]="selectedDate()"
-                  (dateChange)="onDateChange($event)"
-                  (daySelect)="onDaySelect($event)"
-                />
-              }
-              @case ('month') {
-                <app-month-view
-                  [events]="filteredCalendarEvents()"
-                  [members]="members()"
-                  [isLoading]="isCalendarLoading()"
-                  [selectedDate]="selectedDate()"
-                  (dateChange)="onDateChange($event)"
-                  (daySelect)="onDaySelect($event)"
-                />
-              }
-              @case ('agenda') {
-                <app-agenda-view
-                  [events]="filteredCalendarEvents()"
-                  [members]="members()"
-                  [isLoading]="isCalendarLoading()"
-                />
-              }
-            }
-          }
-          @case ('tasks') {
-            <app-tasks-view
-              [tasks]="tasks()"
+            <app-countdown-widget
+              [events]="allUpcomingEvents()"
               [members]="members()"
-              [isLoading]="isLoading()"
+              [maxItems]="3"
             />
-          }
+          </aside>
         }
-      </main>
 
-      <!-- Widgets Panel (shown on schedule view) -->
-      @if (currentView() === 'schedule') {
-        <aside class="widgets-panel">
-          <app-whats-next-widget
-            [events]="todayEvents()"
-            [members]="members()"
-          />
-          <app-countdown-widget
-            [events]="allUpcomingEvents()"
-            [members]="members()"
-            [maxItems]="3"
-          />
-        </aside>
-      }
-
-      <!-- Footer -->
-      <footer class="display-footer">
-        <div class="footer-family-name">
-          {{ familyName() }}
-        </div>
-        @if (isOffline()) {
-          <div class="footer-offline-badge">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 20h.01"/>
-              <path d="M8.5 16.429a5 5 0 0 1 7 0"/>
-              <path d="M5 12.859a10 10 0 0 1 5.17-2.69"/>
-              <path d="M19 12.859a10 10 0 0 0-2.007-1.523"/>
-              <line x1="2" x2="22" y1="2" y2="22"/>
-            </svg>
-            <span>Offline</span>
+        <!-- Footer -->
+        <footer class="display-footer">
+          <div class="footer-family-name">
+            {{ familyName() }}
           </div>
-        }
-      </footer>
-    </div>
+          <div class="footer-status">
+            @if (isOffline()) {
+              <div class="footer-offline-badge">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 20h.01"/>
+                  <path d="M8.5 16.429a5 5 0 0 1 7 0"/>
+                  <path d="M5 12.859a10 10 0 0 1 5.17-2.69"/>
+                  <path d="M19 12.859a10 10 0 0 0-2.007-1.523"/>
+                  <line x1="2" x2="22" y1="2" y2="22"/>
+                </svg>
+                <span>Offline</span>
+              </div>
+            }
+            @if (minutesUntilPrivacy() > 0 && minutesUntilPrivacy() <= 2) {
+              <div class="footer-privacy-hint">
+                Privacy in {{ minutesUntilPrivacy() }}m
+              </div>
+            }
+          </div>
+        </footer>
+      </div>
+    }
   `,
   styles: [`
     .display-header {
@@ -428,6 +466,12 @@ type CalendarViewMode = 'day' | 'week' | 'month' | 'agenda';
       color: var(--text-secondary);
     }
 
+    .footer-status {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
     .footer-offline-badge {
       display: flex;
       align-items: center;
@@ -439,6 +483,15 @@ type CalendarViewMode = 'day' | 'week' | 'month' | 'agenda';
       font-size: 0.875rem;
       font-weight: 500;
     }
+
+    .footer-privacy-hint {
+      padding: var(--space-2) var(--space-4);
+      background: var(--surface-secondary);
+      color: var(--text-tertiary);
+      border-radius: var(--radius-full);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
   `],
 })
 export class DisplayComponent implements OnInit, OnDestroy {
@@ -446,6 +499,7 @@ export class DisplayComponent implements OnInit, OnDestroy {
   private readonly authService = inject(DeviceAuthService);
   private readonly cacheService = inject(CacheService);
   private readonly eventService = inject(EventService);
+  private readonly displayModeService = inject(DisplayModeService);
 
   private refreshSubscription?: Subscription;
 
@@ -458,6 +512,12 @@ export class DisplayComponent implements OnInit, OnDestroy {
   protected readonly isLoading = signal(true);
   protected readonly isCalendarLoading = signal(false);
   protected readonly isOffline = signal(false);
+
+  // Display mode state from service
+  protected readonly isNormalMode = this.displayModeService.isNormalMode;
+  protected readonly isPrivacyMode = this.displayModeService.isPrivacyMode;
+  protected readonly isSleepMode = this.displayModeService.isSleepMode;
+  protected readonly minutesUntilPrivacy = this.displayModeService.minutesUntilPrivacy;
 
   // Data
   protected readonly todayEvents = signal<ScheduleEvent[]>([]);
@@ -493,7 +553,10 @@ export class DisplayComponent implements OnInit, OnDestroy {
     );
   });
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
+    // Initialize display mode service
+    await this.displayModeService.initialize();
+
     this.loadData();
     this.startRefreshTimer();
 
@@ -658,6 +721,10 @@ export class DisplayComponent implements OnInit, OnDestroy {
 
   toggleProfileFilter(): void {
     this.showProfileFilter.set(!this.showProfileFilter());
+  }
+
+  togglePrivacyMode(): void {
+    this.displayModeService.togglePrivacyMode();
   }
 
   onMemberFilterChange(memberIds: string[]): void {
