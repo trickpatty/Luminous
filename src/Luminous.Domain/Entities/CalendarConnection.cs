@@ -160,7 +160,7 @@ public sealed class CalendarConnection : Entity
             ? "https://" + icsUrl[9..]
             : icsUrl;
 
-        return new CalendarConnection
+        var connection = new CalendarConnection
         {
             FamilyId = familyId,
             Name = name.Trim(),
@@ -168,8 +168,12 @@ public sealed class CalendarConnection : Entity
             IcsUrl = normalizedUrl,
             Status = CalendarConnectionStatus.Active,
             SyncSettings = CalendarSyncSettings.ForIcsSubscription(),
-            CreatedBy = createdBy
+            CreatedBy = createdBy,
+            // Schedule immediate sync so the timer job picks this up on next run
+            NextSyncAt = DateTime.UtcNow
         };
+
+        return connection;
     }
 
     /// <summary>

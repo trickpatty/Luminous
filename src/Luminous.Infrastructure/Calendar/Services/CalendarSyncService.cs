@@ -326,6 +326,13 @@ public sealed class CalendarSyncService : ICalendarSyncService
             var startDate = DateOnly.FromDateTime(externalEvent.StartTime);
             var endDate = DateOnly.FromDateTime(externalEvent.EndTime);
 
+            // Ensure endDate is exclusive (at least startDate + 1 day) per iCal spec.
+            // Some ICS sources may not include DTEND or may set it equal to DTSTART.
+            if (endDate <= startDate)
+            {
+                endDate = startDate.AddDays(1);
+            }
+
             domainEvent = Event.CreateAllDay(
                 connection.FamilyId,
                 externalEvent.Title,
@@ -378,8 +385,18 @@ public sealed class CalendarSyncService : ICalendarSyncService
         if (externalEvent.IsAllDay)
         {
             // For all-day events, store dates only
-            domainEvent.StartDate = DateOnly.FromDateTime(externalEvent.StartTime);
-            domainEvent.EndDate = DateOnly.FromDateTime(externalEvent.EndTime);
+            var startDate = DateOnly.FromDateTime(externalEvent.StartTime);
+            var endDate = DateOnly.FromDateTime(externalEvent.EndTime);
+
+            // Ensure endDate is exclusive (at least startDate + 1 day) per iCal spec.
+            // Some ICS sources may not include DTEND or may set it equal to DTSTART.
+            if (endDate <= startDate)
+            {
+                endDate = startDate.AddDays(1);
+            }
+
+            domainEvent.StartDate = startDate;
+            domainEvent.EndDate = endDate;
             domainEvent.StartTime = null;
             domainEvent.EndTime = null;
         }
