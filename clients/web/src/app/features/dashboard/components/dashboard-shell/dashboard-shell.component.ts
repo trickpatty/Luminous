@@ -31,7 +31,7 @@ interface NavItem {
 
       <!-- Sidebar -->
       <aside
-        class="fixed inset-y-0 left-0 z-modal w-64 bg-surface-primary border-r border-light transform transition-transform duration-moderate ease-out lg:translate-x-0 lg:sticky lg:top-0 lg:z-auto lg:h-screen"
+        class="w-64 bg-surface-primary border-r border-light transition-transform duration-moderate ease-out max-lg:fixed max-lg:inset-y-0 max-lg:left-0 max-lg:z-modal lg:sticky lg:top-0 lg:h-screen lg:z-auto lg:!translate-x-0"
         [class.translate-x-0]="mobileMenuOpen()"
         [class.-translate-x-full]="!mobileMenuOpen()"
         role="navigation"
