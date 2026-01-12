@@ -855,5 +855,5 @@ output emailDomainResourceId string = emailService.outputs.domainResourceIds[0]
 // Custom Domain & DNS (only output if configured)
 output customDomainConfigured bool = hasCustomDomain
 output customDomainName string = hasCustomDomain ? customDomain : ''
-output dnsZoneNameServers array = hasCustomDomain && deployDnsZone ? dnsZone.outputs.nameServers : []
+output dnsZoneNameServers array = dnsZone.?outputs.nameServers ?? []
 output webAppUrl string = hasCustomDomain ? 'https://${customDomain}' : 'https://${staticWebApp.outputs.defaultHostname}'
