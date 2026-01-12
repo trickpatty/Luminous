@@ -527,6 +527,7 @@ const DEFAULT_SLEEP_SETTINGS: SleepModeSettings = {
     }
 
     .toggle-knob {
+      display: block;
       width: 24px;
       height: 24px;
       background: white;

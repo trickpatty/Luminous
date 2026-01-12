@@ -3,7 +3,8 @@ import { inject } from '@angular/core';
 import { DeviceAuthService } from '../services/device-auth.service';
 
 /**
- * Interceptor that adds device token to API requests
+ * Interceptor that adds device token to API requests.
+ * Uses standard Authorization Bearer header for JWT token authentication.
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(DeviceAuthService);
@@ -12,7 +13,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   if (token) {
     const authReq = req.clone({
       setHeaders: {
-        'X-Device-Token': token,
+        'Authorization': `Bearer ${token}`,
       },
     });
     return next(authReq);

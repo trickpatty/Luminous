@@ -445,6 +445,7 @@ type CalendarViewMode = 'day' | 'week' | 'month' | 'agenda';
       grid-template-columns: repeat(2, 1fr);
       gap: var(--space-4);
       padding: var(--space-4) 0;
+      flex-shrink: 0;
     }
 
     @media (max-width: 768px) {

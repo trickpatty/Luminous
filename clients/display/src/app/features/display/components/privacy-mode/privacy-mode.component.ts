@@ -239,10 +239,12 @@ export class PrivacyModeComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Handle tap to return to normal mode
+   * Handle tap to return to normal mode.
+   * Always exits privacy mode when tapped, regardless of whether it was
+   * manually activated or triggered by inactivity timeout.
    */
   handleTap(): void {
-    this.displayModeService.handleUserInteraction();
+    this.displayModeService.enterNormalMode();
   }
 
   /**

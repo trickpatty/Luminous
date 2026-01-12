@@ -193,10 +193,17 @@ export class WeatherService {
   }
 
   /**
-   * Fetch weather using browser geolocation
+   * Fetch weather using browser geolocation.
+   * Falls back to cached weather data if geolocation fails.
    */
   async fetchWeatherByGeolocation(): Promise<WeatherData | null> {
     if (!navigator.geolocation) {
+      // Geolocation not supported - try to use cached data
+      const cached = await this.loadCachedWeather();
+      if (cached) {
+        this._weather.set(cached);
+        return cached;
+      }
       this._error.set('Geolocation not supported');
       return null;
     }
@@ -210,8 +217,16 @@ export class WeatherService {
           );
           resolve(result);
         },
-        (error) => {
+        async (error) => {
           console.error('Geolocation error:', error);
+          // Try to use cached weather data when geolocation fails
+          const cached = await this.loadCachedWeather();
+          if (cached) {
+            this._weather.set(cached);
+            // Don't set error if we have cached data
+            resolve(cached);
+            return;
+          }
           this._error.set('Unable to get location');
           resolve(null);
         },
