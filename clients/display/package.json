@@ -81,6 +81,7 @@
   "build": {
     "appId": "com.luminous.display",
     "productName": "Luminous Display",
+    "electronVersion": "35.7.5",
     "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "directories": {
       "output": "release",
