@@ -24,7 +24,9 @@ ${dictionary.allTokens.map(token => {
 
 // Custom format for Swift
 function swiftLuminousExtensions({ dictionary }) {
-  const colorTokens = dictionary.allTokens.filter(p => p.attributes.category === 'color');
+  const colorTokens = dictionary.allTokens.filter(p =>
+    p.attributes.category === 'color' && p.value && typeof p.value === 'string'
+  );
   const spacingTokens = dictionary.allTokens.filter(p => p.attributes.category === 'spacing');
   const radiusTokens = dictionary.allTokens.filter(p => p.attributes.category === 'radius');
   const touchTokens = dictionary.allTokens.filter(p => p.attributes.category === 'touch');
@@ -33,13 +35,15 @@ function swiftLuminousExtensions({ dictionary }) {
   );
 
   function formatColorValue(value) {
+    if (!value || typeof value !== 'string') return 'Color.clear';
     const hex = value.replace('#', '');
     return `Color(hex: "${hex}")`;
   }
 
   function formatDimensionValue(value) {
+    if (!value) return '0';
     const num = parseFloat(value);
-    return `${num}`;
+    return isNaN(num) ? '0' : `${num}`;
   }
 
   return `//
@@ -119,19 +123,23 @@ ${fontSizeTokens.map(token => {
 
 // Custom format for Kotlin/Compose
 function composeLuminousObject({ dictionary }) {
-  const colorTokens = dictionary.allTokens.filter(p => p.attributes.category === 'color');
+  const colorTokens = dictionary.allTokens.filter(p =>
+    p.attributes.category === 'color' && p.value && typeof p.value === 'string'
+  );
   const spacingTokens = dictionary.allTokens.filter(p => p.attributes.category === 'spacing');
   const radiusTokens = dictionary.allTokens.filter(p => p.attributes.category === 'radius');
   const touchTokens = dictionary.allTokens.filter(p => p.attributes.category === 'touch');
 
   function formatColorValue(value) {
+    if (!value || typeof value !== 'string') return 'Color.Transparent';
     const hex = value.replace('#', '');
     return `Color(0xFF${hex.toUpperCase()})`;
   }
 
   function formatDimensionValue(value) {
+    if (!value) return '0.dp';
     const num = parseFloat(value);
-    return `${num}.dp`;
+    return isNaN(num) ? '0.dp' : `${num}.dp`;
   }
 
   return `/**
@@ -187,8 +195,11 @@ function javascriptLuminousTailwind({ dictionary }) {
   const borderRadius = {};
 
   dictionary.allTokens.forEach(token => {
+    if (!token.name || !token.path || token.path.length < 2) return;
+
     if (token.attributes.category === 'color') {
       const [, group, ...rest] = token.path;
+      if (!group) return;
       if (!colors[group]) colors[group] = {};
       if (rest.length === 0) {
         colors[group] = `var(--${token.name})`;
@@ -196,9 +207,9 @@ function javascriptLuminousTailwind({ dictionary }) {
         colors[group][rest.join('-')] = `var(--${token.name})`;
       }
     } else if (token.attributes.category === 'spacing') {
-      spacing[token.path[1]] = `var(--${token.name})`;
+      if (token.path[1]) spacing[token.path[1]] = `var(--${token.name})`;
     } else if (token.attributes.category === 'radius') {
-      borderRadius[token.path[1]] = `var(--${token.name})`;
+      if (token.path[1]) borderRadius[token.path[1]] = `var(--${token.name})`;
     }
   });
 
