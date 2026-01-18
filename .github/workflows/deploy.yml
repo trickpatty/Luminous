@@ -107,10 +107,10 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: 'clients/web/package-lock.json'
+          cache-dependency-path: 'clients/package-lock.json'
 
       - name: Install dependencies
-        working-directory: ./clients/web
+        working-directory: ./clients
         run: npm ci
 
       - name: Build for ${{ matrix.environment }}

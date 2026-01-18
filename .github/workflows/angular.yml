@@ -49,10 +49,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+          cache-dependency-path: './clients/package-lock.json'
 
       - name: Install dependencies
         run: npm ci
+        working-directory: ./clients
 
       - name: Run linting
         run: npm run lint --if-present
@@ -89,10 +90,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+          cache-dependency-path: './clients/package-lock.json'
 
       - name: Install dependencies
         run: npm ci
+        working-directory: ./clients
 
       - name: Build for stg
         run: npm run build:stg
@@ -123,7 +125,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+          cache-dependency-path: './clients/package-lock.json'
 
       - name: Run npm audit
         run: |
@@ -154,10 +156,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+          cache-dependency-path: './clients/package-lock.json'
 
       - name: Install dependencies
         run: npm ci
+        working-directory: ./clients
 
       - name: Build with stats
         run: npm run build:prod -- --stats-json
