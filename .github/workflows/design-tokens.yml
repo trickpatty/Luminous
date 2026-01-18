@@ -30,12 +30,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: design-tokens/package-lock.json
 
       - name: Install dependencies
         working-directory: design-tokens
-        run: npm ci
+        run: npm install
 
       - name: Build tokens
         working-directory: design-tokens
