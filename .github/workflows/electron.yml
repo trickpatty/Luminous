@@ -151,10 +151,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+          cache-dependency-path: './clients/package-lock.json'
 
       - name: Install dependencies
         run: npm ci
+        working-directory: ./clients
 
       - name: Configure environment URLs
         run: |
@@ -211,10 +212,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+          cache-dependency-path: './clients/package-lock.json'
 
       - name: Install dependencies
         run: npm ci
+        working-directory: ./clients
 
       - name: Configure environment URLs
         run: |
@@ -296,10 +298,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+          cache-dependency-path: './clients/package-lock.json'
 
       - name: Install dependencies
         run: npm ci
+        working-directory: ./clients
 
       - name: Configure environment URLs
         shell: pwsh
@@ -396,10 +399,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+          cache-dependency-path: './clients/package-lock.json'
 
       - name: Install dependencies
         run: npm ci
+        working-directory: ./clients
 
       - name: Configure environment URLs
         run: |
@@ -499,10 +503,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+          cache-dependency-path: './clients/package-lock.json'
 
       - name: Install dependencies
         run: npm ci
+        working-directory: ./clients
 
       - name: Configure environment URLs
         run: |
@@ -703,7 +708,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: '${{ env.WORKING_DIRECTORY }}/package-lock.json'
+          cache-dependency-path: './clients/package-lock.json'
 
       - name: Run npm audit
         run: |
