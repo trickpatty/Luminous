@@ -218,6 +218,16 @@ jobs:
         run: npm ci
         working-directory: ./clients
 
+      # Ensure electron-builder binaries are properly installed (app-builder-bin)
+      # npm workspaces can sometimes fail to extract platform-specific binaries
+      - name: Install electron-builder dependencies
+        working-directory: ./clients
+        run: |
+          # Re-install app-builder-bin to ensure platform binaries are extracted
+          npm install app-builder-bin@5.0.0-alpha.10 --save-dev --ignore-scripts=false
+          # Verify the binary exists
+          ls -la node_modules/app-builder-bin/linux/x64/ || echo "Binary not found at expected location"
+
       - name: Configure environment URLs
         run: |
           ENV="${{ needs.fetch-azure-config.outputs.environment }}"
@@ -303,6 +313,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
         working-directory: ./clients
+
+      # Ensure electron-builder binaries are properly installed (app-builder-bin)
+      # npm workspaces can sometimes fail to extract platform-specific binaries
+      - name: Install electron-builder dependencies
+        shell: pwsh
+        working-directory: ./clients
+        run: |
+          # Re-install app-builder-bin to ensure platform binaries are extracted
+          npm install app-builder-bin@5.0.0-alpha.10 --save-dev --ignore-scripts=false
+          # Verify the binary exists
+          if (Test-Path "node_modules\app-builder-bin\win\x64\app-builder.exe") {
+            Write-Host "Binary found at workspace root"
+          } else {
+            Write-Host "Warning: Binary not found in expected locations"
+            Get-ChildItem -Path "node_modules\app-builder-bin" -Recurse -ErrorAction SilentlyContinue | Select-Object FullName
+          }
 
       - name: Configure environment URLs
         shell: pwsh
@@ -404,6 +430,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
         working-directory: ./clients
+
+      # Ensure electron-builder binaries are properly installed (app-builder-bin)
+      # npm workspaces can sometimes fail to extract platform-specific binaries
+      - name: Install electron-builder dependencies
+        working-directory: ./clients
+        run: |
+          # Re-install app-builder-bin to ensure platform binaries are extracted
+          npm install app-builder-bin@5.0.0-alpha.10 --save-dev --ignore-scripts=false
+          # Verify the binary exists (macOS uses universal or arch-specific binary)
+          ls -la node_modules/app-builder-bin/mac/ || echo "Binary not found at expected location"
 
       - name: Configure environment URLs
         run: |
@@ -508,6 +544,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
         working-directory: ./clients
+
+      # Ensure electron-builder binaries are properly installed (app-builder-bin)
+      # npm workspaces can sometimes fail to extract platform-specific binaries
+      - name: Install electron-builder dependencies
+        working-directory: ./clients
+        run: |
+          # Re-install app-builder-bin to ensure platform binaries are extracted
+          npm install app-builder-bin@5.0.0-alpha.10 --save-dev --ignore-scripts=false
+          # Verify the binary exists (macOS uses universal or arch-specific binary)
+          ls -la node_modules/app-builder-bin/mac/ || echo "Binary not found at expected location"
 
       - name: Configure environment URLs
         run: |
