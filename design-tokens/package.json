@@ -1,0 +1,15 @@
+{
+  "name": "@luminous/design-tokens",
+  "version": "0.1.0",
+  "description": "Design tokens for Luminous - Single source of truth for design system values",
+  "private": true,
+  "license": "AGPL-3.0",
+  "scripts": {
+    "build": "style-dictionary build --config config.js",
+    "clean": "rm -rf build",
+    "rebuild": "npm run clean && npm run build"
+  },
+  "devDependencies": {
+    "style-dictionary": "^4.0.0"
+  }
+}

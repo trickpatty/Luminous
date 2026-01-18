@@ -1,0 +1,203 @@
+name: Generate OpenAPI Clients
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'src/Luminous.Api/**'
+      - 'src/Luminous.Application/DTOs/**'
+      - 'src/Luminous.Shared/**'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'src/Luminous.Api/**'
+      - 'src/Luminous.Application/DTOs/**'
+      - 'src/Luminous.Shared/**'
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '9.0.x'
+  NODE_VERSION: '20'
+  API_PROJECT: 'src/Luminous.Api'
+
+jobs:
+  generate-openapi-spec:
+    name: Generate OpenAPI Specification
+    runs-on: ubuntu-latest
+    outputs:
+      spec-changed: ${{ steps.check-changes.outputs.changed }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore ${{ env.API_PROJECT }}
+
+      - name: Build API project
+        run: dotnet build ${{ env.API_PROJECT }} --configuration Release --no-restore
+
+      - name: Generate OpenAPI specification
+        run: |
+          dotnet tool install -g Microsoft.dotnet-openapi
+          cd ${{ env.API_PROJECT }}
+          # Export OpenAPI spec using the built-in endpoint
+          dotnet run --no-build --configuration Release &
+          API_PID=$!
+          sleep 10
+          curl -o ../../openapi/v1.json http://localhost:5000/openapi/v1.json || true
+          kill $API_PID || true
+        continue-on-error: true
+
+      - name: Upload OpenAPI spec artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-spec
+          path: openapi/v1.json
+          retention-days: 30
+
+  generate-typescript-client:
+    name: Generate TypeScript Client
+    runs-on: ubuntu-latest
+    needs: generate-openapi-spec
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download OpenAPI spec
+        uses: actions/download-artifact@v4
+        with:
+          name: openapi-spec
+          path: openapi/
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install openapi-typescript
+        run: npm install -g openapi-typescript
+
+      - name: Generate TypeScript types
+        run: |
+          mkdir -p clients/shared/src/lib/api-client
+          openapi-typescript openapi/v1.json -o clients/shared/src/lib/api-client/api-types.ts
+
+      - name: Upload TypeScript client artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: typescript-client
+          path: clients/shared/src/lib/api-client/
+          retention-days: 30
+
+  generate-swift-client:
+    name: Generate Swift Client
+    runs-on: macos-latest
+    needs: generate-openapi-spec
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download OpenAPI spec
+        uses: actions/download-artifact@v4
+        with:
+          name: openapi-spec
+          path: openapi/
+
+      - name: Install swift-openapi-generator
+        run: |
+          brew install swift-openapi-generator || true
+
+      - name: Generate Swift client
+        run: |
+          mkdir -p clients/ios/Generated
+          swift-openapi-generator generate openapi/v1.json \
+            --output-directory clients/ios/Generated \
+            --config swift-openapi-generator.yaml || echo "Swift generation requires config file"
+
+      - name: Upload Swift client artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: swift-client
+          path: clients/ios/Generated/
+          retention-days: 30
+        if: always()
+
+  generate-kotlin-client:
+    name: Generate Kotlin Client
+    runs-on: ubuntu-latest
+    needs: generate-openapi-spec
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download OpenAPI spec
+        uses: actions/download-artifact@v4
+        with:
+          name: openapi-spec
+          path: openapi/
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install OpenAPI Generator
+        run: |
+          npm install -g @openapitools/openapi-generator-cli
+
+      - name: Generate Kotlin client
+        run: |
+          mkdir -p clients/android/generated
+          openapi-generator-cli generate \
+            -i openapi/v1.json \
+            -g kotlin \
+            -o clients/android/generated \
+            --additional-properties=packageName=com.luminous.api,library=jvm-retrofit2,serializationLibrary=kotlinx_serialization
+
+      - name: Upload Kotlin client artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kotlin-client
+          path: clients/android/generated/
+          retention-days: 30
+
+  # Auto-commit generated clients on push to main/develop
+  commit-generated-clients:
+    name: Commit Generated Clients
+    runs-on: ubuntu-latest
+    needs: [generate-typescript-client, generate-swift-client, generate-kotlin-client]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download TypeScript client
+        uses: actions/download-artifact@v4
+        with:
+          name: typescript-client
+          path: clients/shared/src/lib/api-client/
+
+      - name: Commit TypeScript client
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add clients/shared/src/lib/api-client/
+          if git diff --staged --quiet; then
+            echo "No TypeScript client changes to commit"
+          else
+            git commit -m "🔧 chore(api): Regenerate TypeScript API client"
+            git push
+          fi

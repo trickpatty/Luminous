@@ -1,0 +1,82 @@
+name: Build Design Tokens
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'design-tokens/tokens.json'
+      - 'design-tokens/config.js'
+      - 'design-tokens/package.json'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'design-tokens/tokens.json'
+      - 'design-tokens/config.js'
+      - 'design-tokens/package.json'
+  workflow_dispatch:
+
+jobs:
+  build-tokens:
+    name: Build Design Tokens
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: design-tokens
+        run: npm install
+
+      - name: Build tokens
+        working-directory: design-tokens
+        run: npm run build
+
+      - name: Upload CSS tokens artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: css-tokens
+          path: design-tokens/build/css/
+          retention-days: 30
+
+      - name: Upload Swift tokens artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: swift-tokens
+          path: design-tokens/build/swift/
+          retention-days: 30
+
+      - name: Upload Kotlin tokens artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kotlin-tokens
+          path: design-tokens/build/kotlin/
+          retention-days: 30
+
+      - name: Upload Tailwind tokens artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tailwind-tokens
+          path: design-tokens/build/tailwind/
+          retention-days: 30
+
+      # Auto-commit generated tokens on push to main/develop
+      - name: Commit generated tokens
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add design-tokens/build/
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "🎨 chore(tokens): Regenerate design tokens"
+            git push
+          fi

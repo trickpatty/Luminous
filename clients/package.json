@@ -1,0 +1,33 @@
+{
+  "name": "@luminous/clients",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Luminous client applications monorepo",
+  "license": "AGPL-3.0",
+  "workspaces": [
+    "shared",
+    "web",
+    "display"
+  ],
+  "scripts": {
+    "build:shared": "npm run build -w @luminous/shared",
+    "build:web": "npm run build -w @luminous/web",
+    "build:display": "npm run build -w @luminous/display",
+    "build:all": "npm run build:shared && npm run build:web && npm run build:display",
+    "start:web": "npm run start -w @luminous/web",
+    "start:display": "npm run start -w @luminous/display",
+    "test:shared": "npm run test -w @luminous/shared",
+    "test:web": "npm run test -w @luminous/web",
+    "test:display": "npm run test -w @luminous/display",
+    "test:all": "npm run test --workspaces --if-present",
+    "lint:all": "npm run lint --workspaces --if-present",
+    "typecheck:all": "npm run typecheck --workspaces --if-present"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}
