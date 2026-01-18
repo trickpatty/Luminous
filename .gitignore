@@ -35,6 +35,7 @@ packages/
 x64/
 x86/
 build/
+!design-tokens/build/
 bld/
 [Bb]in/
 [Oo]bj/
