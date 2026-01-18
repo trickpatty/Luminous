@@ -47,8 +47,8 @@ param tags object = {
 }
 
 // Cosmos DB Configuration
-@description('Enable serverless mode for Cosmos DB (recommended for dev)')
-param cosmosDbServerless bool = environment == 'dev'
+@description('Enable serverless mode for Cosmos DB (recommended for cost optimization)')
+param cosmosDbServerless bool = true
 
 @description('Cosmos DB consistency level')
 @allowed(['Eventual', 'Session', 'BoundedStaleness', 'Strong', 'ConsistentPrefix'])

@@ -29,8 +29,8 @@ param tags = {
   Criticality: 'High'
 }
 
-// Cosmos DB - Provisioned throughput with auto-scale for production
-param cosmosDbServerless = false
+// Cosmos DB - Serverless for cost optimization (consumption-based pricing)
+param cosmosDbServerless = true
 param cosmosDbConsistencyLevel = 'Session'
 
 // App Service - Basic tier for production

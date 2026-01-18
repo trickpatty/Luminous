@@ -122,8 +122,7 @@ We will use **Azure Cosmos DB with SQL API** as the primary data store for Lumin
 ### Neutral
 
 - Need to design documents and partition strategy carefully
-- Should use provisioned throughput for predictability
-- Consider autoscale for variable workloads
+- Serverless mode used across all environments for cost optimization
 
 ## Data Model
 
@@ -138,16 +137,20 @@ We will use **Azure Cosmos DB with SQL API** as the primary data store for Lumin
 | devices | /familyId | Devices belong to family |
 | lists | /familyId | Lists belong to family |
 
-### RU Estimation (MVP)
+### Capacity Mode
 
-| Operation | Frequency | Estimated RUs |
-|-----------|-----------|---------------|
-| Read today's events | High | ~5 RUs |
-| Write event | Medium | ~10 RUs |
-| Read chores | Medium | ~5 RUs |
-| Complete chore | Low | ~10 RUs |
+**Serverless** mode is used for all environments (dev, stg, prd) for cost optimization:
+- Pay-per-request pricing (no minimum throughput cost)
+- Automatic scaling based on demand
+- Ideal for variable/unpredictable workloads
+- Maximum 5,000 RU/s per operation (sufficient for family-scale apps)
 
-Start with 400 RU/s provisioned, enable autoscale as needed.
+| Operation | Estimated RUs per Request |
+|-----------|---------------------------|
+| Read today's events | ~5 RUs |
+| Write event | ~10 RUs |
+| Read chores | ~5 RUs |
+| Complete chore | ~10 RUs |
 
 ## Related Decisions
 
