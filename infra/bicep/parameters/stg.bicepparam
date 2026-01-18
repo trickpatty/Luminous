@@ -28,8 +28,8 @@ param tags = {
   CostCenter: 'Staging'
 }
 
-// Cosmos DB - Provisioned throughput for staging (production-like)
-param cosmosDbServerless = false
+// Cosmos DB - Serverless for cost optimization (mirrors production)
+param cosmosDbServerless = true
 param cosmosDbConsistencyLevel = 'Session'
 
 // App Service - Basic tier for staging
