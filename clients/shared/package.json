@@ -1,0 +1,44 @@
+{
+  "name": "@luminous/shared",
+  "version": "0.1.0",
+  "description": "Shared Angular library for Luminous web and display applications",
+  "license": "AGPL-3.0",
+  "peerDependencies": {
+    "@angular/common": "^21.0.0",
+    "@angular/core": "^21.0.0",
+    "@angular/forms": "^21.0.0",
+    "@angular/router": "^21.0.0",
+    "@microsoft/signalr": "^8.0.0 || ^10.0.0",
+    "rxjs": "~7.8.0"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  },
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./src/public-api.d.ts",
+      "default": "./src/public-api.ts"
+    },
+    "./models": {
+      "types": "./src/lib/models/index.d.ts",
+      "default": "./src/lib/models/index.ts"
+    },
+    "./services": {
+      "types": "./src/lib/services/index.d.ts",
+      "default": "./src/lib/services/index.ts"
+    },
+    "./components": {
+      "types": "./src/lib/components/index.d.ts",
+      "default": "./src/lib/components/index.ts"
+    },
+    "./interceptors": {
+      "types": "./src/lib/interceptors/index.d.ts",
+      "default": "./src/lib/interceptors/index.ts"
+    },
+    "./utils": {
+      "types": "./src/lib/utils/index.d.ts",
+      "default": "./src/lib/utils/index.ts"
+    }
+  }
+}
