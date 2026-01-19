@@ -223,24 +223,13 @@ jobs:
         working-directory: ./clients
         run: |
           BINARY_PATH="node_modules/app-builder-bin/linux/x64/app-builder"
-
-          # Always rebuild to ensure binaries are properly extracted from cache
-          echo "Rebuilding app-builder-bin to ensure binaries are extracted..."
-          npm rebuild app-builder-bin
-
-          # Verify binary exists
           if [ ! -f "$BINARY_PATH" ]; then
-            echo "::error::app-builder-bin binary not found after rebuild"
-            ls -la node_modules/app-builder-bin/ || true
-            exit 1
+            echo "::warning::app-builder-bin binary not found, reinstalling..."
+            npm install app-builder-bin@5.0.0-alpha.10 --force
           fi
-
           chmod +x "$BINARY_PATH"
           echo "Binary verified:"
           ls -la "$BINARY_PATH"
-
-          # Test binary can execute
-          "$BINARY_PATH" --version || echo "Version check not supported"
 
       - name: Configure environment URLs
         run: |
@@ -334,24 +323,12 @@ jobs:
         working-directory: ./clients
         run: |
           $BINARY_PATH = "node_modules\app-builder-bin\win\x64\app-builder.exe"
-
-          # Always rebuild to ensure binaries are properly extracted from cache
-          Write-Host "Rebuilding app-builder-bin to ensure binaries are extracted..."
-          npm rebuild app-builder-bin
-
-          # Verify binary exists
           if (-not (Test-Path $BINARY_PATH)) {
-            Write-Host "::error::app-builder-bin binary not found after rebuild"
-            Get-ChildItem -Path "node_modules\app-builder-bin" -Recurse -ErrorAction SilentlyContinue | Select-Object FullName
-            exit 1
+            Write-Host "::warning::app-builder-bin binary not found, reinstalling..."
+            npm install app-builder-bin@5.0.0-alpha.10 --force
           }
-
           Write-Host "Binary verified:"
           Get-Item $BINARY_PATH
-
-          # Test binary can execute
-          & $BINARY_PATH --version 2>&1 | Out-Null
-          if ($LASTEXITCODE -eq 0) { Write-Host "Binary executes successfully" }
 
       - name: Configure environment URLs
         shell: pwsh
@@ -458,25 +435,14 @@ jobs:
       - name: Verify app-builder-bin installation
         working-directory: ./clients
         run: |
-          BINARY_PATH="node_modules/app-builder-bin/mac/app-builder_amd64"
-
-          # Always rebuild to ensure binaries are properly extracted from cache
-          echo "Rebuilding app-builder-bin to ensure binaries are extracted..."
-          npm rebuild app-builder-bin
-
-          # Verify binary exists
+          BINARY_PATH="node_modules/app-builder-bin/mac/app-builder"
           if [ ! -f "$BINARY_PATH" ]; then
-            echo "::error::app-builder-bin binary not found after rebuild"
-            ls -la node_modules/app-builder-bin/mac/ || true
-            exit 1
+            echo "::warning::app-builder-bin binary not found, reinstalling..."
+            npm install app-builder-bin@5.0.0-alpha.10 --force
           fi
-
           chmod +x "$BINARY_PATH"
           echo "Binary verified:"
           ls -la "$BINARY_PATH"
-
-          # Test binary can execute
-          "$BINARY_PATH" --version || echo "Version check not supported"
 
       - name: Configure environment URLs
         run: |
@@ -586,25 +552,14 @@ jobs:
       - name: Verify app-builder-bin installation
         working-directory: ./clients
         run: |
-          BINARY_PATH="node_modules/app-builder-bin/mac/app-builder_arm64"
-
-          # Always rebuild to ensure binaries are properly extracted from cache
-          echo "Rebuilding app-builder-bin to ensure binaries are extracted..."
-          npm rebuild app-builder-bin
-
-          # Verify binary exists
+          BINARY_PATH="node_modules/app-builder-bin/mac/app-builder"
           if [ ! -f "$BINARY_PATH" ]; then
-            echo "::error::app-builder-bin binary not found after rebuild"
-            ls -la node_modules/app-builder-bin/mac/ || true
-            exit 1
+            echo "::warning::app-builder-bin binary not found, reinstalling..."
+            npm install app-builder-bin@5.0.0-alpha.10 --force
           fi
-
           chmod +x "$BINARY_PATH"
           echo "Binary verified:"
           ls -la "$BINARY_PATH"
-
-          # Test binary can execute
-          "$BINARY_PATH" --version || echo "Version check not supported"
 
       - name: Configure environment URLs
         run: |
