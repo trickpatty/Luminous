@@ -435,7 +435,7 @@ jobs:
       - name: Verify app-builder-bin installation
         working-directory: ./clients
         run: |
-          BINARY_PATH="node_modules/app-builder-bin/mac/app-builder"
+          BINARY_PATH="node_modules/app-builder-bin/mac/app-builder_amd64"
           if [ ! -f "$BINARY_PATH" ]; then
             echo "::warning::app-builder-bin binary not found, reinstalling..."
             npm install app-builder-bin@5.0.0-alpha.10 --force
@@ -552,7 +552,7 @@ jobs:
       - name: Verify app-builder-bin installation
         working-directory: ./clients
         run: |
-          BINARY_PATH="node_modules/app-builder-bin/mac/app-builder"
+          BINARY_PATH="node_modules/app-builder-bin/mac/app-builder_arm64"
           if [ ! -f "$BINARY_PATH" ]; then
             echo "::warning::app-builder-bin binary not found, reinstalling..."
             npm install app-builder-bin@5.0.0-alpha.10 --force
