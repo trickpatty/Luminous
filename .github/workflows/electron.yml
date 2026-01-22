@@ -217,6 +217,22 @@ jobs:
         run: npm ci
         working-directory: ./clients
 
+      # Verify app-builder-bin binary exists - npm ci sometimes fails to extract large binaries
+      - name: Verify app-builder-bin installation
+        working-directory: ./clients
+        run: |
+          BINARY_PATH="node_modules/app-builder-bin/linux/x64/app-builder"
+          if [ ! -f "$BINARY_PATH" ]; then
+            echo "::warning::Binary missing after npm ci, manually extracting..."
+            npm pack app-builder-bin@5.0.0-alpha.10
+            tar -xzf app-builder-bin-5.0.0-alpha.10.tgz
+            rm -rf node_modules/app-builder-bin
+            mv package node_modules/app-builder-bin
+            rm app-builder-bin-5.0.0-alpha.10.tgz
+          fi
+          chmod +x "$BINARY_PATH"
+          ls -la "$BINARY_PATH"
+
       - name: Configure environment URLs
         run: |
           ENV="${{ needs.fetch-azure-config.outputs.environment }}"
@@ -301,6 +317,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
         working-directory: ./clients
+
+      # Verify app-builder-bin binary exists - npm ci sometimes fails to extract large binaries
+      - name: Verify app-builder-bin installation
+        shell: pwsh
+        working-directory: ./clients
+        run: |
+          $BINARY_PATH = "node_modules\app-builder-bin\win\x64\app-builder.exe"
+          if (-not (Test-Path $BINARY_PATH)) {
+            Write-Host "::warning::Binary missing after npm ci, manually extracting..."
+            npm pack app-builder-bin@5.0.0-alpha.10
+            tar -xzf app-builder-bin-5.0.0-alpha.10.tgz
+            Remove-Item -Recurse -Force node_modules\app-builder-bin -ErrorAction SilentlyContinue
+            Move-Item package node_modules\app-builder-bin
+            Remove-Item app-builder-bin-5.0.0-alpha.10.tgz
+          }
+          Get-Item $BINARY_PATH
 
       - name: Configure environment URLs
         shell: pwsh
@@ -401,6 +433,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
         working-directory: ./clients
+
+      # Verify app-builder-bin binary exists - npm ci sometimes fails to extract large binaries
+      - name: Verify app-builder-bin installation
+        working-directory: ./clients
+        run: |
+          BINARY_PATH="node_modules/app-builder-bin/mac/app-builder_amd64"
+          if [ ! -f "$BINARY_PATH" ]; then
+            echo "::warning::Binary missing after npm ci, manually extracting..."
+            npm pack app-builder-bin@5.0.0-alpha.10
+            tar -xzf app-builder-bin-5.0.0-alpha.10.tgz
+            rm -rf node_modules/app-builder-bin
+            mv package node_modules/app-builder-bin
+            rm app-builder-bin-5.0.0-alpha.10.tgz
+          fi
+          chmod +x "$BINARY_PATH"
+          ls -la "$BINARY_PATH"
 
       - name: Configure environment URLs
         run: |
@@ -504,6 +552,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
         working-directory: ./clients
+
+      # Verify app-builder-bin binary exists - npm ci sometimes fails to extract large binaries
+      - name: Verify app-builder-bin installation
+        working-directory: ./clients
+        run: |
+          BINARY_PATH="node_modules/app-builder-bin/mac/app-builder_arm64"
+          if [ ! -f "$BINARY_PATH" ]; then
+            echo "::warning::Binary missing after npm ci, manually extracting..."
+            npm pack app-builder-bin@5.0.0-alpha.10
+            tar -xzf app-builder-bin-5.0.0-alpha.10.tgz
+            rm -rf node_modules/app-builder-bin
+            mv package node_modules/app-builder-bin
+            rm app-builder-bin-5.0.0-alpha.10.tgz
+          fi
+          chmod +x "$BINARY_PATH"
+          ls -la "$BINARY_PATH"
 
       - name: Configure environment URLs
         run: |
