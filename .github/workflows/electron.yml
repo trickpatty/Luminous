@@ -217,21 +217,28 @@ jobs:
         run: npm ci
         working-directory: ./clients
 
-      # Verify app-builder-bin binary exists - npm ci sometimes fails to extract large binaries
-      - name: Verify app-builder-bin installation
-        working-directory: ./clients
+      # Create isolated electron-builder installation to bypass npm workspace resolution issues
+      # This completely avoids the app-builder-bin ENOENT errors caused by workspace hoisting
+      - name: Setup isolated electron-builder
         run: |
-          BINARY_PATH="node_modules/app-builder-bin/linux/x64/app-builder"
-          if [ ! -f "$BINARY_PATH" ]; then
-            echo "::warning::Binary missing after npm ci, manually extracting..."
-            npm pack app-builder-bin@5.0.0-alpha.10
-            tar -xzf app-builder-bin-5.0.0-alpha.10.tgz
-            rm -rf node_modules/app-builder-bin
-            mv package node_modules/app-builder-bin
-            rm app-builder-bin-5.0.0-alpha.10.tgz
-          fi
-          chmod +x "$BINARY_PATH"
-          ls -la "$BINARY_PATH"
+          echo "Creating isolated electron-builder installation..."
+          mkdir -p /tmp/eb-tools
+          cd /tmp/eb-tools
+          cat > package.json << 'EOF'
+          {
+            "name": "eb-tools",
+            "version": "1.0.0",
+            "private": true,
+            "dependencies": {
+              "electron-builder": "25.1.8"
+            }
+          }
+          EOF
+          npm install --no-audit --no-fund
+          echo "Verifying app-builder-bin binary..."
+          ls -la node_modules/app-builder-bin/linux/x64/app-builder
+          chmod +x node_modules/app-builder-bin/linux/x64/app-builder
+          echo "Isolated electron-builder ready at /tmp/eb-tools"
 
       - name: Configure environment URLs
         run: |
@@ -277,7 +284,7 @@ jobs:
           done
 
       - name: Build Electron (Linux)
-        run: npx electron-builder build --linux --publish never
+        run: /tmp/eb-tools/node_modules/.bin/electron-builder build --linux --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -318,21 +325,28 @@ jobs:
         run: npm ci
         working-directory: ./clients
 
-      # Verify app-builder-bin binary exists - npm ci sometimes fails to extract large binaries
-      - name: Verify app-builder-bin installation
+      # Create isolated electron-builder installation to bypass npm workspace resolution issues
+      # This completely avoids the app-builder-bin ENOENT errors caused by workspace hoisting
+      - name: Setup isolated electron-builder
         shell: pwsh
-        working-directory: ./clients
         run: |
-          $BINARY_PATH = "node_modules\app-builder-bin\win\x64\app-builder.exe"
-          if (-not (Test-Path $BINARY_PATH)) {
-            Write-Host "::warning::Binary missing after npm ci, manually extracting..."
-            npm pack app-builder-bin@5.0.0-alpha.10
-            tar -xzf app-builder-bin-5.0.0-alpha.10.tgz
-            Remove-Item -Recurse -Force node_modules\app-builder-bin -ErrorAction SilentlyContinue
-            Move-Item package node_modules\app-builder-bin
-            Remove-Item app-builder-bin-5.0.0-alpha.10.tgz
+          Write-Host "Creating isolated electron-builder installation..."
+          New-Item -ItemType Directory -Force -Path C:\eb-tools
+          Set-Location C:\eb-tools
+          @'
+          {
+            "name": "eb-tools",
+            "version": "1.0.0",
+            "private": true,
+            "dependencies": {
+              "electron-builder": "25.1.8"
+            }
           }
-          Get-Item $BINARY_PATH
+          '@ | Out-File -FilePath package.json -Encoding UTF8
+          npm install --no-audit --no-fund
+          Write-Host "Verifying app-builder-bin binary..."
+          Get-Item node_modules\app-builder-bin\win\x64\app-builder.exe
+          Write-Host "Isolated electron-builder ready at C:\eb-tools"
 
       - name: Configure environment URLs
         shell: pwsh
@@ -394,7 +408,7 @@ jobs:
           magick $icoInputs build/icon.ico
 
       - name: Build Electron (Windows)
-        run: npx electron-builder build --win --publish never
+        run: C:\eb-tools\node_modules\.bin\electron-builder.cmd build --win --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -434,21 +448,28 @@ jobs:
         run: npm ci
         working-directory: ./clients
 
-      # Verify app-builder-bin binary exists - npm ci sometimes fails to extract large binaries
-      - name: Verify app-builder-bin installation
-        working-directory: ./clients
+      # Create isolated electron-builder installation to bypass npm workspace resolution issues
+      # This completely avoids the app-builder-bin ENOENT errors caused by workspace hoisting
+      - name: Setup isolated electron-builder
         run: |
-          BINARY_PATH="node_modules/app-builder-bin/mac/app-builder_amd64"
-          if [ ! -f "$BINARY_PATH" ]; then
-            echo "::warning::Binary missing after npm ci, manually extracting..."
-            npm pack app-builder-bin@5.0.0-alpha.10
-            tar -xzf app-builder-bin-5.0.0-alpha.10.tgz
-            rm -rf node_modules/app-builder-bin
-            mv package node_modules/app-builder-bin
-            rm app-builder-bin-5.0.0-alpha.10.tgz
-          fi
-          chmod +x "$BINARY_PATH"
-          ls -la "$BINARY_PATH"
+          echo "Creating isolated electron-builder installation..."
+          mkdir -p /tmp/eb-tools
+          cd /tmp/eb-tools
+          cat > package.json << 'EOF'
+          {
+            "name": "eb-tools",
+            "version": "1.0.0",
+            "private": true,
+            "dependencies": {
+              "electron-builder": "25.1.8"
+            }
+          }
+          EOF
+          npm install --no-audit --no-fund
+          echo "Verifying app-builder-bin binary..."
+          ls -la node_modules/app-builder-bin/mac/app-builder_amd64
+          chmod +x node_modules/app-builder-bin/mac/app-builder_amd64
+          echo "Isolated electron-builder ready at /tmp/eb-tools"
 
       - name: Configure environment URLs
         run: |
@@ -506,7 +527,7 @@ jobs:
           done
 
       - name: Build Electron (macOS Intel)
-        run: npx electron-builder build --mac --x64 --publish never
+        run: /tmp/eb-tools/node_modules/.bin/electron-builder build --mac --x64 --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # For signed builds, add:
@@ -553,21 +574,28 @@ jobs:
         run: npm ci
         working-directory: ./clients
 
-      # Verify app-builder-bin binary exists - npm ci sometimes fails to extract large binaries
-      - name: Verify app-builder-bin installation
-        working-directory: ./clients
+      # Create isolated electron-builder installation to bypass npm workspace resolution issues
+      # This completely avoids the app-builder-bin ENOENT errors caused by workspace hoisting
+      - name: Setup isolated electron-builder
         run: |
-          BINARY_PATH="node_modules/app-builder-bin/mac/app-builder_arm64"
-          if [ ! -f "$BINARY_PATH" ]; then
-            echo "::warning::Binary missing after npm ci, manually extracting..."
-            npm pack app-builder-bin@5.0.0-alpha.10
-            tar -xzf app-builder-bin-5.0.0-alpha.10.tgz
-            rm -rf node_modules/app-builder-bin
-            mv package node_modules/app-builder-bin
-            rm app-builder-bin-5.0.0-alpha.10.tgz
-          fi
-          chmod +x "$BINARY_PATH"
-          ls -la "$BINARY_PATH"
+          echo "Creating isolated electron-builder installation..."
+          mkdir -p /tmp/eb-tools
+          cd /tmp/eb-tools
+          cat > package.json << 'EOF'
+          {
+            "name": "eb-tools",
+            "version": "1.0.0",
+            "private": true,
+            "dependencies": {
+              "electron-builder": "25.1.8"
+            }
+          }
+          EOF
+          npm install --no-audit --no-fund
+          echo "Verifying app-builder-bin binary..."
+          ls -la node_modules/app-builder-bin/mac/app-builder_arm64
+          chmod +x node_modules/app-builder-bin/mac/app-builder_arm64
+          echo "Isolated electron-builder ready at /tmp/eb-tools"
 
       - name: Configure environment URLs
         run: |
@@ -625,7 +653,7 @@ jobs:
           done
 
       - name: Build Electron (macOS Apple Silicon)
-        run: npx electron-builder build --mac --arm64 --publish never
+        run: /tmp/eb-tools/node_modules/.bin/electron-builder build --mac --arm64 --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # For signed builds, add:
