@@ -277,7 +277,7 @@ jobs:
           done
 
       - name: Build Electron (Linux)
-        run: npx electron-builder build --linux --publish never
+        run: /tmp/eb-tools/node_modules/.bin/electron-builder build --linux --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -321,7 +321,6 @@ jobs:
       # Verify app-builder-bin binary exists - npm ci sometimes fails to extract large binaries
       - name: Verify app-builder-bin installation
         shell: pwsh
-        working-directory: ./clients
         run: |
           $BINARY_PATH = "node_modules\app-builder-bin\win\x64\app-builder.exe"
           if (-not (Test-Path $BINARY_PATH)) {
@@ -394,7 +393,7 @@ jobs:
           magick $icoInputs build/icon.ico
 
       - name: Build Electron (Windows)
-        run: npx electron-builder build --win --publish never
+        run: C:\eb-tools\node_modules\.bin\electron-builder.cmd build --win --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -506,7 +505,7 @@ jobs:
           done
 
       - name: Build Electron (macOS Intel)
-        run: npx electron-builder build --mac --x64 --publish never
+        run: /tmp/eb-tools/node_modules/.bin/electron-builder build --mac --x64 --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # For signed builds, add:
@@ -625,7 +624,7 @@ jobs:
           done
 
       - name: Build Electron (macOS Apple Silicon)
-        run: npx electron-builder build --mac --arm64 --publish never
+        run: /tmp/eb-tools/node_modules/.bin/electron-builder build --mac --arm64 --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # For signed builds, add:
