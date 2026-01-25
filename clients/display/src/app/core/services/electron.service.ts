@@ -48,6 +48,17 @@ export interface SleepModeSettings {
   wakeOnTouch: boolean;
 }
 
+/**
+ * Weather location settings
+ */
+export interface WeatherLocationSettings {
+  useAutoLocation: boolean;
+  manualLocationName?: string;
+  manualLatitude?: number;
+  manualLongitude?: number;
+  temperatureUnit?: 'fahrenheit' | 'celsius';
+}
+
 export interface DisplaySettings {
   defaultView?: 'schedule' | 'tasks' | 'routines';
   autoRotate?: boolean;
@@ -61,6 +72,8 @@ export interface DisplaySettings {
   // Display modes (Phase 2.6)
   privacyModeSettings?: PrivacyModeSettings;
   sleepModeSettings?: SleepModeSettings;
+  // Weather location settings
+  weatherLocationSettings?: WeatherLocationSettings;
 }
 
 export interface AppInfo {

@@ -5,6 +5,7 @@ import { interval, Subscription } from 'rxjs';
 import { DeviceAuthService } from '../../core/services/device-auth.service';
 import { CacheService, ScheduleEvent, TaskData, MemberData } from '../../core/services/cache.service';
 import { EventService } from '../../core/services/event.service';
+import { MemberService } from '../../core/services/member.service';
 import { DisplayModeService } from '../../core/services/display-mode.service';
 import { ClockWidgetComponent } from './components/clock-widget/clock-widget.component';
 import { WhatsNextWidgetComponent } from './components/whats-next-widget/whats-next-widget.component';
@@ -500,6 +501,7 @@ export class DisplayComponent implements OnInit, OnDestroy {
   private readonly authService = inject(DeviceAuthService);
   private readonly cacheService = inject(CacheService);
   private readonly eventService = inject(EventService);
+  private readonly memberService = inject(MemberService);
   private readonly displayModeService = inject(DisplayModeService);
 
   private refreshSubscription?: Subscription;
@@ -589,6 +591,9 @@ export class DisplayComponent implements OnInit, OnDestroy {
     try {
       await this.loadFromCache();
 
+      // Load members from API (this populates member data for calendar views)
+      await this.loadMembers();
+
       // Load today's events from API
       await this.loadTodayEvents();
 
@@ -618,6 +623,15 @@ export class DisplayComponent implements OnInit, OnDestroy {
       this.upcomingEvents.set(events);
     } catch (error) {
       console.error('Failed to load upcoming events:', error);
+    }
+  }
+
+  private async loadMembers(): Promise<void> {
+    try {
+      const members = await this.memberService.fetchMembers();
+      this.members.set(members);
+    } catch (error) {
+      console.error('Failed to load members:', error);
     }
   }
 

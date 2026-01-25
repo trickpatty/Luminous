@@ -348,11 +348,17 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
   private units: 'fahrenheit' | 'celsius' = 'fahrenheit';
 
   async ngOnInit(): Promise<void> {
-    // Get settings
+    // Get settings and apply weather preferences
     const settings = await this.electronService.getSettings();
-    // Use family's preferred units if available
-    // Default to fahrenheit for US locale
+    const weatherSettings = settings.weatherLocationSettings;
 
+    // Apply temperature unit preference
+    if (weatherSettings?.temperatureUnit) {
+      this.weatherService.setSettings({ units: weatherSettings.temperatureUnit });
+      this.units = weatherSettings.temperatureUnit;
+    }
+
+    // Load weather based on location settings
     await this.loadWeather();
 
     // Refresh weather every 30 minutes
@@ -368,11 +374,31 @@ export class WeatherWidgetComponent implements OnInit, OnDestroy {
   }
 
   async loadWeather(): Promise<void> {
+    // Priority 1: Use component inputs if provided
     if (this.latitude !== undefined && this.longitude !== undefined) {
       await this.weatherService.fetchWeather(this.latitude, this.longitude, this.locationName);
-    } else {
-      await this.weatherService.fetchWeatherByGeolocation();
+      return;
     }
+
+    // Priority 2: Check for manual location in settings
+    const settings = await this.electronService.getSettings();
+    const weatherSettings = settings.weatherLocationSettings;
+
+    if (weatherSettings && !weatherSettings.useAutoLocation) {
+      // Manual location is configured
+      if (weatherSettings.manualLatitude !== undefined &&
+          weatherSettings.manualLongitude !== undefined) {
+        await this.weatherService.fetchWeather(
+          weatherSettings.manualLatitude,
+          weatherSettings.manualLongitude,
+          weatherSettings.manualLocationName || 'Custom Location'
+        );
+        return;
+      }
+    }
+
+    // Priority 3: Fall back to geolocation
+    await this.weatherService.fetchWeatherByGeolocation();
   }
 
   protected getWeatherIcon(condition: WeatherCondition, isDay: boolean): string {
