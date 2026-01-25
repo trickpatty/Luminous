@@ -1,7 +1,7 @@
 # Luminous Development Roadmap
 
-> **Document Version:** 4.1.0
-> **Last Updated:** 2026-01-18
+> **Document Version:** 4.2.0
+> **Last Updated:** 2026-01-25
 > **Status:** Active
 > **TOGAF Phase:** Phase E/F (Opportunities, Solutions & Migration Planning)
 
@@ -750,57 +750,262 @@ Establish shared code infrastructure before Phase 3 to maximize code reuse and e
 
 ### Objective
 
-Deliver native iOS and Android apps with full feature access and push notifications, leveraging the cross-platform infrastructure established in Phase 2.7.
+Deliver native iOS and Android apps with full feature access and push notifications, leveraging the cross-platform infrastructure established in Phase 2.7. Mobile apps provide on-the-go management, quick actions, and notification delivery for family coordination.
 
 ### Prerequisites
 
 - Phase 2.7 complete (shared library, OpenAPI clients, design tokens)
-- Generated API clients available for Swift and Kotlin
-- Design tokens exported to Swift and Kotlin formats
+- Generated API clients available for Swift and Kotlin (via GitHub Actions workflow)
+- Design tokens exported to Swift and Kotlin formats (via Style Dictionary)
+- Push notification infrastructure provisioned in Azure (Azure Notification Hub)
 
 ### Scope
 
 #### 3.1 iOS App (Swift/SwiftUI)
 
-- [ ] **3.1.1** Xcode project with SwiftUI
-- [ ] **3.1.2** Integrate generated OpenAPI Swift client
-- [ ] **3.1.3** Import design tokens (colors, spacing, typography)
-- [ ] **3.1.4** Passkey integration with ASAuthorizationController
-- [ ] **3.1.5** Core Data for offline caching
-- [ ] **3.1.6** Navigation structure (TabView)
-- [ ] **3.1.7** Push notifications (APNs)
+##### 3.1.1 Project Foundation
+- [ ] **3.1.1.1** Create Xcode project with SwiftUI App lifecycle
+- [ ] **3.1.1.2** Configure iOS deployment target (iOS 17+)
+- [ ] **3.1.1.3** Set up project structure (MVVM architecture)
+- [ ] **3.1.1.4** Configure Swift Package Manager dependencies
+- [ ] **3.1.1.5** Set up code signing and provisioning profiles
+
+##### 3.1.2 API Integration
+- [ ] **3.1.2.1** Integrate generated OpenAPI Swift client from `clients/ios/Generated/`
+- [ ] **3.1.2.2** Configure base URL and authentication headers
+- [ ] **3.1.2.3** Create API service layer with async/await
+- [ ] **3.1.2.4** Implement request retry logic with exponential backoff
+- [ ] **3.1.2.5** Add network reachability monitoring
+
+##### 3.1.3 Design System Integration
+- [ ] **3.1.3.1** Import design tokens from `design-tokens/build/swift/DesignTokens.swift`
+- [ ] **3.1.3.2** Create Color extensions for family member colors
+- [ ] **3.1.3.3** Implement typography styles matching design system
+- [ ] **3.1.3.4** Create reusable SwiftUI components (Button, Card, Avatar, etc.)
+- [ ] **3.1.3.5** Implement time-adaptive canvas colors
+
+##### 3.1.4 Authentication
+- [ ] **3.1.4.1** Implement passkey registration with ASAuthorizationController
+- [ ] **3.1.4.2** Implement passkey authentication with AutoFill support
+- [ ] **3.1.4.3** Create email OTP fallback authentication
+- [ ] **3.1.4.4** Implement biometric unlock (Face ID/Touch ID) for app access
+- [ ] **3.1.4.5** Secure token storage in Keychain
+- [ ] **3.1.4.6** Token refresh flow with silent renewal
+
+##### 3.1.5 Offline Support
+- [ ] **3.1.5.1** Set up Core Data model matching domain entities
+- [ ] **3.1.5.2** Implement sync manager for background synchronization
+- [ ] **3.1.5.3** Create offline-first data access layer
+- [ ] **3.1.5.4** Implement optimistic UI updates with conflict resolution
+- [ ] **3.1.5.5** Background fetch configuration
+
+##### 3.1.6 Navigation & UI
+- [ ] **3.1.6.1** Implement TabView with 5 sections (Home, Calendar, Tasks, Family, Settings)
+- [ ] **3.1.6.2** Create NavigationStack for each tab
+- [ ] **3.1.6.3** Implement deep linking with custom URL scheme
+- [ ] **3.1.6.4** Add Universal Links support
+- [ ] **3.1.6.5** Implement haptic feedback for interactions
+
+##### 3.1.7 Push Notifications
+- [ ] **3.1.7.1** Configure APNs entitlements and certificates
+- [ ] **3.1.7.2** Register for remote notifications and handle token
+- [ ] **3.1.7.3** Send device token to backend
+- [ ] **3.1.7.4** Implement notification service extension (rich notifications)
+- [ ] **3.1.7.5** Handle notification actions (mark complete, snooze, etc.)
+- [ ] **3.1.7.6** Implement notification preferences management
+
+##### 3.1.8 Widgets (WidgetKit)
+- [ ] **3.1.8.1** Create WidgetExtension target
+- [ ] **3.1.8.2** Implement Today's Schedule widget (small, medium, large)
+- [ ] **3.1.8.3** Implement Grocery List widget
+- [ ] **3.1.8.4** Implement Chore Status widget
+- [ ] **3.1.8.5** Set up widget timeline providers with background refresh
 
 #### 3.2 Android App (Kotlin/Compose)
 
-- [ ] **3.2.1** Android Studio project with Jetpack Compose
-- [ ] **3.2.2** Integrate generated OpenAPI Kotlin client
-- [ ] **3.2.3** Import design tokens (colors, spacing, typography)
-- [ ] **3.2.4** Passkey integration with Credential Manager API
-- [ ] **3.2.5** Room for offline caching
-- [ ] **3.2.6** Navigation component
-- [ ] **3.2.7** Push notifications (FCM)
+##### 3.2.1 Project Foundation
+- [ ] **3.2.1.1** Create Android Studio project with Jetpack Compose
+- [ ] **3.2.1.2** Configure minimum SDK (Android 13+, API 33)
+- [ ] **3.2.1.3** Set up project structure (MVVM with Clean Architecture layers)
+- [ ] **3.2.1.4** Configure Gradle dependencies with version catalog
+- [ ] **3.2.1.5** Set up signing configuration for release builds
+
+##### 3.2.2 API Integration
+- [ ] **3.2.2.1** Integrate generated OpenAPI Kotlin client from `clients/android/generated/`
+- [ ] **3.2.2.2** Configure Retrofit with OkHttp client
+- [ ] **3.2.2.3** Create repository layer with Kotlin coroutines and Flow
+- [ ] **3.2.2.4** Implement request retry logic with exponential backoff
+- [ ] **3.2.2.5** Add connectivity monitoring with NetworkCallback
+
+##### 3.2.3 Design System Integration
+- [ ] **3.2.3.1** Import design tokens from `design-tokens/build/kotlin/DesignTokens.kt`
+- [ ] **3.2.3.2** Create MaterialTheme with Luminous color scheme
+- [ ] **3.2.3.3** Implement typography styles matching design system
+- [ ] **3.2.3.4** Create reusable Compose components (Button, Card, Avatar, etc.)
+- [ ] **3.2.3.5** Implement time-adaptive canvas colors
+- [ ] **3.2.3.6** Support Material You dynamic color (optional user preference)
+
+##### 3.2.4 Authentication
+- [ ] **3.2.4.1** Implement passkey registration with Credential Manager API
+- [ ] **3.2.4.2** Implement passkey authentication with AutoFill
+- [ ] **3.2.4.3** Create email OTP fallback authentication
+- [ ] **3.2.4.4** Implement biometric unlock (fingerprint/face) for app access
+- [ ] **3.2.4.5** Secure token storage in EncryptedSharedPreferences
+- [ ] **3.2.4.6** Token refresh flow with Authenticator pattern
+
+##### 3.2.5 Offline Support
+- [ ] **3.2.5.1** Set up Room database with entities matching domain
+- [ ] **3.2.5.2** Implement WorkManager for background synchronization
+- [ ] **3.2.5.3** Create offline-first repository with NetworkBoundResource pattern
+- [ ] **3.2.5.4** Implement optimistic UI updates with conflict resolution
+- [ ] **3.2.5.5** Configure periodic sync with WorkManager constraints
+
+##### 3.2.6 Navigation & UI
+- [ ] **3.2.6.1** Implement bottom navigation with 5 sections
+- [ ] **3.2.6.2** Set up Navigation Compose with NavHost
+- [ ] **3.2.6.3** Implement deep linking with Android App Links
+- [ ] **3.2.6.4** Add implicit deep link handling
+- [ ] **3.2.6.5** Implement app shortcuts for quick actions
+
+##### 3.2.7 Push Notifications
+- [ ] **3.2.7.1** Configure Firebase Cloud Messaging (FCM)
+- [ ] **3.2.7.2** Implement FirebaseMessagingService
+- [ ] **3.2.7.3** Send FCM token to backend
+- [ ] **3.2.7.4** Create notification channels (events, tasks, reminders)
+- [ ] **3.2.7.5** Implement notification actions (mark complete, snooze, etc.)
+- [ ] **3.2.7.6** Implement notification preferences management
+
+##### 3.2.8 Widgets (Glance)
+- [ ] **3.2.8.1** Set up Glance dependencies for app widgets
+- [ ] **3.2.8.2** Implement Today's Schedule widget (various sizes)
+- [ ] **3.2.8.3** Implement Grocery List widget
+- [ ] **3.2.8.4** Implement Chore Status widget
+- [ ] **3.2.8.5** Configure widget update intervals
 
 #### 3.3 Mobile Calendar Features
 
-- [ ] **3.3.1** Calendar views (day, week, month)
-- [ ] **3.3.2** Event creation and editing
-- [ ] **3.3.3** Calendar connection management
-- [ ] **3.3.4** Profile filtering
+- [ ] **3.3.1** Calendar day view with hourly timeline
+- [ ] **3.3.2** Calendar week view with 7-day overview
+- [ ] **3.3.3** Calendar month view with traditional grid
+- [ ] **3.3.4** Agenda view with chronological event list
+- [ ] **3.3.5** Event creation with date/time pickers
+- [ ] **3.3.6** Event editing with form validation
+- [ ] **3.3.7** Event deletion with confirmation
+- [ ] **3.3.8** Calendar connection management (Google, Outlook OAuth flows)
+- [ ] **3.3.9** Profile/member filtering in calendar views
+- [ ] **3.3.10** Recurring event creation and editing
+- [ ] **3.3.11** Event reminders configuration
+- [ ] **3.3.12** Calendar sharing with caregivers
 
 #### 3.4 Mobile Device Features
 
-- [ ] **3.4.1** Device linking via code entry
-- [ ] **3.4.2** Family member management
-- [ ] **3.4.3** Biometric authentication (passkey unlock)
-- [ ] **3.4.4** Widget support (iOS/Android)
+- [ ] **3.4.1** Device linking via 6-digit code entry
+- [ ] **3.4.2** Family member invitation (email invite)
+- [ ] **3.4.3** Member role management (Owner, Admin, Adult, Teen, Child)
+- [ ] **3.4.4** Profile editing (name, avatar, color)
+- [ ] **3.4.5** Family settings configuration
+- [ ] **3.4.6** Device management (view linked devices, unlink)
+- [ ] **3.4.7** Session management (view active sessions, sign out all)
+
+#### 3.5 Push Notification Infrastructure (Backend)
+
+Backend infrastructure required to support push notifications on mobile apps.
+
+- [ ] **3.5.1** Provision Azure Notification Hub in Bicep
+- [ ] **3.5.2** Configure APNs credentials in Notification Hub
+- [ ] **3.5.3** Configure FCM credentials in Notification Hub
+- [ ] **3.5.4** Create PushToken entity and repository in domain layer
+- [ ] **3.5.5** Create API endpoints for device registration (POST /api/push/register)
+- [ ] **3.5.6** Create API endpoints for device deregistration (DELETE /api/push/unregister)
+- [ ] **3.5.7** Create NotificationService for sending push notifications
+- [ ] **3.5.8** Integrate notification sending with event/chore/reminder workflows
+- [ ] **3.5.9** Implement notification preferences per user (what to receive, quiet hours)
+- [ ] **3.5.10** Create Azure Function for scheduled notification delivery (reminders)
+
+#### 3.6 Real-time Sync (Mobile)
+
+Mobile app integration with SignalR for real-time updates (extends Phase 2.5).
+
+##### 3.6.1 iOS SignalR Integration
+- [ ] **3.6.1.1** Add SignalR Swift client package (SwiftSignalRClient)
+- [ ] **3.6.1.2** Implement SyncService with SignalR connection management
+- [ ] **3.6.1.3** Handle JWT authentication for WebSocket connection
+- [ ] **3.6.1.4** Implement reconnection logic with exponential backoff
+- [ ] **3.6.1.5** Subscribe to family group messages
+- [ ] **3.6.1.6** Update local Core Data cache on sync messages
+- [ ] **3.6.1.7** Handle connection state changes (connected, reconnecting, disconnected)
+
+##### 3.6.2 Android SignalR Integration
+- [ ] **3.6.2.1** Add SignalR Java client dependency
+- [ ] **3.6.2.2** Implement SyncService with SignalR connection management
+- [ ] **3.6.2.3** Handle JWT authentication for WebSocket connection
+- [ ] **3.6.2.4** Implement reconnection logic with exponential backoff
+- [ ] **3.6.2.5** Subscribe to family group messages
+- [ ] **3.6.2.6** Update local Room cache on sync messages using Flow
+- [ ] **3.6.2.7** Handle connection state changes with StateFlow
+
+#### 3.7 Managed Accounts (Mobile)
+
+Mobile app support for managed accounts per ADR-016.
+
+##### 3.7.1 Parent Features (iOS & Android)
+- [ ] **3.7.1.1** "Add Child" flow (create managed account without email)
+- [ ] **3.7.1.2** "Set Up Child's Device" wizard with setup code generation
+- [ ] **3.7.1.3** QR code scanner for parent authorization flow
+- [ ] **3.7.1.4** Managed account settings page (PIN management, permissions)
+- [ ] **3.7.1.5** Child device management dashboard (view, revoke devices)
+- [ ] **3.7.1.6** Notification when child device is linked
+- [ ] **3.7.1.7** Convert managed account to full account flow
+
+##### 3.7.2 Child Device Setup (iOS & Android)
+- [ ] **3.7.2.1** "Enter Setup Code" flow for linking to managed account
+- [ ] **3.7.2.2** Device passkey registration without email
+- [ ] **3.7.2.3** "Join Family" flow with QR code display
+- [ ] **3.7.2.4** Session token handling for managed accounts
+- [ ] **3.7.2.5** Appropriate UI for child/teen permissions
+
+#### 3.8 Mobile Quality Assurance
+
+- [ ] **3.8.1** Unit tests for ViewModels and services
+- [ ] **3.8.2** UI tests with XCTest (iOS) and Compose Test (Android)
+- [ ] **3.8.3** Integration tests for API client
+- [ ] **3.8.4** Device testing matrix (various screen sizes, OS versions)
+- [ ] **3.8.5** Accessibility audit (VoiceOver, TalkBack)
+- [ ] **3.8.6** Performance profiling (startup time, memory usage)
+- [ ] **3.8.7** Crash reporting integration (Firebase Crashlytics or App Center)
+- [ ] **3.8.8** Analytics integration (App Center Analytics or Firebase Analytics)
+
+#### 3.9 App Store Submission
+
+##### 3.9.1 iOS App Store
+- [ ] **3.9.1.1** Create App Store Connect app record
+- [ ] **3.9.1.2** Prepare app metadata (description, keywords, screenshots)
+- [ ] **3.9.1.3** Create app privacy policy and data collection disclosure
+- [ ] **3.9.1.4** Set up TestFlight for beta testing
+- [ ] **3.9.1.5** Configure In-App Review prompts
+- [ ] **3.9.1.6** Submit for App Review
+
+##### 3.9.2 Google Play Store
+- [ ] **3.9.2.1** Create Google Play Console app record
+- [ ] **3.9.2.2** Prepare store listing (description, screenshots, graphics)
+- [ ] **3.9.2.3** Complete data safety questionnaire
+- [ ] **3.9.2.4** Set up internal and closed beta tracks
+- [ ] **3.9.2.5** Configure in-app updates API
+- [ ] **3.9.2.6** Submit for Play Store review
 
 ### Exit Criteria
 
-- iOS app available on App Store (TestFlight initially)
-- Android app available on Play Store (Beta track initially)
-- Push notifications work for events and reminders
-- Apps authenticate via passkey or social login
-- Offline mode with local caching
+- **iOS app available on TestFlight** for beta testing
+- **Android app available on Play Store** (closed beta track initially)
+- **Push notifications work reliably** for events, reminders, and chore completions
+- **Apps authenticate via passkey** (primary) or email OTP (fallback)
+- **Offline mode works** with local caching and background sync
+- **Real-time sync active** - changes on one device appear on others within seconds
+- **Widgets functional** on both platforms (schedule, lists, chores)
+- **Managed accounts supported** - parents can set up child devices
+- **Feature parity achieved** with web app for core features (calendar, tasks, profiles)
+- **WCAG 2.1 AA accessibility** verified on both platforms
+- **Crash-free rate > 99%** in beta testing
 
 ---
 
@@ -1202,3 +1407,4 @@ After Phase 2.7 is complete, feature development can proceed in parallel:
 | 3.9.0 | 2026-01-11 | Luminous Team | Phase 2.6 Display Modes completed (Normal, Privacy, Sleep modes with DisplayModeService, PrivacyModeComponent, SleepModeComponent) |
 | 4.0.0 | 2026-01-12 | Luminous Team | Added production deployment with custom domain (DNS zone, SWA custom domain binding), PRODUCTION-DEPLOYMENT.md guide |
 | 4.1.0 | 2026-01-18 | Luminous Team | Phase 2.7 Cross-Platform Infrastructure completed (shared Angular library, OpenAPI client generation, design tokens pipeline, GitHub Actions workflows) |
+| 4.2.0 | 2026-01-25 | Luminous Team | Phase 3 Native Mobile Apps comprehensive update: expanded iOS/Android project structure, added push notification infrastructure (3.5), real-time sync mobile integration (3.6), managed accounts mobile support (3.7), QA and App Store submission sections (3.8, 3.9) |
