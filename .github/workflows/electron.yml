@@ -629,9 +629,11 @@ jobs:
 
       - name: Display structure of downloaded files
         run: ls -R artifacts
+        working-directory: .
 
       - name: Determine version
         id: version
+        working-directory: .
         run: |
           ENV="${{ needs.fetch-azure-config.outputs.environment }}"
           if [[ "${{ github.event.inputs.version }}" != "" ]]; then
