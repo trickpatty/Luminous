@@ -1,0 +1,127 @@
+// Xcode Project Template for Luminous iOS App
+//
+// This file provides a reference for the Xcode project structure.
+// The actual .xcodeproj must be created in Xcode.
+//
+// IMPORTANT: This is NOT a valid pbxproj file - it's documentation for
+// how to set up the project in Xcode.
+//
+// ========================================
+// Project Setup Instructions
+// ========================================
+//
+// 1. Open Xcode and create a new project:
+//    - Template: iOS > App
+//    - Product Name: Luminous
+//    - Organization Identifier: com.luminous
+//    - Interface: SwiftUI
+//    - Language: Swift
+//    - Include Tests: Yes
+//
+// 2. Configure deployment target:
+//    - iOS Deployment Target: 17.0
+//    - Supported Destinations: iPhone, iPad
+//
+// 3. Add the existing source files:
+//    - Drag the Luminous folder into the project
+//    - Select "Copy items if needed" if files are outside project
+//    - Add to target: Luminous
+//
+// 4. Configure Swift Package Manager dependencies:
+//    - File > Add Package Dependencies
+//    - Add each package from Package.swift:
+//      * https://github.com/Alamofire/Alamofire.git (5.8.0+)
+//      * https://github.com/evgenyneu/keychain-swift.git (21.0.0+)
+//      * https://github.com/moozzyk/SignalR-Client-Swift.git (0.9.0+)
+//      * https://github.com/kean/Nuke.git (12.0.0+)
+//      * https://github.com/apple/swift-openapi-runtime.git (1.0.0+)
+//      * https://github.com/apple/swift-openapi-urlsession.git (1.0.0+)
+//      * https://github.com/SwiftyJSON/SwiftyJSON.git (5.0.0+)
+//
+// 5. Configure signing:
+//    - Select the project in the navigator
+//    - Select the Luminous target
+//    - Go to Signing & Capabilities
+//    - Select your Team
+//    - Enable "Automatically manage signing"
+//
+// 6. Add capabilities:
+//    - Associated Domains (for passkeys/Universal Links)
+//    - Push Notifications
+//    - Background Modes (Background fetch, Remote notifications)
+//    - Sign in with Apple (optional, for future use)
+//
+// 7. Configure Info.plist:
+//    - Add NSFaceIDUsageDescription for biometric auth
+//    - Add NSCameraUsageDescription (for QR scanning)
+//    - Add CFBundleURLTypes for deep linking
+//
+// 8. Configure build settings:
+//    - Swift Compiler - Language: Swift 5
+//    - Swift Compiler - Version: 5.9
+//    - Build Libraries for Distribution: No
+//    - Debug Information Format: DWARF with dSYM
+//
+// ========================================
+// Build Configurations
+// ========================================
+//
+// Debug:
+//   - Optimization Level: None
+//   - DEBUG_INFORMATION_FORMAT: dwarf
+//   - SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+//   - APP_ENVIRONMENT: debug
+//
+// Staging:
+//   - Optimization Level: Optimize for Speed
+//   - DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+//   - SWIFT_ACTIVE_COMPILATION_CONDITIONS: STAGING
+//   - APP_ENVIRONMENT: staging
+//
+// Release:
+//   - Optimization Level: Optimize for Speed
+//   - DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+//   - APP_ENVIRONMENT: production
+//
+// ========================================
+// Folder Structure
+// ========================================
+//
+// Luminous/
+// ├── App/
+// │   ├── AppState.swift
+// │   └── AppConfiguration.swift
+// ├── Core/
+// │   └── Services/
+// │       ├── APIService.swift
+// │       ├── AuthService.swift
+// │       └── KeychainService.swift
+// ├── Design/
+// │   ├── DesignTokens.swift
+// │   └── Components/
+// │       ├── LuminousButton.swift
+// │       ├── LuminousCard.swift
+// │       ├── LuminousAvatar.swift
+// │       ├── LuminousTextField.swift
+// │       └── EmptyStateView.swift
+// ├── Features/
+// │   ├── Auth/
+// │   ├── Home/
+// │   ├── Calendar/
+// │   ├── Tasks/
+// │   ├── Family/
+// │   ├── Settings/
+// │   └── Main/
+// ├── Generated/              (OpenAPI-generated client)
+// ├── Resources/
+// │   ├── Assets.xcassets/
+// │   └── Localizable.strings
+// ├── LuminousApp.swift
+// └── ContentView.swift
+//
+// LuminousTests/
+// ├── Core/
+// └── Design/
+//
+// LuminousUITests/
+// └── (UI test files)

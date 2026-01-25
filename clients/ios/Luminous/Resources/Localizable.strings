@@ -1,0 +1,146 @@
+/*
+  Localizable.strings
+  Luminous
+
+  Created by Luminous Team
+  Copyright © 2026 Luminous. All rights reserved.
+
+  English (Base) localization
+*/
+
+// MARK: - Common
+
+"common.cancel" = "Cancel";
+"common.done" = "Done";
+"common.save" = "Save";
+"common.delete" = "Delete";
+"common.edit" = "Edit";
+"common.close" = "Close";
+"common.retry" = "Retry";
+"common.loading" = "Loading...";
+"common.error" = "Error";
+"common.success" = "Success";
+
+// MARK: - Authentication
+
+"auth.signIn" = "Sign In";
+"auth.signUp" = "Sign Up";
+"auth.signOut" = "Sign Out";
+"auth.email" = "Email";
+"auth.password" = "Password";
+"auth.passkey" = "Passkey";
+"auth.passkeySignIn" = "Sign in with Passkey";
+"auth.passkeySignUp" = "Sign up with Passkey";
+"auth.emailContinue" = "Continue with Email";
+"auth.otpTitle" = "Enter verification code";
+"auth.otpSubtitle" = "We sent a code to %@";
+"auth.otpVerify" = "Verify";
+"auth.otpResend" = "Resend code";
+"auth.otpDifferentEmail" = "Use different email";
+
+// MARK: - Tabs
+
+"tab.home" = "Home";
+"tab.calendar" = "Calendar";
+"tab.tasks" = "Tasks";
+"tab.family" = "Family";
+"tab.settings" = "Settings";
+
+// MARK: - Home
+
+"home.todaySchedule" = "Today's Schedule";
+"home.seeAll" = "See All";
+"home.quickActions" = "Quick Actions";
+"home.addEvent" = "Add Event";
+"home.addTask" = "Add Task";
+"home.groceryList" = "Grocery List";
+"home.invite" = "Invite";
+"home.tasksDueToday" = "Tasks Due Today";
+"home.recentActivity" = "Recent Activity";
+"home.noClear" = "All clear!";
+"home.noEvents" = "No events scheduled for today";
+"home.allDone" = "All done!";
+"home.noTasks" = "No tasks due today";
+"home.noActivity" = "No recent activity";
+"home.activityHint" = "Family activity will appear here";
+
+// MARK: - Calendar
+
+"calendar.day" = "Day";
+"calendar.week" = "Week";
+"calendar.month" = "Month";
+"calendar.agenda" = "Agenda";
+"calendar.today" = "Today";
+"calendar.newEvent" = "New Event";
+"calendar.noUpcoming" = "No upcoming events";
+"calendar.scheduleClear" = "Your schedule looks clear";
+"calendar.allDay" = "All day";
+
+// MARK: - Tasks
+
+"tasks.all" = "All";
+"tasks.today" = "Today";
+"tasks.overdue" = "Overdue";
+"tasks.completed" = "Completed";
+"tasks.newTask" = "New Task";
+"tasks.noTasks" = "No tasks";
+"tasks.noCompleted" = "No completed tasks";
+"tasks.filterHint" = "Tasks matching this filter will appear here";
+"tasks.createFirst" = "Create your first task to get started";
+
+// MARK: - Family
+
+"family.members" = "Family Members";
+"family.invitations" = "Pending Invitations";
+"family.devices" = "Linked Devices";
+"family.noMembers" = "No members yet";
+"family.inviteHint" = "Invite family members to get started";
+"family.noDevices" = "No devices linked";
+"family.linkDisplay" = "Link a display to show your family hub";
+"family.inviteMember" = "Invite Member";
+"family.revoke" = "Revoke";
+"family.expires" = "Expires %@";
+"family.lastSeen" = "Last seen %@";
+"family.online" = "Online";
+
+// MARK: - Roles
+
+"role.owner" = "Owner";
+"role.admin" = "Admin";
+"role.adult" = "Adult";
+"role.teen" = "Teen";
+"role.child" = "Child";
+"role.caregiver" = "Caregiver";
+
+// MARK: - Settings
+
+"settings.account" = "Account";
+"settings.profile" = "Profile";
+"settings.security" = "Security";
+"settings.notifications" = "Notifications";
+"settings.family" = "Family";
+"settings.familySettings" = "Family Settings";
+"settings.linkDisplay" = "Link a Display";
+"settings.appearance" = "Appearance";
+"settings.theme" = "Theme & Colors";
+"settings.support" = "Support";
+"settings.helpCenter" = "Help Center";
+"settings.about" = "About";
+"settings.signOut" = "Sign Out";
+"settings.signOutConfirm" = "Are you sure you want to sign out?";
+"settings.version" = "Version";
+
+// MARK: - Errors
+
+"error.network" = "Unable to connect to the server. Please check your internet connection and try again.";
+"error.auth" = "Your session has expired. Please sign in again.";
+"error.generic" = "Something went wrong. Please try again.";
+"error.connectionTitle" = "Connection Error";
+"error.authTitle" = "Authentication Required";
+
+// MARK: - Empty States
+
+"empty.events" = "No events";
+"empty.tasks" = "No tasks";
+"empty.family" = "No family members";
+"empty.devices" = "No linked devices";
