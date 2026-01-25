@@ -1,7 +1,7 @@
 # ADR-004: Native iOS and Android Apps
 
 > **Status:** Accepted
-> **Date:** 2025-12-21
+> **Date:** 2025-12-21 (Updated: 2026-01-25)
 > **Deciders:** Luminous Core Team
 > **Categories:** Technology, Architecture
 
@@ -135,29 +135,46 @@ We will build **native mobile apps**: Swift/SwiftUI for iOS and Kotlin/Jetpack C
 ### iOS (Swift/SwiftUI)
 - SwiftUI for modern declarative UI
 - Core Data for offline persistence
-- MSAL for Azure AD B2C authentication
+- ASAuthorizationController for passkey/WebAuthn authentication (ADR-010)
+- Keychain for secure token storage
 - APNs for push notifications
 - WidgetKit for home screen widgets
+- SwiftSignalRClient for real-time sync
 
 ### Android (Kotlin/Compose)
 - Jetpack Compose for modern UI
 - Room for offline persistence
-- MSAL for Azure AD B2C authentication
+- Credential Manager API for passkey/WebAuthn authentication (ADR-010)
+- EncryptedSharedPreferences for secure token storage
 - FCM for push notifications
 - Glance for app widgets
+- SignalR Java client for real-time sync
 
 ### Shared
-- OpenAPI-generated API clients
-- Common API contract
+- OpenAPI-generated API clients (TypeScript, Swift, Kotlin)
+- Design tokens exported via Style Dictionary (CSS, Swift, Kotlin)
+- Common API contract with in-house JWT authentication
 - Feature parity checklist
+- Managed accounts support (ADR-016)
+
+### Authentication Methods (per ADR-010, ADR-016)
+- **Primary**: Passkeys (WebAuthn) - platform biometrics (Face ID, Touch ID, fingerprint)
+- **Fallback**: Email OTP for passwordless access
+- **Children**: Device passkey + parent-delegated setup (ADR-016)
 
 ## Related Decisions
 
 - [ADR-001: .NET 10 as Backend Platform](./ADR-001-dotnet-backend.md)
-- [ADR-010: Azure AD B2C for Identity](./ADR-010-azure-ad-b2c-identity.md)
+- [ADR-010: In-House Passwordless Authentication](./ADR-010-passwordless-authentication.md)
+- [ADR-014: Cross-Platform Feature Parity Strategy](./ADR-014-cross-platform-feature-parity.md)
+- [ADR-015: Design Token Export Pipeline](./ADR-015-design-token-pipeline.md)
+- [ADR-016: Managed Accounts for Children/Non-Email Users](./ADR-016-managed-accounts.md)
+- [ADR-017: Real-time Sync with SignalR](./ADR-017-realtime-sync-signalr.md)
 
 ## References
 
 - [SwiftUI Documentation](https://developer.apple.com/xcode/swiftui/)
 - [Jetpack Compose Documentation](https://developer.android.com/jetpack/compose)
-- [MSAL for iOS and Android](https://learn.microsoft.com/azure/active-directory/develop/msal-overview)
+- [ASAuthorizationController for Passkeys](https://developer.apple.com/documentation/authenticationservices/asauthorizationcontroller)
+- [Android Credential Manager](https://developer.android.com/identity/sign-in/credential-manager)
+- [WebAuthn Specification](https://www.w3.org/TR/webauthn-2/)
