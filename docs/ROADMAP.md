@@ -1,6 +1,6 @@
 # Luminous Development Roadmap
 
-> **Document Version:** 4.2.0
+> **Document Version:** 4.3.0
 > **Last Updated:** 2026-01-25
 > **Status:** Active
 > **TOGAF Phase:** Phase E/F (Opportunities, Solutions & Migration Planning)
@@ -763,12 +763,32 @@ Deliver native iOS and Android apps with full feature access and push notificati
 
 #### 3.1 iOS App (Swift/SwiftUI)
 
-##### 3.1.1 Project Foundation
-- [ ] **3.1.1.1** Create Xcode project with SwiftUI App lifecycle
-- [ ] **3.1.1.2** Configure iOS deployment target (iOS 17+)
-- [ ] **3.1.1.3** Set up project structure (MVVM architecture)
-- [ ] **3.1.1.4** Configure Swift Package Manager dependencies
-- [ ] **3.1.1.5** Set up code signing and provisioning profiles
+##### 3.1.1 Project Foundation ✅ COMPLETED
+- [x] **3.1.1.1** Create Xcode project with SwiftUI App lifecycle
+  - *Implemented: LuminousApp.swift with SwiftUI App lifecycle, ContentView.swift root view*
+  - *Structure: clients/ios/Luminous/ with App/, Core/, Design/, Features/ directories*
+- [x] **3.1.1.2** Configure iOS deployment target (iOS 17+)
+  - *Configured: iOS 17.0+ deployment target in Package.swift and project documentation*
+- [x] **3.1.1.3** Set up project structure (MVVM architecture)
+  - *Implemented: Complete MVVM architecture with Views, ViewModels, and Services*
+  - *Features: Auth, Home, Calendar, Tasks, Family, Settings, Main modules*
+  - *Core: APIService, AuthService, KeychainService with protocols for testability*
+- [x] **3.1.1.4** Configure Swift Package Manager dependencies
+  - *Implemented: Package.swift with Alamofire, KeychainSwift, SignalR-Client-Swift, Nuke, swift-openapi-runtime, swift-openapi-urlsession, SwiftyJSON*
+- [x] **3.1.1.5** Set up code signing and provisioning profiles
+  - *Documented: Luminous.xcodeproj/project.pbxproj.template with signing instructions*
+  - *Includes: Associated Domains, Push Notifications, Background Modes capabilities*
+
+**Additional deliverables:**
+- [x] DesignTokens.swift generated from design-tokens/tokens.json
+- [x] Reusable SwiftUI components (LuminousButton, LuminousCard, LuminousAvatar, LuminousTextField, EmptyStateView)
+- [x] AppState for global state management with time-adaptive canvas colors
+- [x] AppConfiguration for environment-based API URLs and settings
+- [x] Full authentication flow with passkey and OTP support
+- [x] All 5 main feature views (Home, Calendar, Tasks, Family, Settings) with ViewModels
+- [x] openapi-generator-config.yaml for Swift client generation
+- [x] Localizable.strings for internationalization support
+- [x] Comprehensive README.md with setup instructions
 
 ##### 3.1.2 API Integration
 - [ ] **3.1.2.1** Integrate generated OpenAPI Swift client from `clients/ios/Generated/`
@@ -1408,3 +1428,4 @@ After Phase 2.7 is complete, feature development can proceed in parallel:
 | 4.0.0 | 2026-01-12 | Luminous Team | Added production deployment with custom domain (DNS zone, SWA custom domain binding), PRODUCTION-DEPLOYMENT.md guide |
 | 4.1.0 | 2026-01-18 | Luminous Team | Phase 2.7 Cross-Platform Infrastructure completed (shared Angular library, OpenAPI client generation, design tokens pipeline, GitHub Actions workflows) |
 | 4.2.0 | 2026-01-25 | Luminous Team | Phase 3 Native Mobile Apps comprehensive update: expanded iOS/Android project structure, added push notification infrastructure (3.5), real-time sync mobile integration (3.6), managed accounts mobile support (3.7), QA and App Store submission sections (3.8, 3.9) |
+| 4.3.0 | 2026-01-25 | Luminous Team | Phase 3.1.1 iOS App Project Foundation completed: SwiftUI App lifecycle, MVVM architecture, SPM dependencies, DesignTokens.swift, core services (APIService, AuthService, KeychainService), reusable components, all 5 feature views with ViewModels |

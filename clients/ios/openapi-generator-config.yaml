@@ -1,0 +1,66 @@
+# OpenAPI Generator Configuration for Luminous iOS Client
+# Used by the openapi-clients.yml GitHub Actions workflow
+
+generatorName: swift5
+outputDir: ./Generated
+inputSpec: ../../openapi/v1.json
+
+# Library configuration
+library: urlsession
+
+# Global properties
+globalProperties:
+  apiDocs: true
+  modelDocs: true
+  models: ""
+  apis: ""
+  supportingFiles: ""
+
+# Additional properties for Swift generation
+additionalProperties:
+  projectName: LuminousAPI
+  podAuthors: Luminous Team
+  podDescription: Auto-generated API client for Luminous backend
+  podHomepage: https://github.com/luminous-app/luminous
+  podLicense: AGPL-3.0
+  podSource: https://github.com/luminous-app/luminous.git
+  podVersion: 1.0.0
+
+  # Swift-specific options
+  swiftPackagePath: LuminousAPI
+  useClasses: false
+  useJsonEncodable: true
+  useSPMFileStructure: true
+  hashableModels: true
+  useBacktickEscapes: true
+  generateModelAdditionalProperties: false
+  validatable: true
+
+  # Date handling
+  dateLibrary: Foundation
+
+  # Response handling
+  responseAs: AsyncAwait
+  objcCompatible: false
+
+  # Naming conventions
+  enumNameMapping: ""
+  enumUnknownDefaultCase: true
+
+# Type mappings for custom types
+typeMappings:
+  DateTime: Date
+  UUID: UUID
+
+# Import mappings
+importMappings:
+  Foundation: Foundation
+
+# File naming
+files:
+  api.mustache:
+    templateType: API
+    destinationFilename: .swift
+  model.mustache:
+    templateType: Model
+    destinationFilename: .swift
