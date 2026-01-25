@@ -211,27 +211,17 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          # Note: npm cache disabled for electron builds due to app-builder-bin binary corruption issues
 
+      # Install directly in display directory, bypassing workspace hoisting
+      # This ensures electron-builder can find app-builder-bin via normal module resolution
       - name: Install dependencies
-        run: npm ci
-        working-directory: ./clients
-
-      # Verify app-builder-bin binary exists - npm ci sometimes fails to extract large binaries
-      - name: Verify app-builder-bin installation
-        working-directory: ./clients
+        working-directory: ./clients/display
         run: |
-          BINARY_PATH="node_modules/app-builder-bin/linux/x64/app-builder"
-          if [ ! -f "$BINARY_PATH" ]; then
-            echo "::warning::Binary missing after npm ci, manually extracting..."
-            npm pack app-builder-bin@5.0.0-alpha.10
-            tar -xzf app-builder-bin-5.0.0-alpha.10.tgz
-            rm -rf node_modules/app-builder-bin
-            mv package node_modules/app-builder-bin
-            rm app-builder-bin-5.0.0-alpha.10.tgz
-          fi
-          chmod +x "$BINARY_PATH"
-          ls -la "$BINARY_PATH"
+          echo "Installing dependencies directly in display directory (bypassing workspace hoisting)"
+          npm install --workspaces=false --legacy-peer-deps
+          echo "Verifying app-builder-bin binary exists..."
+          ls -la node_modules/app-builder-bin/linux/x64/app-builder
+          chmod +x node_modules/app-builder-bin/linux/x64/app-builder
 
       - name: Configure environment URLs
         run: |
@@ -277,7 +267,7 @@ jobs:
           done
 
       - name: Build Electron (Linux)
-        run: /tmp/eb-tools/node_modules/.bin/electron-builder build --linux --publish never
+        run: npx electron-builder build --linux --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -312,26 +302,17 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          # Note: npm cache disabled for electron builds due to app-builder-bin binary corruption issues
 
+      # Install directly in display directory, bypassing workspace hoisting
+      # This ensures electron-builder can find app-builder-bin via normal module resolution
       - name: Install dependencies
-        run: npm ci
-        working-directory: ./clients
-
-      # Verify app-builder-bin binary exists - npm ci sometimes fails to extract large binaries
-      - name: Verify app-builder-bin installation
+        working-directory: ./clients/display
         shell: pwsh
         run: |
-          $BINARY_PATH = "node_modules\app-builder-bin\win\x64\app-builder.exe"
-          if (-not (Test-Path $BINARY_PATH)) {
-            Write-Host "::warning::Binary missing after npm ci, manually extracting..."
-            npm pack app-builder-bin@5.0.0-alpha.10
-            tar -xzf app-builder-bin-5.0.0-alpha.10.tgz
-            Remove-Item -Recurse -Force node_modules\app-builder-bin -ErrorAction SilentlyContinue
-            Move-Item package node_modules\app-builder-bin
-            Remove-Item app-builder-bin-5.0.0-alpha.10.tgz
-          }
-          Get-Item $BINARY_PATH
+          Write-Host "Installing dependencies directly in display directory (bypassing workspace hoisting)"
+          npm install --workspaces=false --legacy-peer-deps
+          Write-Host "Verifying app-builder-bin binary exists..."
+          Get-Item node_modules\app-builder-bin\win\x64\app-builder.exe
 
       - name: Configure environment URLs
         shell: pwsh
@@ -393,7 +374,7 @@ jobs:
           magick $icoInputs build/icon.ico
 
       - name: Build Electron (Windows)
-        run: C:\eb-tools\node_modules\.bin\electron-builder.cmd build --win --publish never
+        run: npx electron-builder build --win --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -427,27 +408,17 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          # Note: npm cache disabled for electron builds due to app-builder-bin binary corruption issues
 
+      # Install directly in display directory, bypassing workspace hoisting
+      # This ensures electron-builder can find app-builder-bin via normal module resolution
       - name: Install dependencies
-        run: npm ci
-        working-directory: ./clients
-
-      # Verify app-builder-bin binary exists - npm ci sometimes fails to extract large binaries
-      - name: Verify app-builder-bin installation
-        working-directory: ./clients
+        working-directory: ./clients/display
         run: |
-          BINARY_PATH="node_modules/app-builder-bin/mac/app-builder_amd64"
-          if [ ! -f "$BINARY_PATH" ]; then
-            echo "::warning::Binary missing after npm ci, manually extracting..."
-            npm pack app-builder-bin@5.0.0-alpha.10
-            tar -xzf app-builder-bin-5.0.0-alpha.10.tgz
-            rm -rf node_modules/app-builder-bin
-            mv package node_modules/app-builder-bin
-            rm app-builder-bin-5.0.0-alpha.10.tgz
-          fi
-          chmod +x "$BINARY_PATH"
-          ls -la "$BINARY_PATH"
+          echo "Installing dependencies directly in display directory (bypassing workspace hoisting)"
+          npm install --workspaces=false --legacy-peer-deps
+          echo "Verifying app-builder-bin binary exists..."
+          ls -la node_modules/app-builder-bin/mac/app-builder_amd64
+          chmod +x node_modules/app-builder-bin/mac/app-builder_amd64
 
       - name: Configure environment URLs
         run: |
@@ -505,7 +476,7 @@ jobs:
           done
 
       - name: Build Electron (macOS Intel)
-        run: /tmp/eb-tools/node_modules/.bin/electron-builder build --mac --x64 --publish never
+        run: npx electron-builder build --mac --x64 --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # For signed builds, add:
@@ -546,27 +517,17 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          # Note: npm cache disabled for electron builds due to app-builder-bin binary corruption issues
 
+      # Install directly in display directory, bypassing workspace hoisting
+      # This ensures electron-builder can find app-builder-bin via normal module resolution
       - name: Install dependencies
-        run: npm ci
-        working-directory: ./clients
-
-      # Verify app-builder-bin binary exists - npm ci sometimes fails to extract large binaries
-      - name: Verify app-builder-bin installation
-        working-directory: ./clients
+        working-directory: ./clients/display
         run: |
-          BINARY_PATH="node_modules/app-builder-bin/mac/app-builder_arm64"
-          if [ ! -f "$BINARY_PATH" ]; then
-            echo "::warning::Binary missing after npm ci, manually extracting..."
-            npm pack app-builder-bin@5.0.0-alpha.10
-            tar -xzf app-builder-bin-5.0.0-alpha.10.tgz
-            rm -rf node_modules/app-builder-bin
-            mv package node_modules/app-builder-bin
-            rm app-builder-bin-5.0.0-alpha.10.tgz
-          fi
-          chmod +x "$BINARY_PATH"
-          ls -la "$BINARY_PATH"
+          echo "Installing dependencies directly in display directory (bypassing workspace hoisting)"
+          npm install --workspaces=false --legacy-peer-deps
+          echo "Verifying app-builder-bin binary exists..."
+          ls -la node_modules/app-builder-bin/mac/app-builder_arm64
+          chmod +x node_modules/app-builder-bin/mac/app-builder_arm64
 
       - name: Configure environment URLs
         run: |
@@ -624,7 +585,7 @@ jobs:
           done
 
       - name: Build Electron (macOS Apple Silicon)
-        run: /tmp/eb-tools/node_modules/.bin/electron-builder build --mac --arm64 --publish never
+        run: npx electron-builder build --mac --arm64 --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # For signed builds, add:
