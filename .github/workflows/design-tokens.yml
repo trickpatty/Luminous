@@ -22,12 +22,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
 
@@ -40,28 +40,28 @@ jobs:
         run: npm run build
 
       - name: Upload CSS tokens artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: css-tokens
           path: design-tokens/build/css/
           retention-days: 30
 
       - name: Upload Swift tokens artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: swift-tokens
           path: design-tokens/build/swift/
           retention-days: 30
 
       - name: Upload Kotlin tokens artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: kotlin-tokens
           path: design-tokens/build/kotlin/
           retention-days: 30
 
       - name: Upload Tailwind tokens artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: tailwind-tokens
           path: design-tokens/build/tailwind/
