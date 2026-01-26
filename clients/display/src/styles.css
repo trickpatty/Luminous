@@ -64,6 +64,15 @@
     min-width: var(--touch-lg);
   }
 
+  /* Toggle switch - pill shape override */
+  button.toggle,
+  .toggle[role="switch"] {
+    min-width: 52px;
+    min-height: 32px;
+    width: 52px;
+    height: 32px;
+  }
+
   /* Focus styles */
   :focus-visible {
     outline: 3px solid var(--accent-500);
@@ -393,6 +402,45 @@
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin-bottom: var(--space-4);
+  }
+
+  /* Toggle switch component - pill shaped */
+  .toggle {
+    position: relative;
+    width: 52px;
+    height: 32px;
+    min-width: 52px;
+    min-height: 32px;
+    background: var(--border-color-strong);
+    border-radius: var(--radius-full);
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    transition: background var(--duration-standard) var(--ease-in-out);
+    flex-shrink: 0;
+  }
+
+  .toggle[data-checked="true"] {
+    background: var(--accent-600);
+  }
+
+  .toggle-knob {
+    display: block;
+    width: 24px;
+    height: 24px;
+    background: white;
+    border-radius: var(--radius-full);
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--duration-standard) var(--ease-spring);
+  }
+
+  .toggle[data-checked="true"] .toggle-knob {
+    transform: translateX(20px);
+  }
+
+  .toggle:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 }
 

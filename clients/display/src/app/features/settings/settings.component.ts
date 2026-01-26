@@ -1,12 +1,15 @@
-import { Component, inject, signal, OnInit, computed } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import {
   ElectronService,
   DisplaySettings,
   PrivacyModeSettings,
   SleepModeSettings,
+  WeatherLocationSettings,
 } from '../../core/services/electron.service';
 import { DeviceAuthService } from '../../core/services/device-auth.service';
 import { CacheService } from '../../core/services/cache.service';
@@ -33,6 +36,40 @@ const DEFAULT_SLEEP_SETTINGS: SleepModeSettings = {
   dimLevel: 10,
   wakeOnTouch: true,
 };
+
+/**
+ * Default weather location settings
+ */
+const DEFAULT_WEATHER_SETTINGS: WeatherLocationSettings = {
+  useAutoLocation: true,
+  temperatureUnit: 'fahrenheit',
+};
+
+/**
+ * Location search result from geocoding API
+ */
+interface LocationSearchResult {
+  name: string;
+  latitude: number;
+  longitude: number;
+  country: string;
+  region: string;
+}
+
+/**
+ * Open-Meteo Geocoding API response
+ */
+interface GeocodingResponse {
+  results?: Array<{
+    id: number;
+    name: string;
+    latitude: number;
+    longitude: number;
+    country: string;
+    admin1?: string;
+    admin2?: string;
+  }>;
+}
 
 @Component({
   selector: 'app-settings',
@@ -125,6 +162,104 @@ const DEFAULT_SLEEP_SETTINGS: SleepModeSettings = {
                 <option value="routines">Routines</option>
               </select>
             </div>
+          </div>
+        </section>
+
+        <!-- Weather Location Settings -->
+        <section class="settings-section">
+          <h2 class="settings-section-title">Weather Location</h2>
+
+          <div class="settings-card">
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-label">Auto-Detect Location</span>
+                <span class="setting-description">Use device location for weather</span>
+              </div>
+              <button
+                class="toggle"
+                [attr.data-checked]="weatherSettings().useAutoLocation"
+                (click)="toggleAutoLocation()"
+              >
+                <div class="toggle-knob"></div>
+              </button>
+            </div>
+
+            @if (!weatherSettings().useAutoLocation) {
+              <div class="setting-item">
+                <div class="setting-info">
+                  <span class="setting-label">Location</span>
+                  <span class="setting-description">Enter city name to search</span>
+                </div>
+                <div class="location-input-container">
+                  <input
+                    type="text"
+                    class="location-input"
+                    placeholder="Enter city name..."
+                    [value]="locationSearchQuery"
+                    (input)="onLocationSearchInput($any($event.target).value)"
+                    (keyup.enter)="searchLocation()"
+                  />
+                  <button class="search-btn" (click)="searchLocation()" [disabled]="isSearchingLocation()">
+                    @if (isSearchingLocation()) {
+                      <div class="search-spinner"></div>
+                    } @else {
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.3-4.3"/>
+                      </svg>
+                    }
+                  </button>
+                </div>
+              </div>
+
+              @if (locationSearchResults().length > 0) {
+                <div class="setting-item location-results">
+                  <div class="setting-info full-width">
+                    <span class="setting-label">Search Results</span>
+                    <div class="location-list">
+                      @for (result of locationSearchResults(); track result.name + result.latitude) {
+                        <button
+                          class="location-result-item"
+                          (click)="selectLocation(result)"
+                        >
+                          <span class="location-name">{{ result.name }}</span>
+                          <span class="location-region">{{ result.region }}, {{ result.country }}</span>
+                        </button>
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+
+              @if (weatherSettings().manualLocationName) {
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <span class="setting-label">Current Location</span>
+                  </div>
+                  <span class="setting-value">{{ weatherSettings().manualLocationName }}</span>
+                </div>
+              }
+            }
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-label">Temperature Unit</span>
+              </div>
+              <select
+                class="setting-select"
+                [ngModel]="weatherSettings().temperatureUnit"
+                (ngModelChange)="updateWeatherSetting('temperatureUnit', $event)"
+              >
+                <option value="fahrenheit">Fahrenheit</option>
+                <option value="celsius">Celsius</option>
+              </select>
+            </div>
+
+            @if (locationError()) {
+              <div class="setting-item error-item">
+                <span class="error-text">{{ locationError() }}</span>
+              </div>
+            }
           </div>
         </section>
 
@@ -514,12 +649,17 @@ const DEFAULT_SLEEP_SETTINGS: SleepModeSettings = {
       position: relative;
       width: 52px;
       height: 32px;
+      /* Override global button min-height/min-width */
+      min-width: 52px;
+      min-height: 32px;
       background: var(--border-color-strong);
       border-radius: var(--radius-full);
       border: none;
       padding: 4px;
       cursor: pointer;
       transition: background var(--duration-standard) var(--ease-in-out);
+      /* Ensure the toggle maintains its pill shape */
+      flex-shrink: 0;
     }
 
     .toggle[data-checked="true"] {
@@ -654,10 +794,126 @@ const DEFAULT_SLEEP_SETTINGS: SleepModeSettings = {
       background: var(--danger) !important;
       color: white !important;
     }
+
+    /* Weather Location Styles */
+    .location-input-container {
+      display: flex;
+      gap: var(--space-2);
+    }
+
+    .location-input {
+      flex: 1;
+      height: 44px;
+      padding: 0 var(--space-3);
+      font-size: 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      background: var(--surface-primary);
+      min-width: 180px;
+    }
+
+    .location-input:focus {
+      outline: none;
+      border-color: var(--accent-500);
+    }
+
+    .search-btn {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-500);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--duration-quick) var(--ease-out);
+    }
+
+    .search-btn:hover:not(:disabled) {
+      background: var(--accent-600);
+    }
+
+    .search-btn:active:not(:disabled) {
+      transform: scale(0.95);
+    }
+
+    .search-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .search-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 800ms linear infinite;
+    }
+
+    .location-results {
+      flex-direction: column;
+      align-items: stretch !important;
+    }
+
+    .location-results .setting-info.full-width {
+      width: 100%;
+    }
+
+    .location-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      margin-top: var(--space-3);
+    }
+
+    .location-result-item {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: var(--space-3);
+      background: var(--surface-secondary);
+      border: 1px solid var(--border-color-light);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--duration-quick) var(--ease-out);
+    }
+
+    .location-result-item:hover {
+      background: var(--surface-interactive);
+      border-color: var(--accent-300);
+    }
+
+    .location-result-item:active {
+      background: var(--surface-pressed);
+    }
+
+    .location-name {
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .location-region {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .error-item {
+      justify-content: center !important;
+    }
+
+    .error-text {
+      color: var(--danger);
+      font-size: 0.875rem;
+    }
   `],
 })
 export class SettingsComponent implements OnInit {
   private readonly router = inject(Router);
+  private readonly http = inject(HttpClient);
   private readonly electronService = inject(ElectronService);
   private readonly authService = inject(DeviceAuthService);
   private readonly cacheService = inject(CacheService);
@@ -674,6 +930,11 @@ export class SettingsComponent implements OnInit {
 
   protected readonly privacySettings = signal<PrivacyModeSettings>(DEFAULT_PRIVACY_SETTINGS);
   protected readonly sleepSettings = signal<SleepModeSettings>(DEFAULT_SLEEP_SETTINGS);
+  protected readonly weatherSettings = signal<WeatherLocationSettings>(DEFAULT_WEATHER_SETTINGS);
+  protected readonly isSearchingLocation = signal(false);
+  protected readonly locationSearchResults = signal<LocationSearchResult[]>([]);
+  protected readonly locationError = signal<string | null>(null);
+  protected locationSearchQuery = '';
 
   protected readonly appInfo = this.electronService.appInfo;
   protected readonly familyName = this.authService.familyName;
@@ -706,6 +967,13 @@ export class SettingsComponent implements OnInit {
       this.sleepSettings.set({
         ...DEFAULT_SLEEP_SETTINGS,
         ...savedSettings.sleepModeSettings,
+      });
+    }
+    // Load weather location settings
+    if (savedSettings.weatherLocationSettings) {
+      this.weatherSettings.set({
+        ...DEFAULT_WEATHER_SETTINGS,
+        ...savedSettings.weatherLocationSettings,
       });
     }
   }
@@ -796,6 +1064,100 @@ export class SettingsComponent implements OnInit {
 
   toggleSleepModeNow(): void {
     this.displayModeService.toggleSleepMode();
+  }
+
+  // ============================================
+  // Weather Location Settings
+  // ============================================
+
+  async updateWeatherSetting<K extends keyof WeatherLocationSettings>(
+    key: K,
+    value: WeatherLocationSettings[K]
+  ): Promise<void> {
+    const updated = { ...this.weatherSettings(), [key]: value };
+    this.weatherSettings.set(updated);
+    await this.saveWeatherSettings(updated);
+  }
+
+  toggleAutoLocation(): void {
+    const current = this.weatherSettings().useAutoLocation;
+    this.updateWeatherSetting('useAutoLocation', !current);
+    // Clear search results when toggling
+    this.locationSearchResults.set([]);
+    this.locationError.set(null);
+  }
+
+  onLocationSearchInput(value: string): void {
+    this.locationSearchQuery = value;
+    // Clear error when typing
+    this.locationError.set(null);
+  }
+
+  async searchLocation(): Promise<void> {
+    const query = this.locationSearchQuery.trim();
+    if (!query) {
+      this.locationError.set('Please enter a city name');
+      return;
+    }
+
+    this.isSearchingLocation.set(true);
+    this.locationError.set(null);
+    this.locationSearchResults.set([]);
+
+    try {
+      const response = await firstValueFrom(
+        this.http.get<GeocodingResponse>(
+          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`
+        )
+      );
+
+      if (response.results && response.results.length > 0) {
+        this.locationSearchResults.set(
+          response.results.map(r => ({
+            name: r.name,
+            latitude: r.latitude,
+            longitude: r.longitude,
+            country: r.country,
+            region: r.admin1 || r.admin2 || '',
+          }))
+        );
+      } else {
+        this.locationError.set('No locations found. Try a different search term.');
+      }
+    } catch (error) {
+      console.error('Location search failed:', error);
+      this.locationError.set('Failed to search for location. Please try again.');
+    } finally {
+      this.isSearchingLocation.set(false);
+    }
+  }
+
+  async selectLocation(result: LocationSearchResult): Promise<void> {
+    const locationName = result.region
+      ? `${result.name}, ${result.region}`
+      : `${result.name}, ${result.country}`;
+
+    const updated: WeatherLocationSettings = {
+      ...this.weatherSettings(),
+      manualLocationName: locationName,
+      manualLatitude: result.latitude,
+      manualLongitude: result.longitude,
+    };
+
+    this.weatherSettings.set(updated);
+    await this.saveWeatherSettings(updated);
+
+    // Clear search results
+    this.locationSearchResults.set([]);
+    this.locationSearchQuery = '';
+  }
+
+  private async saveWeatherSettings(settings: WeatherLocationSettings): Promise<void> {
+    const currentSettings = await this.electronService.getSettings();
+    await this.electronService.setSettings({
+      ...currentSettings,
+      weatherLocationSettings: settings,
+    });
   }
 
   // ============================================
